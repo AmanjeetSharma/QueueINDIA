@@ -1,0 +1,19 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "",
+  "scripts": {
+    "dev": "concurrently -n GATEWAY,USER,DEPT -c cyan,green,magenta \"npm run dev --prefix api-gateway\" \"npm run dev --prefix user-service\" \"npm run dev --prefix department-service\"",
+    "start": "concurrently -n GATEWAY,USER,DEPT -c cyan,green,magenta \"npm start --prefix api-gateway\" \"npm start --prefix user-service\" \"npm start --prefix department-service\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^9.2.1",
+    "dotenv": "^17.2.3",
+    "google-auth-library": "^10.5.0",
+    "nodemon": "^3.1.10"
+  }
+}

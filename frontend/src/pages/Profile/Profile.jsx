@@ -1,12 +1,12 @@
 import { useAuth } from "../../context/AuthContext";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaShieldAlt, FaUserSlash, FaCamera, FaEdit } from "react-icons/fa";
+import { FaUser, FaShieldAlt, FaUserSlash, FaCamera, FaEdit, FaCheck } from "react-icons/fa";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 // Import Components
-import ProfileHeader from "../Profile/ProfileSub/ProfileHeader";
 import ProfileTab from "../Profile/ProfileSub/ProfileTab";
 import SecurityTab from "../Profile/ProfileSub/SecurityTab";
 import DangerZoneTab from "../Profile/ProfileSub/DangerZoneTab";
@@ -26,6 +26,8 @@ const Profile = () => {
         verifySecondaryEmail,
         sendPrimaryEmailVerification
     } = useAuth();
+
+    const navigate = useNavigate();
 
     const [searchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState('profile');
@@ -69,6 +71,69 @@ const Profile = () => {
         newPassword: '',
         confirmPassword: ''
     });
+
+    // Enhanced animations
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                duration: 0.6,
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.5,
+                ease: "easeOut"
+            }
+        }
+    };
+
+    const tabContentVariants = {
+        hidden: { opacity: 0, x: 20 },
+        visible: {
+            opacity: 1,
+            x: 0,
+            transition: {
+                duration: 0.4,
+                ease: "easeOut"
+            }
+        },
+        exit: {
+            opacity: 0,
+            x: -20,
+            transition: {
+                duration: 0.3,
+                ease: "easeIn"
+            }
+        }
+    };
+
+    const avatarVariants = {
+        normal: { scale: 1 },
+        hover: { scale: 1.05 },
+        tap: { scale: 0.95 }
+    };
+
+    const badgeVariants = {
+        hidden: { scale: 0, opacity: 0 },
+        visible: {
+            scale: 1,
+            opacity: 1,
+            transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 20
+            }
+        }
+    };
 
     // Check for email verification success
     useEffect(() => {
@@ -202,9 +267,8 @@ const Profile = () => {
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
-        if (passwordData.newPassword !== passwordData.confirmPassword) {
-            return;
-        }
+
+        if (passwordData.newPassword !== passwordData.confirmPassword) return;
 
         try {
             await changePassword({
@@ -213,15 +277,20 @@ const Profile = () => {
                 confirmPassword: passwordData.confirmPassword
             });
 
+            // Keep UI state clean
             setIsChangingPassword(false);
             setPasswordData({
-                oldPassword: '',
-                newPassword: '',
-                confirmPassword: ''
+                oldPassword: "",
+                newPassword: "",
+                confirmPassword: ""
             });
-        } catch (error) {
-            // Error handled in AuthContext
-        }
+
+            // ✅ Delay navigation so toast stays visible
+            setTimeout(() => {
+                navigate("/login");
+            }, 1500);
+
+        } catch (error) { }
     };
 
     const handleLogout = () => {
@@ -265,9 +334,17 @@ const Profile = () => {
 
     if (!user) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-            </div>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white"
+            >
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="rounded-full h-12 w-12 border-b-2 border-indigo-600"
+                ></motion.div>
+            </motion.div>
         );
     }
 
@@ -278,90 +355,150 @@ const Profile = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 py-8">
+        <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8"
+        >
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Header */}
+                {/* Clean Header */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
+                    variants={itemVariants}
                     className="text-center mb-12"
                 >
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-indigo-600 bg-clip-text text-transparent mb-4">
+                    <motion.h1
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7, delay: 0.2 }}
+                        className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-indigo-600 bg-clip-text text-transparent mb-4"
+                    >
                         Profile Settings
-                    </h1>
-                    <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7, delay: 0.4 }}
+                        className="text-gray-600 text-lg max-w-2xl mx-auto"
+                    >
                         Manage your account settings and personalize your experience
-                    </p>
+                    </motion.p>
                 </motion.div>
 
-                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
-                    {/* Profile Header with Enhanced Avatar */}
+                <motion.div
+                    variants={itemVariants}
+                    className="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden"
+                >
+                    {/* Clean Profile Header with Rounded Avatar */}
                     <div className="relative bg-gradient-to-r from-indigo-500 to-purple-600 p-8">
                         <div className="flex flex-col md:flex-row items-center gap-8">
-                            {/* Avatar with Edit Overlay */}
-                            <div className="relative group">
-                                <div
-                                    className="relative w-32 h-32 rounded-2xl border-4 border-white/20 shadow-2xl overflow-hidden cursor-pointer transition-all duration-300 group-hover:scale-105 group-hover:border-white/40"
+                            {/* Enhanced Rounded Avatar with Centered Image */}
+                            <motion.div
+                                className="relative group"
+                                variants={avatarVariants}
+                                whileHover="hover"
+                                whileTap="tap"
+                            >
+                                <motion.div
+                                    className="relative w-32 h-32 rounded-full border-4 border-white/30 shadow-2xl overflow-hidden cursor-pointer"
                                     onMouseEnter={() => setIsAvatarHovered(true)}
                                     onMouseLeave={() => setIsAvatarHovered(false)}
                                     onClick={handleAvatarClick}
+                                    whileHover={{
+                                        scale: 1.05,
+                                        borderColor: "rgba(255,255,255,0.6)"
+                                    }}
+                                    transition={{ type: "spring", stiffness: 300 }}
                                 >
                                     <img
                                         src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=6366f1&color=ffffff&size=128`}
                                         alt={user.name}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-cover object-center" // Ensures image is centered
                                     />
 
-                                    {/* Edit Overlay */}
+                                    {/* Enhanced Edit Overlay */}
                                     <AnimatePresence>
                                         {isAvatarHovered && (
                                             <motion.div
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
                                                 exit={{ opacity: 0 }}
-                                                className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-2xl"
+                                                className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full"
+                                                transition={{ duration: 0.2 }}
                                             >
-                                                <div className="text-white text-center">
+                                                <motion.div
+                                                    initial={{ y: 10 }}
+                                                    animate={{ y: 0 }}
+                                                    className="text-white text-center"
+                                                >
                                                     <FaCamera className="w-6 h-6 mx-auto mb-1" />
                                                     <span className="text-xs font-medium">Change Photo</span>
-                                                </div>
+                                                </motion.div>
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
-                                </div>
+                                </motion.div>
 
-                                {/* Edit Button */}
+                                {/* Floating Edit Button */}
                                 <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    whileHover={{ scale: 1.1, rotate: 15 }}
+                                    whileTap={{ scale: 0.9 }}
                                     onClick={handleAvatarClick}
                                     className="absolute -bottom-2 -right-2 bg-white text-indigo-600 p-2 rounded-full shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200"
                                 >
                                     <FaEdit className="w-4 h-4" />
                                 </motion.button>
-                            </div>
+
+
+                            </motion.div>
 
                             {/* User Info */}
                             <div className="flex-1 text-center md:text-left">
-                                <h2 className="text-3xl font-bold text-white mb-2">{user.name}</h2>
-                                <p className="text-indigo-100 text-lg mb-4">{user.email}</p>
-                                <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                                <motion.h2
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="text-3xl font-bold text-white mb-2"
+                                >
+                                    {user.name}
+                                </motion.h2>
+                                <motion.p
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="text-indigo-100 text-lg mb-4"
+                                >
+                                    {user.email}
+                                </motion.p>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.5 }}
+                                    className="flex flex-wrap gap-2 justify-center md:justify-start"
+                                >
                                     {user.isEmailVerified && (
-                                        <span className="bg-white/20 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                                        <motion.span
+                                            variants={badgeVariants}
+                                            className="bg-white/20 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm"
+                                        >
                                             ✅ Email Verified
-                                        </span>
+                                        </motion.span>
                                     )}
                                     {user.isPhoneVerified && (
-                                        <span className="bg-white/20 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                                        <motion.span
+                                            variants={badgeVariants}
+                                            className="bg-white/20 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm"
+                                        >
                                             📱 Phone Verified
-                                        </span>
+                                        </motion.span>
                                     )}
-                                    <span className="bg-white/20 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                                    <motion.span
+                                        variants={badgeVariants}
+                                        className="bg-white/20 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm"
+                                    >
                                         👤 Member since {new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                    </span>
-
-                                </div>
+                                    </motion.span>
+                                </motion.div>
                             </div>
                         </div>
 
@@ -375,37 +512,45 @@ const Profile = () => {
                         />
                     </div>
 
-                    {/* Tabs */}
-                    <div className="border-b border-gray-200/60 bg-white/50 backdrop-blur-sm">
+                    {/* Enhanced Tabs */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 }}
+                        className="border-b border-gray-200 bg-white"
+                    >
                         <nav className="flex overflow-x-auto">
-                            {tabs.map((tab) => (
-                                <button
+                            {tabs.map((tab, index) => (
+                                <motion.button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-3 px-8 py-5 border-b-2 font-semibold text-sm transition-all duration-200 whitespace-nowrap ${activeTab === tab.id
-                                        ? 'border-indigo-600 text-indigo-600 bg-white shadow-sm'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.7 + index * 0.1 }}
+                                    className={`relative flex items-center gap-3 px-8 py-5 border-b-2 font-semibold text-sm transition-all duration-300 whitespace-nowrap ${activeTab === tab.id
+                                        ? 'border-indigo-600 text-indigo-600 bg-gray-50'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                         }`}
                                 >
-                                    <tab.icon className={`w-5 h-5 transition-colors ${activeTab === tab.id ? 'text-indigo-600' : 'text-gray-400'
+                                    <tab.icon className={`w-5 h-5 transition-colors duration-300 ${activeTab === tab.id ? 'text-indigo-600' : 'text-gray-400'
                                         }`} />
                                     {tab.label}
-                                </button>
+                                </motion.button>
                             ))}
                         </nav>
-                    </div>
+                    </motion.div>
 
                     {/* Tab Content */}
-                    <div className="p-8 bg-white/30 backdrop-blur-sm">
+                    <div className="p-8 bg-gray-50/50">
                         <AnimatePresence mode="wait">
                             {/* Profile Tab */}
                             {activeTab === 'profile' && (
                                 <motion.div
                                     key="profile"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    transition={{ duration: 0.3 }}
+                                    variants={tabContentVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    exit="exit"
                                 >
                                     <ProfileTab
                                         user={user}
@@ -433,10 +578,10 @@ const Profile = () => {
                             {activeTab === 'security' && (
                                 <motion.div
                                     key="security"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    transition={{ duration: 0.3 }}
+                                    variants={tabContentVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    exit="exit"
                                 >
                                     <SecurityTab
                                         isChangingPassword={isChangingPassword}
@@ -452,10 +597,10 @@ const Profile = () => {
                             {activeTab === 'danger' && (
                                 <motion.div
                                     key="danger"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    transition={{ duration: 0.3 }}
+                                    variants={tabContentVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    exit="exit"
                                 >
                                     <DangerZoneTab
                                         onLogout={handleLogout}
@@ -466,7 +611,7 @@ const Profile = () => {
                             )}
                         </AnimatePresence>
                     </div>
-                </div>
+                </motion.div>
             </div>
 
             {/* Popups */}
@@ -499,7 +644,7 @@ const Profile = () => {
                 type="danger"
                 confirmText="Delete Account"
             />
-        </div>
+        </motion.div>
     );
 };
 

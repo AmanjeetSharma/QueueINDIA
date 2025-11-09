@@ -216,7 +216,7 @@ const changePassword = asyncHandler(async (req, res) => {
         .status(200)
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
-        .json(new ApiResponse(200, {}, "✅ Password changed and all sessions invalidated. Please log in again."));
+        .json(new ApiResponse(200, {}, "Password changed and all sessions deactivated. Please log in again."));
 });
 
 

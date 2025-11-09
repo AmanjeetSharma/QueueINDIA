@@ -61,7 +61,7 @@ const Login = () => {
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {/* Very subtle grid pattern */}
                 <div className="absolute inset-0 opacity-[0.02] bg-[linear-gradient(rgba(0,0,0,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.1)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
-                
+
                 {/* Soft gradient orbs */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
@@ -87,7 +87,7 @@ const Login = () => {
                                 <FaShieldAlt className="text-white text-xl" />
                             </div>
                         </motion.div>
-                        
+
                         <motion.h1
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -96,7 +96,7 @@ const Login = () => {
                         >
                             Welcome to QueueINDIA
                         </motion.h1>
-                        
+
                         <motion.p
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -194,7 +194,7 @@ const Login = () => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.8 }}
-                            whileHover={{ 
+                            whileHover={{
                                 scale: 1.01,
                                 backgroundColor: "#2563eb"
                             }}
@@ -265,15 +265,13 @@ const Login = () => {
                                     to="/register"
                                     className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-500 font-medium transition-colors group"
                                 >
-                                    <motion.div
-                                        whileHover={{ scale: 1.05 }}
-                                        className="flex items-center gap-1"
-                                    >
+                                    <motion.span whileHover={{ scale: 1.05 }} className="flex items-center gap-1">
                                         <FaUserPlus className="w-3 h-3" />
                                         Create account
-                                    </motion.div>
+                                    </motion.span>
                                 </Link>
                             </p>
+
                         </div>
                     </motion.div>
                 </motion.div>

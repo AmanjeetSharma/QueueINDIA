@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }) => {
             fetchProfile(); // refresh profile
             setUser(user);
             localStorage.setItem("user", JSON.stringify(user));
-            toast.success(res.data.message || "Successfully logged in with Google!",{
+            toast.success(res.data.message || "Successfully logged in with Google!", {
                 duration: 3000,
                 position: "bottom-left"
             });
@@ -184,18 +184,16 @@ export const AuthProvider = ({ children }) => {
 
             const res = await axiosInstance.patch("/users/change-password", payload);
 
-            // ✅ Invalidate local session
-            setUser(null); // clear auth state
-            localStorage.removeItem("accessToken"); // if stored
-            localStorage.removeItem("refreshToken");
-
             toast.success("Password changed successfully. Please log in again.", {
-                duration: 3000,
+                duration: 5000,
                 position: "bottom-left"
             });
 
-            // ✅ Redirect to login
-            window.location.href = "/login";
+            // Just clear auth state — DO NOT REDIRECT HERE
+            setUser(null);
+            localStorage.removeItem("user");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
 
             return res.data;
         } catch (err) {
@@ -204,6 +202,7 @@ export const AuthProvider = ({ children }) => {
             throw err;
         }
     };
+
 
 
 

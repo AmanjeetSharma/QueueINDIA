@@ -46,7 +46,7 @@ app.use(
       return proxyReqOpts;
     },
     proxyErrorHandler: (err, res, next) => {
-      console.error("[GATEWAY] Proxy error:", err.message);
+      // console.error("[GATEWAY] Proxy error:", err.message);
       next(err);
     },
   })
@@ -66,7 +66,7 @@ app.use(
       return proxyReqOpts;
     },
     proxyErrorHandler: (err, res, next) => {
-      console.error("[GATEWAY] Department proxy error:", err.message);
+      // console.error("[GATEWAY] Department proxy error:", err.message);
       next(err);
     },
   })

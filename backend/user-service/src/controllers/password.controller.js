@@ -1,0 +1,225 @@
+import crypto from "crypto";
+import bcrypt from "bcrypt";
+import { User } from "../models/user.model.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import resetPasswordHtml from "../utils/emailTemplates/resetPasswordHtml.js";
+import { phoneValidator } from "../utils/validators.js";
+
+
+
+
+
+
+
+
+
+
+
+
+// ================= FORGOT PASSWORD ===================
+const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        throw new ApiError(400, "Email is required");
+    }
+
+    // Find user
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    // Always send generic message to avoid account enumeration
+    if (!user) {
+        return res.status(200).json(
+            new ApiResponse(200, {}, "No account found with this email")
+        );
+    }
+
+    // OPTIONAL: block if email is not verified
+    // if (!user.isEmailVerified) {
+    //     throw new ApiError(403, "Email is not verified. Verify email before resetting password.");
+    // }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 min expiry
+
+    await user.save();
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    const html = resetPasswordHtml(resetUrl);
+
+    await sendEmail(user.email, "Password Reset Request", html, true);
+    console.log(`📧 Password reset email sent → ${user.email}`);
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Reset email has been sent to the provided email address."));
+});
+
+
+
+
+
+// ================= RESET PASSWORD ===================
+const resetPassword = asyncHandler(async (req, res) => {
+
+    const { token, newPassword, confirmPassword } = req.body;
+
+    if (!token || !newPassword || !confirmPassword) {
+        throw new ApiError(400, "Token, new password, and confirm password are required");
+    }
+
+    if (newPassword !== confirmPassword) {
+        throw new ApiError(400, "Passwords do not match");
+    }
+
+    if (newPassword.length < 8) {
+        throw new ApiError(400, "Password must be at least 8 characters long");
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+        throw new ApiError(400, "Invalid or expired token");
+    }
+
+    // Update password
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+
+    // 🔒 Invalidate all sessions after password reset (important!)
+    user.sessions = [];
+
+    await user.save();
+
+    console.log(`🔐 Password reset successful for → ${user.email}`);
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password has been reset successfully."));
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ================= FORGOT PASSWORD VIA PHONE ===================
+const requestPhonePasswordReset = asyncHandler(async (req, res) => {
+    const { phone } = req.body;
+
+    if (!phone) {
+        throw new ApiError(400, "Phone number is required");
+    }
+
+    if (!phoneValidator(phone)) {
+        throw new ApiError(400, "Invalid 10-digit phone number");
+    }
+
+    // Phone must be unique → findOne
+    const user = await User.findOne({ phone });
+
+    if (!user) {
+        throw new ApiError(404, "No account is linked with this phone number");
+    }
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    user.phoneResetOTP = otp;
+    user.phoneResetExpiry = Date.now() + 10 * 60 * 1000; // 10 mins
+
+    await user.save();
+
+    console.log(`📲 Password-reset OTP for ${phone}: ${otp}`);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            { phone },
+            "OTP sent to phone for password reset"
+        )
+    );
+});
+
+
+
+
+
+// ================= RESET PASSWORD VIA PHONE ===================
+const resetPasswordWithPhone = asyncHandler(async (req, res) => {
+    const { phone, otp, newPassword, confirmPassword } = req.body;
+
+    if (!phone || !otp || !newPassword || !confirmPassword) {
+        throw new ApiError(400, "All fields are required");
+    }
+
+    if (!phoneValidator(phone)) {
+        throw new ApiError(400, "Invalid phone number");
+    }
+
+    if (newPassword !== confirmPassword) {
+        throw new ApiError(400, "Passwords do not match");
+    }
+
+    const user = await User.findOne({
+        phone,
+        phoneResetOTP: otp,
+        phoneResetExpiry: { $gt: Date.now() }
+    });
+
+    if (!user) {
+        throw new ApiError(400, "Invalid OTP or OTP expired");
+    }
+
+    // Hash and save new password
+    user.password = await bcrypt.hash(newPassword, 10);
+
+    // Clear OTP
+    user.phoneResetOTP = null;
+    user.phoneResetExpiry = null;
+
+    await user.save();
+
+    console.log(`🔐 Password reset via phone completed for ${phone}`);
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password has been reset successfully"));
+});
+
+
+
+
+
+
+
+
+export {
+    forgotPassword,
+    resetPassword,
+    requestPhonePasswordReset,
+    resetPasswordWithPhone
+};

@@ -57,12 +57,14 @@ export const AuthProvider = ({ children }) => {
             // ✅ try profile fetch, but don't override login toast if it fails
             try {
                 await fetchProfile();
+                console.log("Avatar from DB:", user.avatar);
+
             } catch (e) {
                 console.warn("Profile fetch after login failed (ignored):", e);
             }
 
             toast.success(`Welcome back! ${res.data?.data?.user.name || 'User'}`, {
-                duration: 3000,
+                duration: 5000,
                 position: "bottom-left",
             });
 

@@ -303,7 +303,13 @@ const addPhone = asyncHandler(async (req, res) => {
         throw new ApiError(404, "User not found");
     }
 
-    // If phone already linked & verified, stop
+    // 🔐 UNIQUE PHONE CHECK (Important)
+    const phoneOwner = await User.findOne({ phone });
+    if (phoneOwner && phoneOwner._id.toString() !== user._id.toString()) {
+        throw new ApiError(409, "This phone number is already linked with another account");
+    }
+
+    // If same phone already verified
     if (user.phone === phone && user.isPhoneVerified) {
         throw new ApiError(409, "Phone number already verified");
     }
@@ -313,16 +319,17 @@ const addPhone = asyncHandler(async (req, res) => {
 
     user.phone = phone;
     user.phoneVerificationCode = otp;
-    user.phoneVerificationExpiry = Date.now() + 10 * 60 * 1000; // OTP valid 10 minutes
-    console.log(`exipiry set to: ${user.phoneVerificationExpiry}`);
+    user.phoneVerificationExpiry = Date.now() + 10 * 60 * 1000;
+
     await user.save();
 
-    console.log(`📲 OTP Sent to ${phone}:`, otp);
+    console.log(`📲 OTP sent to ${phone}:`, otp);
 
     return res.status(200).json(
         new ApiResponse(200, { phone }, "OTP sent to phone successfully")
     );
 });
+
 
 
 

@@ -51,6 +51,7 @@ const userSchema = new Schema(
             unique: true,
             sparse: true, // So it does not conflict if empty
         },
+        // Fields for password reset
         resetPasswordToken: {
             type: String,
             default: null
@@ -59,6 +60,15 @@ const userSchema = new Schema(
             type: Date,
             default: null
         },
+        phoneResetOTP: {
+            type: String,
+            default: null
+        },
+        phoneResetExpiry: {
+            type: Date,
+            default: null
+        },
+        // Verification fields
         isEmailVerified: {
             type: Boolean,
             default: false,
@@ -111,7 +121,7 @@ const userSchema = new Schema(
             type: Date,
             default: null,
         },
-
+        // Address
         address: {
             type: addressSchema,
             default: {},

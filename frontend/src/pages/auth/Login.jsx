@@ -56,11 +56,11 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4 py-8 relative overflow-hidden">
+        <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4 py-8 relative overflow-hidden">
             {/* Subtle Background Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {/* Very subtle grid pattern */}
-                <div className="absolute inset-0 opacity-[0.02] bg-[linear-gradient(rgba(0,0,0,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.1)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+                <div className="absolute inset-0 opacity-[0.02] bg-[linear-gradient(rgba(0,0,0,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.1)_1px,transparent_1px)] bg-size-[50px_50px]"></div>
 
                 {/* Soft gradient orbs */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
@@ -83,7 +83,7 @@ const Login = () => {
                             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
                             className="flex justify-center mb-6"
                         >
-                            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                            <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
                                 <FaShieldAlt className="text-white text-xl" />
                             </div>
                         </motion.div>
@@ -258,20 +258,32 @@ const Login = () => {
                         transition={{ delay: 1.1 }}
                         className="mt-6 pt-6 border-t border-gray-100"
                     >
-                        <div className="text-center">
-                            <p className="text-gray-600 text-sm">
-                                Don't have an account?{" "}
-                                <Link
-                                    to="/register"
-                                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-500 font-medium transition-colors group"
-                                >
-                                    <motion.span whileHover={{ scale: 1.05 }} className="flex items-center gap-1">
-                                        <FaUserPlus className="w-3 h-3" />
-                                        Create account
-                                    </motion.span>
-                                </Link>
-                            </p>
+                        <div className="text-center space-y-3 p-6 bg-linear-to-br from-gray-50 to-blue-50 rounded-2xl border border-blue-100 shadow-sm">
+                            <div className="space-y-1">
+                                <p className="text-gray-600 font-medium text-base">
+                                    Join QueueIndia Today
+                                </p>
+                                <p className="text-gray-500 text-sm">
+                                    Start managing your queues efficiently
+                                </p>
+                            </div>
 
+                            <Link
+                                to="/register"
+                                className="group inline-flex items-center justify-center gap-3 px-6 py-3 w-full max-w-xs bg-white hover:bg-blue-600 text-blue-600 hover:text-white border-2 border-blue-200 hover:border-blue-600 rounded-xl font-medium transition-all duration-300 ease-out hover:shadow-lg hover:scale-105 active:scale-95"
+                            >
+                                <FaUserPlus className="w-5 h-5 transition-transform group-hover:scale-110" />
+                                <span>Create Your Account</span>
+                            </Link>
+
+                            <div className="pt-2">
+                                <p className="text-gray-400 text-xs">
+                                    <span className="inline-flex items-center gap-1">
+                                        <FaLock className="w-3 h-3" />
+                                        Google users can set a password later for email sign-in
+                                    </span>
+                                </p>
+                            </div>
                         </div>
                     </motion.div>
                 </motion.div>

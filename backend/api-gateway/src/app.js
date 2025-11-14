@@ -16,7 +16,7 @@ app.use(cookieParser());
 // Important: Remove global body parsing for proxy routes
 // Only parse body for non-proxy routes if needed
 app.use((req, res, next) => {
-  console.log(`[GATEWAY] ${req.method} ${req.originalUrl}`);
+  // console.log(`[GATEWAY] ${req.method} ${req.originalUrl}`);
 
   // Skip body parsing for proxy routes
   if (req.originalUrl.startsWith('/api/v1/')) {
@@ -33,7 +33,7 @@ const DEPARTMENT_SERVICE_URL = process.env.DEPARTMENT_SERVICE_URL;
 
 // -------- User Service (Auth, Profile, etc.) --------
 app.use(
-  ["/api/v1/auth", "/api/v1/users", "/api/v1/oauth2"],
+  ["/api/v1/auth", "/api/v1/users", "/api/v1/oauth2", "/api/v1/reset-password"],
   proxy(USER_SERVICE_URL, {
     proxyReqPathResolver: (req) => req.originalUrl,
     parseReqBody: true, // Let the proxy handle body parsing
@@ -46,7 +46,7 @@ app.use(
       return proxyReqOpts;
     },
     proxyErrorHandler: (err, res, next) => {
-      // console.error("[GATEWAY] Proxy error:", err.message);
+      console.error("[GATEWAY] Proxy error:", err.message);
       next(err);
     },
   })
@@ -66,7 +66,7 @@ app.use(
       return proxyReqOpts;
     },
     proxyErrorHandler: (err, res, next) => {
-      // console.error("[GATEWAY] Department proxy error:", err.message);
+      console.error("[GATEWAY] Department proxy error:", err.message);
       next(err);
     },
   })

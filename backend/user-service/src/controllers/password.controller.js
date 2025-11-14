@@ -6,7 +6,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import resetPasswordHtml from "../utils/emailTemplates/resetPasswordHtml.js";
-import { phoneValidator } from "../utils/validators.js";
+import { phoneValidator, passwordValidator } from "../utils/validators.js";
 
 
 
@@ -79,8 +79,14 @@ const resetPassword = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Passwords do not match");
     }
 
-    if (newPassword.length < 8) {
-        throw new ApiError(400, "Password must be at least 8 characters long");
+
+    const passwordCheck = passwordValidator(password);
+
+    if (!passwordCheck.valid) {
+        throw new ApiError(
+            400,
+            `Password is missing: ${passwordCheck.errors.join(", ")}.`
+        );
     }
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
@@ -108,7 +114,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, {}, "Password has been reset successfully."));
+        .json(new ApiResponse(200, {}, "Your password has been reset successfully."));
 });
 
 
@@ -159,7 +165,7 @@ const requestPhonePasswordReset = asyncHandler(async (req, res) => {
         new ApiResponse(
             200,
             { phone },
-            "OTP sent to phone for password reset"
+            "OTP has been sent to the provided phone number"
         )
     );
 });
@@ -172,8 +178,26 @@ const requestPhonePasswordReset = asyncHandler(async (req, res) => {
 const resetPasswordWithPhone = asyncHandler(async (req, res) => {
     const { phone, otp, newPassword, confirmPassword } = req.body;
 
-    if (!phone || !otp || !newPassword || !confirmPassword) {
-        throw new ApiError(400, "All fields are required");
+
+    if (!phone) {
+        throw new ApiError(400, "Phone number is required");
+    }
+    if (!otp) {
+        throw new ApiError(400, "OTP is required");
+    }
+    if (!newPassword) {
+        throw new ApiError(400, "New password is required");
+    }
+    if (!confirmPassword) {
+        throw new ApiError(400, "Confirm password is required");
+    }
+
+    const passwordCheck = passwordValidator(newPassword);
+    if (!passwordCheck.valid) {
+        throw new ApiError(
+            400,
+            `Password is missing: ${passwordCheck.errors.join(", ")}.`
+        );
     }
 
     if (!phoneValidator(phone)) {
@@ -207,7 +231,7 @@ const resetPasswordWithPhone = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, {}, "Password has been reset successfully"));
+        .json(new ApiResponse(200, {}, "Your password has been reset successfully."));
 });
 
 

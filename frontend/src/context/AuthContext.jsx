@@ -251,47 +251,6 @@ export const AuthProvider = ({ children }) => {
 
 
 
-    const forgotPassword = async (email) => {
-        try {
-            const res = await axiosInstance.post("/users/forgot-password", { email });
-            toast.success("Password reset link sent to your email!", {
-                duration: 4000,
-                position: "bottom-left"
-            });
-            return res.data;
-        } catch (err) {
-            console.error("❌ Forgot password error:", err);
-            const msg = err?.response?.data?.message || "Failed to send reset link";
-            toast.error(msg, {
-                duration: 3000,
-                position: "bottom-left"
-            });
-            throw err;
-        }
-    };
-
-    const resetPassword = async (token, newPassword) => {
-        try {
-            const res = await axiosInstance.post("/users/reset-password", { token, newPassword });
-            toast.success("Password reset successfully!", {
-                duration: 3000,
-                position: "bottom-left"
-            });
-            return res.data;
-        } catch (err) {
-            console.error("❌ Reset password error:", err);
-            const msg = err?.response?.data?.message || "Password reset failed";
-            toast.error(msg, {
-                duration: 3000,
-                position: "bottom-left"
-            });
-            throw err;
-        }
-    };
-
-
-
-
 
     const addPhone = async (phone) => {
         try {
@@ -337,6 +296,9 @@ export const AuthProvider = ({ children }) => {
             handleError(error);
         }
     };
+
+
+
 
 
 
@@ -414,6 +376,116 @@ export const AuthProvider = ({ children }) => {
 
 
 
+
+
+
+    const forgotPasswordEmail = async (email) => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.post('/reset-password/forgot-password-email', {
+                email
+            });
+
+            toast.success(response.data.message || 'Password reset instructions sent to your email!', {
+                duration: 3000,
+                position: "bottom-left"
+            });
+            return response.data;
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Failed to send reset email';
+            toast.error(errorMessage, {
+                duration: 3000,
+                position: "bottom-left"
+            });
+            throw new Error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resetPasswordEmail = async (token, newPassword, confirmPassword) => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.post('/reset-password/reset-password-email', {
+                token,
+                newPassword,
+                confirmPassword,
+            });
+
+            toast.success(response.data.message || 'Password reset successfully!', {
+                duration: 3000,
+                position: "bottom-left"
+            });
+            return response.data;
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Password reset failed';
+            toast.error(errorMessage, {
+                duration: 3000,
+                position: "bottom-left"
+            });
+            throw new Error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const forgotPasswordPhone = async (phone) => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.post('/reset-password/forgot-password-phone', {
+                phone
+            });
+
+            toast.success(response.data.message || 'OTP sent to your phone!', {
+                duration: 3000,
+                position: "bottom-left"
+            });
+            return response.data;
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Failed to send OTP';
+            toast.error(errorMessage, {
+                duration: 3000,
+                position: "bottom-left"
+            });
+            throw new Error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resetPasswordPhone = async (phone, otp, newPassword, confirmPassword) => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.post('/reset-password/reset-password-phone', {
+                phone,
+                otp,
+                newPassword,
+                confirmPassword,
+            });
+
+            toast.success(response.data.message || 'Password reset successfully!', {
+                duration: 3000,
+                position: "bottom-left"
+            });
+            return response.data;
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Password reset failed';
+            toast.error(errorMessage, {
+                duration: 5000,
+                position: "bottom-left"
+            });
+            throw new Error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
+
+
+
+
     const value = {
         user,
         loading,
@@ -425,8 +497,6 @@ export const AuthProvider = ({ children }) => {
         logoutAll,
         updateProfile,
         changePassword,
-        forgotPassword,
-        resetPassword,
         deleteAccount,
         sessions,
         addPhone,
@@ -434,6 +504,10 @@ export const AuthProvider = ({ children }) => {
         addSecondaryEmail,
         verifySecondaryEmail,
         sendPrimaryEmailVerification,
+        forgotPasswordEmail,
+        resetPasswordEmail,
+        forgotPasswordPhone,
+        resetPasswordPhone,
         refreshProfile: fetchProfile
     };
 

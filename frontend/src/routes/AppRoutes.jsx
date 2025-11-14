@@ -9,6 +9,8 @@ import Services from "../pages/info/Services.jsx";
 import Contact from "../pages/info/Contact.jsx";
 import Pricing from "../pages/info/Pricing.jsx";
 import AboutUs from "../pages/info/AboutUs.jsx";
+import ForgotPassword from "../pages/auth/ForgotPassword.jsx";
+import ResetPassword from "../pages/auth/ResetPassword.jsx";
 
 const AppRoutes = () => {
   return (
@@ -35,6 +37,8 @@ const AppRoutes = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<AboutUs />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="*" element={<div className="p-8">Not Found</div>} />
 
       </Routes>

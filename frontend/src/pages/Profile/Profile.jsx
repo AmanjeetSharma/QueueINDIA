@@ -258,7 +258,6 @@ const Profile = () => {
                 const formData = new FormData();
                 formData.append("avatar", file);
                 await updateProfile(formData);
-                toast.success("Profile picture updated successfully!");
             } catch (error) {
                 // Error handled in AuthContext
             }

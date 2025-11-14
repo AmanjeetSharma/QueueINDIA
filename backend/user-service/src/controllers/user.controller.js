@@ -53,6 +53,8 @@ const getProfile = asyncHandler(async (req, res) => {
  * Works even if the URL includes versioning (v12345)
  */
 const extractPublicId = (url) => {
+    // Ignore if URL is apart from cloudinary uploads
+    if (!url || !url.includes("/upload/")) return null;
     // Example:
     // https://res.cloudinary.com/amanjeet/image/upload/v1762337048/QueueIndia/users/avatars/mawv22t3p6and0otju1l.png
     const parts = url.split("/upload/")[1]; // => v1762337048/QueueIndia/users/avatars/mawv22t3p6and0otju1l.png
@@ -98,18 +100,21 @@ const updateProfile = asyncHandler(async (req, res) => {
 
     // ✅ Handle avatar replacement
     if (avatarFile) {
-        // 🧹 Delete old avatar from Cloudinary (if any)
-        if (user.avatar) {
-            const publicId = extractPublicId(user.avatar);
-            console.log("Deleting old avatar with publicId:", publicId);
-
+        // 🧹 Delete old avatar only if it's hosted on Cloudinary
+        if (user.avatar && user.avatar.includes("/upload/")) {
             try {
+                const publicId = extractPublicId(user.avatar);
+                console.log("Deleting old avatar with publicId:", publicId);
+
                 const deleteResponse = await cloudinary.uploader.destroy(publicId);
-                console.log("🧹 Old avatar deleted:", deleteResponse);
+                console.log("🧹 Old avatar deleted from Cloudinary:", deleteResponse);
             } catch (error) {
-                console.error("⚠️ Error deleting old avatar:", error.message);
+                console.error("⚠️ Error deleting old avatar:", error?.message);
             }
+        } else {
+            console.log("ℹ️  Old avatar not from Cloudinary — skipping delete.");
         }
+
 
         // ☁️ Upload new avatar to Cloudinary
         const uploadedAvatar = await uploadOnCloudinary(

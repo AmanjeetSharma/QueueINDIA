@@ -412,8 +412,15 @@ const Profile = () => {
                                     <img
                                         src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=6366f1&color=ffffff&size=128`}
                                         alt={user.name}
-                                        className="w-full h-full object-cover object-center" // Ensures image is centered
+                                        className="w-full h-full object-cover object-center"
+                                        referrerPolicy="no-referrer"
+                                        onError={(e) => {
+                                            e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                                user.name
+                                            )}&background=6366f1&color=ffffff&size=128`;
+                                        }}
                                     />
+
 
                                     {/* Enhanced Edit Overlay */}
                                     <AnimatePresence>

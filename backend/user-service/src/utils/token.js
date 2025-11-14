@@ -10,7 +10,7 @@ const generateSessionId = () => {
 
 
 const generateAccessToken = (user) => {
-    // console.log("access token expires in:", process.env.ACCESS_TOKEN_EXPIRE);
+    console.log("access token expires in:", process.env.ACCESS_TOKEN_EXPIRE);
     return jwt.sign(
         {
             _id: user._id,

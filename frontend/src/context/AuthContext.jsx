@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
             // ✅ try profile fetch, but don't override login toast if it fails
             try {
                 await fetchProfile();
-                console.log("Avatar from DB:", user.avatar);
+                // console.log("Avatar from DB:", user.avatar);
 
             } catch (e) {
                 console.warn("Profile fetch after login failed (ignored):", e);
@@ -152,7 +152,7 @@ export const AuthProvider = ({ children }) => {
     const updateProfile = async (formData) => {
         try {
             const isFormData = formData instanceof FormData;
-            console.log("Updating profile with data:", formData);
+            // console.log("Updating profile with data:", formData);
             const res = await axiosInstance.patch("/users/update-profile", formData, {
                 headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined
             });
@@ -235,7 +235,7 @@ export const AuthProvider = ({ children }) => {
     const sessions = async () => {
         try {
             const res = await axiosInstance.get("/users/sessions");
-            console.log("✅ Fetched user sessions");
+            // console.log("✅ Fetched user sessions");
             return res.data;
         } catch (err) {
             console.error("❌ Fetch sessions error:", err);
@@ -323,7 +323,7 @@ export const AuthProvider = ({ children }) => {
 
     const verifySecondaryEmail = async (otp) => {
         try {
-            console.log("Verifying secondary email with OTP:", otp);
+            // console.log("Verifying secondary email with OTP:", otp);
             const res = await axiosInstance.post("/users/email/verify-secondary", { otp }, {
                 headers: { "Content-Type": "application/json" }
             });

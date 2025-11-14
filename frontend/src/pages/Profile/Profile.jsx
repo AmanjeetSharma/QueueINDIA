@@ -336,7 +336,7 @@ const Profile = () => {
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white"
+                className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-white"
             >
                 <motion.div
                     animate={{ rotate: 360 }}
@@ -358,7 +358,7 @@ const Profile = () => {
             initial="hidden"
             animate="visible"
             variants={containerVariants}
-            className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8"
+            className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 py-8"
         >
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Clean Header */}
@@ -370,7 +370,7 @@ const Profile = () => {
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.7, delay: 0.2 }}
-                        className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-indigo-600 bg-clip-text text-transparent mb-4"
+                        className="text-4xl font-bold bg-linear-to-r from-gray-900 to-indigo-600 bg-clip-text text-transparent mb-4"
                     >
                         Profile Settings
                     </motion.h1>
@@ -389,7 +389,7 @@ const Profile = () => {
                     className="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden"
                 >
                     {/* Clean Profile Header with Rounded Avatar */}
-                    <div className="relative bg-gradient-to-r from-indigo-500 to-purple-600 p-8">
+                    <div className="relative bg-linear-to-r from-indigo-500 to-purple-600 p-8">
                         <div className="flex flex-col md:flex-row items-center gap-8">
                             {/* Enhanced Rounded Avatar with Centered Image */}
                             <motion.div

@@ -10,6 +10,7 @@ const generateSessionId = () => {
 
 
 const generateAccessToken = (user) => {
+    // console.log("access token expires in:", process.env.ACCESS_TOKEN_EXPIRE);
     return jwt.sign(
         {
             _id: user._id,
@@ -44,7 +45,7 @@ const generateVerificationToken = () => {
 
 
 export const generateOtp = (digits = 6) =>
-  Math.floor(10 ** (digits - 1) + Math.random() * 9 * 10 ** (digits - 1)).toString();
+    Math.floor(10 ** (digits - 1) + Math.random() * 9 * 10 ** (digits - 1)).toString();
 
 
 export {

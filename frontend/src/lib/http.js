@@ -1,23 +1,10 @@
 import axios from "axios";
 
-// Create axios instance
 export const axiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL,      // http://localhost:3000/api/v1
-    withCredentials: true,                           // send/receive http-only cookies
+    baseURL: import.meta.env.VITE_API_BASE_URL,
+    withCredentials: true,
     headers: { "Content-Type": "application/json" }
 });
-
-// Response interceptor to auto-refresh access token on 401
-let isRefreshing = false;
-let pendingQueue = [];
-
-const processQueue = (error, token = null) => {
-    pendingQueue.forEach(p => {
-        if (error) p.reject(error);
-        else p.resolve(token);
-    });
-    pendingQueue = [];
-};
 
 axiosInstance.interceptors.response.use(
     (response) => response,
@@ -25,31 +12,22 @@ axiosInstance.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // If refresh token missing, do NOT retry refresh
-        const hasRefreshToken = document.cookie.includes("refreshToken");
-        if (!hasRefreshToken) {
+        // 🔁 Stop retry if already tried OR if refresh call
+        if (originalRequest._retry || originalRequest.url.includes("/auth/refresh-token")) {
             return Promise.reject(error);
         }
 
-        // Ignore refresh attempts for these endpoints
-        if (
-            originalRequest.url.includes("/auth/login") ||
-            originalRequest.url.includes("/auth/register") ||
-            originalRequest.url.includes("/auth/refresh-token")
-        ) {
-            return Promise.reject(error);
-        }
-
-        // Perform refresh only on 401 once
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // ⛔ If unauthorized → attempt refresh once
+        if (error.response?.status === 401) {
             originalRequest._retry = true;
             try {
-                await axiosInstance.post("/auth/refresh-token");
+                // console.log("🔄 Trying refresh token...");
+                await axiosInstance.post("/auth/refresh-token", {}, { withCredentials: true });
+                // console.log("🔁 Retry original request after refresh");
                 return axiosInstance(originalRequest);
-            } catch (refreshError) {
-                // Clear cookies on failed refresh
-                console.warn("❌ Refresh failed. Logging out...");
-                return Promise.reject(refreshError);
+            } catch (err) {
+                console.warn("❌ Refresh failed");
+                return Promise.reject(err); // Handled in AuthContext
             }
         }
 
@@ -57,6 +35,4 @@ axiosInstance.interceptors.response.use(
     }
 );
 
-
-// Keep http export for backward compatibility
 export const http = axiosInstance;

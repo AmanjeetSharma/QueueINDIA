@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
             return res.data;
 
         } catch (err) {
-            console.log("Login error:", err.response?.data); // <-- we see actual backend error now
+            // console.log("Login error:", err.response?.data); // <-- we see actual backend error now
 
             const msg = err?.response?.data?.message || "Login failed. Please check your credentials.";
             toast.error(msg, {
@@ -157,7 +157,7 @@ export const AuthProvider = ({ children }) => {
                 headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined
             });
             setUser(res.data?.data || res.data?.user || null);
-            toast.success("Profile updated successfully!", {
+            toast.success(res.data.message || "Profile updated successfully!", {
                 duration: 3000,
                 position: "bottom-left"
             });
@@ -166,7 +166,7 @@ export const AuthProvider = ({ children }) => {
             console.error("❌ Update profile error:", err);
             const msg = err?.response?.data?.message || "Profile update failed";
             toast.error(msg, {
-                duration: 3000,
+                duration: 5000,
                 position: "bottom-left"
             });
             throw err;
@@ -485,6 +485,38 @@ export const AuthProvider = ({ children }) => {
 
 
 
+    const updateDOB = async (dob) => {
+        try {
+            // Format the date if it's a Date object
+            let formattedDOB = dob;
+            if (dob instanceof Date) {
+                const day = String(dob.getDate()).padStart(2, '0');
+                const month = String(dob.getMonth() + 1).padStart(2, '0');
+                const year = dob.getFullYear();
+                formattedDOB = `${day}/${month}/${year}`;
+            }
+
+            const res = await axiosInstance.patch("/users/update-dob", { dob: formattedDOB });
+            await fetchProfile(); // refresh user data
+
+            toast.success(res.data.message || "Date of birth updated successfully!", {
+                duration: 3000,
+                position: "bottom-left"
+            });
+            return res.data;
+        } catch (err) {
+            console.error("❌ Update DOB error:", err);
+            const msg = err?.response?.data?.message || "Date of birth update failed";
+            toast.error(msg, {
+                duration: 5000,
+                position: "bottom-left"
+            });
+            throw err;
+        }
+    };
+
+
+
 
     const value = {
         user,
@@ -508,6 +540,7 @@ export const AuthProvider = ({ children }) => {
         resetPasswordEmail,
         forgotPasswordPhone,
         resetPasswordPhone,
+        updateDOB,
         refreshProfile: fetchProfile
     };
 

@@ -11,6 +11,7 @@ import ProfileTab from "../Profile/ProfileSub/ProfileTab";
 import SecurityTab from "../Profile/ProfileSub/SecurityTab";
 import DangerZoneTab from "../Profile/ProfileSub/DangerZoneTab";
 import Popup from "../Profile/ProfileSub/Popup";
+import { getDominantColor, createGradientFromColor, createSimpleGradient, getTextColorForBackground } from "../../utils/colorExtractor";
 
 const Profile = () => {
     const {
@@ -24,7 +25,8 @@ const Profile = () => {
         verifyPhone,
         addSecondaryEmail,
         verifySecondaryEmail,
-        sendPrimaryEmailVerification
+        sendPrimaryEmailVerification,
+        updateDOB
     } = useAuth();
 
     const navigate = useNavigate();
@@ -33,6 +35,19 @@ const Profile = () => {
     const [activeTab, setActiveTab] = useState('profile');
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [isAvatarHovered, setIsAvatarHovered] = useState(false);
+    const [bannerColor, setBannerColor] = useState('linear-gradient(135deg, #6366f1, #8b5cf6)');
+    const [isExtractingColor, setIsExtractingColor] = useState(false);
+    const [textColor, setTextColor] = useState('#ffffff');
+    const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
+    const [lastProcessedAvatar, setLastProcessedAvatar] = useState(null);
+
+    // Replace the single isUpdating state with individual loading states
+    const [isUpdatingName, setIsUpdatingName] = useState(false);
+    const [isUpdatingAddress, setIsUpdatingAddress] = useState(false);
+    const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
+    const [isUpdatingSecondaryEmail, setIsUpdatingSecondaryEmail] = useState(false);
+    const [isUpdatingDOB, setIsUpdatingDOB] = useState(false);
+
 
     // Popup states
     const [showLogoutPopup, setShowLogoutPopup] = useState(false);
@@ -54,6 +69,7 @@ const Profile = () => {
         }
     });
 
+
     const [phoneData, setPhoneData] = useState({
         phone: '',
         otp: '',
@@ -71,6 +87,50 @@ const Profile = () => {
         newPassword: '',
         confirmPassword: ''
     });
+
+    // Extract color from avatar only when it actually changes
+    useEffect(() => {
+        const extractColorFromAvatar = async () => {
+            // Skip if no user, same avatar, or already processing
+            if (!user?.avatar || user.avatar === lastProcessedAvatar || isExtractingColor) {
+                return;
+            }
+
+            setIsExtractingColor(true);
+            try {
+                const avatarUrl = user.avatar.startsWith('http')
+                    ? user.avatar + '?t=' + Date.now() // Cache busting for initial load
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=6366f1&color=ffffff&size=128`;
+
+                const dominantColor = await getDominantColor(avatarUrl);
+
+                // Try creating gradient, fall back to simple gradient if needed
+                let gradient;
+                try {
+                    gradient = createGradientFromColor(dominantColor);
+                } catch (error) {
+                    gradient = createSimpleGradient(dominantColor);
+                }
+
+                setBannerColor(gradient);
+
+                // Calculate optimal text color for contrast
+                const optimalTextColor = getTextColorForBackground(dominantColor);
+                setTextColor(optimalTextColor);
+
+                // Mark this avatar as processed
+                setLastProcessedAvatar(user.avatar);
+
+            } catch (error) {
+                console.log('Error extracting color, using default:', error);
+                // Don't change colors if extraction fails
+            } finally {
+                setIsExtractingColor(false);
+            }
+        };
+
+        extractColorFromAvatar();
+    }, [user?.avatar, user?.name]); // Only depend on avatar and name changes
 
     // Enhanced animations
     const containerVariants = {
@@ -135,6 +195,29 @@ const Profile = () => {
         }
     };
 
+    const bannerVariants = {
+        initial: { opacity: 0, scale: 1.05 },
+        animate: {
+            opacity: 1,
+            scale: 1,
+            transition: { duration: 0.8, ease: "easeOut" }
+        }
+    };
+
+    const colorExtractionVariants = {
+        initial: { scale: 0, opacity: 0 },
+        animate: {
+            scale: 1,
+            opacity: 1,
+            transition: { type: "spring", stiffness: 400, damping: 20 }
+        },
+        exit: {
+            scale: 0,
+            opacity: 0,
+            transition: { duration: 0.2 }
+        }
+    };
+
     // Check for email verification success
     useEffect(() => {
         const verified = searchParams.get('verified');
@@ -156,29 +239,58 @@ const Profile = () => {
         }
     };
 
+    // DOB Update Handler
+    const handleUpdateDOB = async () => {
+        setIsUpdatingDOB(true);
+        try {
+            await updateDOB(profileData.dob);
+            setEditingField(null);
+
+            // Refresh the profileData state with the updated user data
+            setProfileData(prev => ({
+                ...prev,
+                dob: user?.dob ? new Date(user.dob) : null // Use the updated user data from context
+            }));
+
+        } catch (error) {
+            // Error handled in AuthContext
+        } finally {
+            setIsUpdatingDOB(false);
+        }
+    };
+
     // Send OTP Handler
     const handleAddPhone = async () => {
         if (!phoneData.phone || phoneData.phone.length !== 10) {
             return;
         }
 
+        setIsUpdatingPhone(true);
         try {
             await addPhone(phoneData.phone);
             setPhoneData(prev => ({ ...prev, otpSent: true }));
-        } catch (error) { }
+        } catch (error) {
+            // Error handled in AuthContext
+        } finally {
+            setIsUpdatingPhone(false);
+        }
     };
 
-    // Verify OTP Handler
     const handleVerifyPhone = async () => {
         if (!phoneData.otp) {
             return;
         }
 
+        setIsUpdatingPhone(true);
         try {
             await verifyPhone(phoneData.otp);
             setPhoneData({ phone: '', otp: '', otpSent: false });
             setEditingField(null);
-        } catch (error) { }
+        } catch (error) {
+            // Error handled in AuthContext
+        } finally {
+            setIsUpdatingPhone(false);
+        }
     };
 
     // Secondary Email Handlers
@@ -196,11 +308,14 @@ const Profile = () => {
     };
 
     const handleAddSecondaryEmail = async () => {
+        setIsUpdatingSecondaryEmail(true);
         try {
             await addSecondaryEmail(emailData.secondaryEmail);
             setEmailData(prev => ({ ...prev, otpSent: true }));
         } catch (error) {
             // Error handled in AuthContext
+        } finally {
+            setIsUpdatingSecondaryEmail(false);
         }
     };
 
@@ -208,35 +323,44 @@ const Profile = () => {
         if (!emailData.otp) {
             return;
         }
+        setIsUpdatingSecondaryEmail(true);
         try {
             await verifySecondaryEmail(emailData.otp);
             setEmailData({ secondaryEmail: '', otp: '', otpSent: false });
             setEditingField(null);
         } catch (error) {
             // Error handled in AuthContext
+        } finally {
+            setIsUpdatingSecondaryEmail(false);
         }
     };
 
     // Profile Update Handlers
     const handleUpdateName = async () => {
+        setIsUpdatingName(true);
         try {
             await updateProfile({ name: profileData.name });
             setEditingField(null);
         } catch (error) {
             // Error handled in AuthContext
+        } finally {
+            setIsUpdatingName(false);
         }
     };
 
     const handleUpdateAddress = async () => {
+        setIsUpdatingAddress(true);
         try {
             await updateProfile({ address: profileData.address });
             setEditingField(null);
         } catch (error) {
             // Error handled in AuthContext
+        } finally {
+            setIsUpdatingAddress(false);
         }
     };
 
-    // Avatar Handlers
+    // Avatar Handlers with Fixed Color Sync
     const handleAvatarClick = () => {
         fileInputRef.current?.click();
     };
@@ -249,17 +373,24 @@ const Profile = () => {
                 toast.error("Please select a valid image file");
                 return;
             }
-            if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                toast.error("Image size should be less than 5MB");
-                return;
-            }
+
+            // Reset file input
+            e.target.value = '';
+
+            setIsUpdatingAvatar(true);
+            setIsExtractingColor(true);
 
             try {
+                // First, update the avatar with backend
                 const formData = new FormData();
                 formData.append("avatar", file);
                 await updateProfile(formData);
+
             } catch (error) {
-                // Error handled in AuthContext
+                console.log('Error updating avatar:', error);
+            } finally {
+                setIsExtractingColor(false);
+                setIsUpdatingAvatar(false);
             }
         }
     };
@@ -388,9 +519,47 @@ const Profile = () => {
                     variants={itemVariants}
                     className="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden"
                 >
-                    {/* Clean Profile Header with Rounded Avatar */}
-                    <div className="relative bg-linear-to-r from-indigo-500 to-purple-600 p-8">
-                        <div className="flex flex-col md:flex-row items-center gap-8">
+                    {/* Dynamic Banner with Fixed Color Extraction */}
+                    <motion.div
+                        className="relative p-8 transition-all duration-1000 ease-in-out overflow-hidden"
+                        style={{
+                            background: bannerColor,
+                            color: textColor
+                        }}
+                        variants={bannerVariants}
+                        initial="initial"
+                        animate="animate"
+                    >
+                        {/* Animated background pattern */}
+                        <div className="absolute inset-0 opacity-10">
+                            <div className="absolute inset-0 bg-linear-to-br from-white/20 to-transparent"></div>
+                            <div className="absolute bottom-0 right-0 w-64 h-64 bg-white/10 rounded-full -mb-32 -mr-32"></div>
+                            <div className="absolute top-0 left-0 w-48 h-48 bg-white/10 rounded-full -mt-24 -ml-24"></div>
+                        </div>
+
+                        {/* Avatar Update Loader - Shows during entire update process */}
+                        <AnimatePresence>
+                            {(isExtractingColor || isUpdatingAvatar) && (
+                                <motion.div
+                                    variants={colorExtractionVariants}
+                                    initial="initial"
+                                    animate="animate"
+                                    exit="exit"
+                                    className="absolute top-4 right-4 bg-black/20 text-white px-3 py-2 rounded-full flex items-center gap-2 backdrop-blur-sm border border-white/20"
+                                >
+                                    <motion.div
+                                        animate={{ rotate: 360 }}
+                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                        className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full"
+                                    />
+                                    <span className="text-sm font-medium">
+                                        Updating Image...
+                                    </span>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <div className="relative flex flex-col md:flex-row items-center gap-8">
                             {/* Enhanced Rounded Avatar with Centered Image */}
                             <motion.div
                                 className="relative group"
@@ -421,7 +590,6 @@ const Profile = () => {
                                         }}
                                     />
 
-
                                     {/* Enhanced Edit Overlay */}
                                     <AnimatePresence>
                                         {isAvatarHovered && (
@@ -429,7 +597,7 @@ const Profile = () => {
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
                                                 exit={{ opacity: 0 }}
-                                                className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full"
+                                                className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full cursor-pointer"
                                                 transition={{ duration: 0.2 }}
                                             >
                                                 <motion.div
@@ -450,12 +618,11 @@ const Profile = () => {
                                     whileHover={{ scale: 1.1, rotate: 15 }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={handleAvatarClick}
-                                    className="absolute -bottom-2 -right-2 bg-white text-indigo-600 p-2 rounded-full shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200"
+                                    disabled={isUpdatingAvatar}
+                                    className="absolute -bottom-2 -right-2 bg-white text-gray-700 p-2 rounded-full shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <FaEdit className="w-4 h-4" />
                                 </motion.button>
-
-
                             </motion.div>
 
                             {/* User Info */}
@@ -464,7 +631,8 @@ const Profile = () => {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 0.3 }}
-                                    className="text-3xl font-bold text-white mb-2"
+                                    className="text-3xl font-bold mb-2"
+                                    style={{ color: textColor }}
                                 >
                                     {user.name}
                                 </motion.h2>
@@ -472,7 +640,8 @@ const Profile = () => {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 0.4 }}
-                                    className="text-indigo-100 text-lg mb-4"
+                                    className="text-lg mb-4 opacity-90"
+                                    style={{ color: textColor }}
                                 >
                                     {user.email}
                                 </motion.p>
@@ -485,7 +654,8 @@ const Profile = () => {
                                     {user.isEmailVerified && (
                                         <motion.span
                                             variants={badgeVariants}
-                                            className="bg-white/20 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm"
+                                            className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-white/30"
+                                            style={{ color: textColor }}
                                         >
                                             ✅ Email Verified
                                         </motion.span>
@@ -493,14 +663,16 @@ const Profile = () => {
                                     {user.isPhoneVerified && (
                                         <motion.span
                                             variants={badgeVariants}
-                                            className="bg-white/20 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm"
+                                            className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-white/30"
+                                            style={{ color: textColor }}
                                         >
                                             📱 Phone Verified
                                         </motion.span>
                                     )}
                                     <motion.span
                                         variants={badgeVariants}
-                                        className="bg-white/20 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm"
+                                        className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-white/30"
+                                        style={{ color: textColor }}
                                     >
                                         👤 Member since {new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                                     </motion.span>
@@ -515,8 +687,9 @@ const Profile = () => {
                             onChange={handleAvatarChange}
                             accept="image/*"
                             className="hidden"
+                            disabled={isUpdatingAvatar}
                         />
-                    </div>
+                    </motion.div>
 
                     {/* Enhanced Tabs */}
                     <motion.div
@@ -576,6 +749,12 @@ const Profile = () => {
                                         onAddSecondaryEmail={handleAddSecondaryEmail}
                                         onVerifySecondaryEmail={handleVerifySecondaryEmail}
                                         onSendPrimaryEmailVerification={handleSendPrimaryEmailVerification}
+                                        onUpdateDOB={handleUpdateDOB}
+                                        isUpdatingName={isUpdatingName}
+                                        isUpdatingAddress={isUpdatingAddress}
+                                        isUpdatingPhone={isUpdatingPhone}
+                                        isUpdatingSecondaryEmail={isUpdatingSecondaryEmail}
+                                        isUpdatingDOB={isUpdatingDOB}
                                     />
                                 </motion.div>
                             )}

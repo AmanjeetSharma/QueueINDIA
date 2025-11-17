@@ -1,5 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { FaEdit, FaSave, FaTimes, FaUser, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCheckCircle, FaExclamationTriangle, FaKey } from "react-icons/fa";
+import { FaCalendarAlt, FaEdit, FaSave, FaTimes, FaUser, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCheckCircle, FaExclamationTriangle, FaKey, FaBirthdayCake } from "react-icons/fa";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const ProfileTab = ({
     user,
@@ -17,7 +19,13 @@ const ProfileTab = ({
     setEmailData,
     onAddSecondaryEmail,
     onVerifySecondaryEmail,
-    onSendPrimaryEmailVerification
+    onSendPrimaryEmailVerification,
+    onUpdateDOB, // New prop for updating date of birth
+    isUpdatingName,
+    isUpdatingAddress,
+    isUpdatingPhone,
+    isUpdatingSecondaryEmail,
+    isUpdatingDOB // New prop for DOB updating state
 }) => {
     // Safe access to user properties with fallbacks
     const safeUser = {
@@ -28,13 +36,15 @@ const ProfileTab = ({
         isPhoneVerified: user?.isPhoneVerified || false,
         secondaryEmail: user?.secondaryEmail || '',
         secondaryEmailVerified: user?.secondaryEmailVerified || false,
+        dob: user?.dob ? new Date(user.dob) : null, // Convert string to Date object
         address: user?.address || {
             street: '',
             city: '',
             state: '',
             zipCode: '',
             country: ''
-        }
+        },
+        dob: user?.dob ? new Date(user.dob) : null
     };
 
     // Initialize phone data with current user phone when editing starts
@@ -56,6 +66,40 @@ const ProfileTab = ({
         });
         setEditingField('secondaryEmail');
     };
+
+    // Handle DOB date change
+    const handleDOBChange = (date) => {
+        setProfileData({
+            ...profileData,
+            dob: date
+        });
+    };
+
+    // Format date for display
+    const formatDate = (date) => {
+        if (!date) return '';
+        return new Date(date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    // Calculate age from DOB
+    const calculateAge = (dob) => {
+        if (!dob) return null;
+        const today = new Date();
+        const birthDate = new Date(dob);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    const userAge = safeUser.dob ? calculateAge(safeUser.dob) : null;
 
     return (
         <div className="space-y-6">
@@ -83,17 +127,28 @@ const ProfileTab = ({
                         <div className="flex gap-2 w-full sm:w-auto">
                             <button
                                 onClick={() => setEditingField(null)}
-                                className="flex items-center gap-2 text-gray-600 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center"
+                                disabled={isUpdatingName} // Disable cancel while updating
+                                className="flex items-center gap-2 text-gray-600 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center"
                             >
                                 <FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />
                                 Cancel
                             </button>
                             <button
                                 onClick={onUpdateName}
-                                className="flex items-center gap-2 text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center"
+                                disabled={isUpdatingName || !profileData.name?.trim()} // Disable if updating or empty name
+                                className="flex items-center gap-2 text-white bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center"
                             >
-                                <FaSave className="w-3 h-3 sm:w-4 sm:h-4" />
-                                Save
+                                {isUpdatingName ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white"></div>
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FaSave className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        Save
+                                    </>
+                                )}
                             </button>
                         </div>
                     )}
@@ -109,12 +164,158 @@ const ProfileTab = ({
                             type="text"
                             value={profileData.name}
                             onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                            className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                            disabled={isUpdatingName} // Disable input while updating
+                            className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                             placeholder="Enter your full name"
                         />
+                        {isUpdatingName && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="flex items-center gap-2 mt-2 text-indigo-600 text-xs"
+                            >
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-indigo-600"></div>
+                                Updating your name...
+                            </motion.div>
+                        )}
                     </motion.div>
                 ) : (
-                    <p className="text-gray-900 text-base sm:text-lg font-medium">{safeUser.name}</p>
+                    <div className="flex items-center justify-between">
+                        <p className="text-gray-900 text-base sm:text-lg font-medium">{safeUser.name}</p>
+                        {isUpdatingName && (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Date of Birth Field */}
+            <div className="bg-linear-to-r from-white to-white rounded-xl p-4 sm:p-6 border border-pink-100 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-pink-100 rounded-lg">
+                            <FaBirthdayCake className="text-pink-600 w-4 h-4 sm:w-5 sm:h-5" />
+                        </div>
+                        <div>
+                            <h4 className="text-base sm:text-lg font-semibold text-gray-900">Date of Birth</h4>
+                            <p className="text-xs sm:text-sm text-gray-500">Your Age {`: ${userAge} years old`}</p>
+                        </div>
+                    </div>
+                    {editingField !== 'dob' ? (
+                        <button
+                            onClick={() => setEditingField('dob')}
+                            className="flex items-center gap-2 text-pink-600 hover:text-pink-700 bg-pink-50 hover:bg-pink-100 px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 w-full sm:w-auto justify-center"
+                        >
+                            <FaEdit className="w-3 h-3 sm:w-4 sm:h-4" />
+                            {safeUser.dob ? "Edit" : "Add DOB"}
+                        </button>
+                    ) : (
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <button
+                                onClick={() => setEditingField(null)}
+                                className="flex items-center gap-2 text-gray-600 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center"
+                            >
+                                <FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />
+                                Cancel
+                            </button>
+                            <button
+                                onClick={onUpdateDOB}
+                                disabled={!profileData.dob}
+                                className="flex items-center gap-2 text-white bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center"
+                            >
+                                <FaSave className="w-3 h-3 sm:w-4 sm:h-4" />
+                                Save
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {editingField === 'dob' ? (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-4"
+                    >
+                        <div className="flex flex-col sm:flex-row gap-4 items-start">
+                            <div className="flex-1 relative">
+                                <DatePicker
+                                    selected={profileData.dob}
+                                    onChange={handleDOBChange}
+                                    dateFormat="dd/MM/yyyy"
+                                    showYearDropdown
+                                    showMonthDropdown
+                                    dropdownMode="select"
+                                    yearDropdownItemNumber={100}
+                                    scrollableYearDropdown
+                                    maxDate={new Date()}
+                                    minDate={new Date(new Date().getFullYear() - 100, 0, 1)}
+                                    placeholderText="dd/mm/yyyy"
+                                    className="w-full p-3 pl-10 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all duration-200"
+                                    isClearable
+                                    withPortal
+                                    popperClassName="z-50"
+                                    popperPlacement="bottom-start"
+                                />
+                                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                    <FaCalendarAlt className="w-4 h-4" />
+                                </div>
+                            </div>
+
+                            {profileData.dob && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 min-w-[120px] text-center"
+                                >
+                                    <p className="text-xs text-green-600 font-semibold">
+                                        {calculateAge(profileData.dob)} years old
+                                    </p>
+                                </motion.div>
+                            )}
+                        </div>
+
+                        {/* Validation messages */}
+                        {profileData.dob && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className={`text-xs font-medium ${calculateAge(profileData.dob) < 13
+                                    ? 'text-red-600 bg-red-50 border border-red-200 p-2 rounded-lg'
+                                    : 'text-green-600 bg-green-50 border border-green-200 p-2 rounded-lg'
+                                    }`}
+                            >
+                                {calculateAge(profileData.dob) < 13
+                                    ? '⚠️ You must be at least 13 years old to use this service'
+                                    : '✓ Age requirement satisfied'
+                                }
+                            </motion.div>
+                        )}
+                    </motion.div>
+                ) : (
+                    <div className="text-gray-700">
+                        {safeUser.dob ? (
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div>
+                                    <p className="text-lg sm:text-xl font-semibold text-gray-900">
+                                        {formatDate(safeUser.dob)}
+                                    </p>
+                                    <p className="text-pink-600 font-medium text-sm sm:text-base">
+                                        {userAge} years old
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
+                                    <FaCheckCircle className="w-3 h-3" />
+                                    Verified
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-gray-500 bg-gray-100 p-4 rounded-lg text-center">
+                                <FaBirthdayCake className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-gray-400" />
+                                <p className="text-sm">No date of birth added</p>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 
@@ -179,7 +380,7 @@ const ProfileTab = ({
             )}
 
             {/* Phone Verification */}
-            <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+            <div className="bg-linear-to-r from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-purple-50 rounded-lg">
@@ -194,7 +395,8 @@ const ProfileTab = ({
                     {editingField !== 'phone' && (
                         <button
                             onClick={handleEditPhone}
-                            className="flex items-center gap-2 text-purple-600 hover:text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 w-full sm:w-auto justify-center"
+                            disabled={isUpdatingPhone}
+                            className="flex items-center gap-2 text-purple-600 hover:text-purple-700 bg-purple-50 hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 w-full sm:w-auto justify-center"
                         >
                             <FaEdit className="w-3 h-3 sm:w-4 sm:h-4" />
                             {safeUser.phone ? "Edit / Verify" : "Add Phone"}
@@ -204,23 +406,33 @@ const ProfileTab = ({
 
                 {/* Status Display */}
                 {safeUser.isPhoneVerified ? (
-                    <div className="flex items-center gap-3 text-green-600 bg-green-50 p-3 rounded-lg">
-                        <FaCheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm sm:text-base">Verified Phone Number</p>
-                            <p className="text-xs sm:text-sm truncate">{safeUser.phone}</p>
+                    <div className="flex items-center justify-between gap-3 text-green-600 bg-green-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <FaCheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm sm:text-base">Verified Phone Number</p>
+                                <p className="text-xs sm:text-sm truncate">{safeUser.phone}</p>
+                            </div>
                         </div>
+                        {isUpdatingPhone && (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                        )}
                     </div>
                 ) : safeUser.phone ? (
-                    <div className="flex items-center gap-3 text-amber-600 bg-amber-50 p-3 rounded-lg">
-                        <FaExclamationTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm sm:text-base">Phone Not Verified</p>
-                            <p className="text-xs sm:text-sm truncate">{safeUser.phone}</p>
+                    <div className="flex items-center justify-between gap-3 text-amber-600 bg-amber-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <FaExclamationTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm sm:text-base">Phone Not Verified</p>
+                                <p className="text-xs sm:text-sm truncate">{safeUser.phone}</p>
+                            </div>
                         </div>
+                        {isUpdatingPhone && (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
+                        )}
                     </div>
                 ) : (
-                    <div className="text-gray-500 bg-gray-50 p-4 rounded-lg text-center">
+                    <div className="text-gray-500 bg-gray-100 p-4 rounded-lg text-center">
                         <FaPhone className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-gray-400" />
                         <p className="text-sm">No phone number added</p>
                     </div>
@@ -251,23 +463,35 @@ const ProfileTab = ({
                                             setPhoneData({ ...phoneData, phone: value });
                                         }}
                                         placeholder="Enter 10-digit phone number"
-                                        className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                                        className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                         maxLength={10}
+                                        disabled={phoneData.otpSent || isUpdatingPhone}
                                     />
                                 </div>
 
                                 <div className="flex gap-2 sm:gap-3">
                                     <button
                                         onClick={onAddPhone}
-                                        disabled={!phoneData.phone || phoneData.phone.length !== 10}
-                                        className="bg-blue-500 text-white px-4 py-3 sm:px-6 sm:py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex-1 sm:flex-none justify-center text-sm sm:text-base"
+                                        disabled={!phoneData.phone || phoneData.phone.length !== 10 || isUpdatingPhone}
+                                        className="flex items-center gap-2 bg-blue-500 text-white px-4 py-3 sm:px-6 sm:py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex-1 sm:flex-none justify-center text-sm sm:text-base"
                                     >
-                                        Send OTP
+                                        {isUpdatingPhone ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white"></div>
+                                                Sending...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FaKey className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                Send OTP
+                                            </>
+                                        )}
                                     </button>
 
                                     <button
                                         onClick={() => setEditingField(null)}
-                                        className="px-4 py-3 sm:px-6 sm:py-3 text-gray-600 hover:text-gray-800 border-2 border-gray-200 hover:border-gray-300 rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center text-sm sm:text-base"
+                                        disabled={isUpdatingPhone}
+                                        className="px-4 py-3 sm:px-6 sm:py-3 text-gray-600 hover:text-gray-800 border-2 border-gray-200 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center text-sm sm:text-base"
                                     >
                                         Cancel
                                     </button>
@@ -291,22 +515,45 @@ const ProfileTab = ({
                                                     setPhoneData({ ...phoneData, otp: value });
                                                 }}
                                                 placeholder="Enter OTP"
-                                                className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
+                                                className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 maxLength={6}
+                                                disabled={isUpdatingPhone}
                                             />
                                         </div>
 
                                         <button
                                             onClick={onVerifyPhone}
-                                            disabled={!phoneData.otp || phoneData.otp.length !== 6}
-                                            className="bg-green-500 text-white px-4 py-3 sm:px-6 sm:py-3 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base"
+                                            disabled={!phoneData.otp || phoneData.otp.length !== 6 || isUpdatingPhone}
+                                            className="flex items-center gap-2 bg-green-500 text-white px-4 py-3 sm:px-6 sm:py-3 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base"
                                         >
-                                            Verify
+                                            {isUpdatingPhone ? (
+                                                <>
+                                                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white"></div>
+                                                    Verifying...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FaCheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                    Verify
+                                                </>
+                                            )}
                                         </button>
                                     </div>
                                     <p className="text-xs sm:text-sm text-gray-500">
                                         Enter the 6-digit OTP sent to your phone
                                     </p>
+                                </motion.div>
+                            )}
+
+                            {/* Loading indicator */}
+                            {isUpdatingPhone && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="flex items-center gap-2 text-purple-600 text-xs"
+                                >
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-600"></div>
+                                    Processing your request...
                                 </motion.div>
                             )}
                         </motion.div>
@@ -315,7 +562,7 @@ const ProfileTab = ({
             </div>
 
             {/* Secondary Email */}
-            <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+            <div className="bg-linear-to-r from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-orange-50 rounded-lg">
@@ -329,7 +576,8 @@ const ProfileTab = ({
                     {editingField !== 'secondaryEmail' && (
                         <button
                             onClick={handleEditEmail}
-                            className="flex items-center gap-2 text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 w-full sm:w-auto justify-center"
+                            disabled={isUpdatingSecondaryEmail}
+                            className="flex items-center gap-2 text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 w-full sm:w-auto justify-center"
                         >
                             <FaEdit className="w-3 h-3 sm:w-4 sm:h-4" />
                             {safeUser.secondaryEmail ? "Change Email" : "Add Email"}
@@ -338,23 +586,33 @@ const ProfileTab = ({
                 </div>
 
                 {safeUser.secondaryEmailVerified ? (
-                    <div className="flex items-center gap-3 text-green-600 bg-green-50 p-3 rounded-lg">
-                        <FaCheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm sm:text-base">Verified Secondary Email</p>
-                            <p className="text-xs sm:text-sm break-all">{safeUser.secondaryEmail}</p>
+                    <div className="flex items-center justify-between gap-3 text-green-600 bg-green-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <FaCheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm sm:text-base">Verified Secondary Email</p>
+                                <p className="text-xs sm:text-sm break-all">{safeUser.secondaryEmail}</p>
+                            </div>
                         </div>
+                        {isUpdatingSecondaryEmail && (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                        )}
                     </div>
                 ) : safeUser.secondaryEmail ? (
-                    <div className="flex items-center gap-3 text-amber-600 bg-amber-50 p-3 rounded-lg">
-                        <FaExclamationTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm sm:text-base">Email Not Verified</p>
-                            <p className="text-xs sm:text-sm break-all">{safeUser.secondaryEmail}</p>
+                    <div className="flex items-center justify-between gap-3 text-amber-600 bg-amber-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <FaExclamationTriangle className="w-4 h-4 sm:w-5 sm:w-5" />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm sm:text-base">Email Not Verified</p>
+                                <p className="text-xs sm:text-sm break-all">{safeUser.secondaryEmail}</p>
+                            </div>
                         </div>
+                        {isUpdatingSecondaryEmail && (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
+                        )}
                     </div>
                 ) : (
-                    <div className="text-gray-500 bg-gray-50 p-4 rounded-lg text-center">
+                    <div className="text-gray-500 bg-gray-100 p-4 rounded-lg text-center">
                         <FaEnvelope className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-gray-400" />
                         <p className="text-sm">No secondary email added</p>
                     </div>
@@ -382,8 +640,8 @@ const ProfileTab = ({
                                         value={emailData.secondaryEmail}
                                         onChange={(e) => setEmailData({ ...emailData, secondaryEmail: e.target.value })}
                                         placeholder="Enter secondary email address"
-                                        className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                                        disabled={emailData.otpSent}
+                                        className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled={emailData.otpSent || isUpdatingSecondaryEmail}
                                     />
                                 </div>
 
@@ -392,11 +650,20 @@ const ProfileTab = ({
                                     {!emailData.otpSent && (
                                         <button
                                             onClick={onAddSecondaryEmail}
-                                            disabled={!emailData.secondaryEmail}
+                                            disabled={!emailData.secondaryEmail || isUpdatingSecondaryEmail}
                                             className="flex items-center gap-2 bg-blue-500 text-white px-4 py-3 sm:px-6 sm:py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex-1 sm:flex-none justify-center text-sm sm:text-base"
                                         >
-                                            <FaKey className="w-3 h-3 sm:w-4 sm:h-4" />
-                                            Verify Email
+                                            {isUpdatingSecondaryEmail ? (
+                                                <>
+                                                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white"></div>
+                                                    Sending...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FaKey className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                    Verify Email
+                                                </>
+                                            )}
                                         </button>
                                     )}
 
@@ -405,7 +672,8 @@ const ProfileTab = ({
                                             setEditingField(null);
                                             setEmailData({ secondaryEmail: '', otp: '', otpSent: false });
                                         }}
-                                        className="px-4 py-3 sm:px-6 sm:py-3 text-gray-600 hover:text-gray-800 border-2 border-gray-200 hover:border-gray-300 rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center text-sm sm:text-base"
+                                        disabled={isUpdatingSecondaryEmail}
+                                        className="px-4 py-3 sm:px-6 sm:py-3 text-gray-600 hover:text-gray-800 border-2 border-gray-200 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center text-sm sm:text-base"
                                     >
                                         Cancel
                                     </button>
@@ -435,17 +703,27 @@ const ProfileTab = ({
                                                     setEmailData({ ...emailData, otp: value });
                                                 }}
                                                 placeholder="Enter 6-digit OTP"
-                                                className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
+                                                className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 maxLength={6}
+                                                disabled={isUpdatingSecondaryEmail}
                                             />
                                         </div>
                                         <button
                                             onClick={onVerifySecondaryEmail}
-                                            disabled={!emailData.otp || emailData.otp.length !== 6}
+                                            disabled={!emailData.otp || emailData.otp.length !== 6 || isUpdatingSecondaryEmail}
                                             className="flex items-center gap-2 bg-green-500 text-white px-4 py-3 sm:px-6 sm:py-3 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base"
                                         >
-                                            <FaCheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                                            Verify OTP
+                                            {isUpdatingSecondaryEmail ? (
+                                                <>
+                                                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white"></div>
+                                                    Verifying...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FaCheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                    Verify OTP
+                                                </>
+                                            )}
                                         </button>
                                     </div>
 
@@ -453,11 +731,24 @@ const ProfileTab = ({
                                     <div className="flex justify-center">
                                         <button
                                             onClick={onAddSecondaryEmail}
-                                            className="text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium transition-colors duration-200"
+                                            disabled={isUpdatingSecondaryEmail}
+                                            className="text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium transition-colors duration-200"
                                         >
                                             Resend OTP
                                         </button>
                                     </div>
+                                </motion.div>
+                            )}
+
+                            {/* Loading indicator */}
+                            {isUpdatingSecondaryEmail && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="flex items-center gap-2 text-orange-600 text-xs"
+                                >
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-orange-600"></div>
+                                    Processing your request...
                                 </motion.div>
                             )}
                         </motion.div>
@@ -466,7 +757,7 @@ const ProfileTab = ({
             </div>
 
             {/* Address Section */}
-            <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+            <div className="bg-linear-to-r from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-teal-50 rounded-lg">
@@ -489,17 +780,28 @@ const ProfileTab = ({
                         <div className="flex gap-2 w-full sm:w-auto">
                             <button
                                 onClick={() => setEditingField(null)}
-                                className="flex items-center gap-2 text-gray-600 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center"
+                                disabled={isUpdatingAddress}
+                                className="flex items-center gap-2 text-gray-600 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center"
                             >
                                 <FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />
                                 Cancel
                             </button>
                             <button
                                 onClick={onUpdateAddress}
-                                className="flex items-center gap-2 text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center"
+                                disabled={isUpdatingAddress}
+                                className="flex items-center gap-2 text-white bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 rounded-lg transition-all duration-200 flex-1 sm:flex-none justify-center"
                             >
-                                <FaSave className="w-3 h-3 sm:w-4 sm:h-4" />
-                                Save
+                                {isUpdatingAddress ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white"></div>
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FaSave className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        Save
+                                    </>
+                                )}
                             </button>
                         </div>
                     )}
@@ -510,96 +812,119 @@ const ProfileTab = ({
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="grid grid-cols-1 gap-3 sm:gap-4"
+                        className="space-y-4"
                     >
-                        <div>
-                            <input
-                                type="text"
-                                value={profileData.address?.street || ''}
-                                onChange={(e) => setProfileData({
-                                    ...profileData,
-                                    address: {
-                                        ...profileData.address,
-                                        street: e.target.value
-                                    }
-                                })}
-                                placeholder="Street Address"
-                                className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200"
-                            />
+                        <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                            <div>
+                                <input
+                                    type="text"
+                                    value={profileData.address?.street || ''}
+                                    onChange={(e) => setProfileData({
+                                        ...profileData,
+                                        address: {
+                                            ...profileData.address,
+                                            street: e.target.value
+                                        }
+                                    })}
+                                    disabled={isUpdatingAddress}
+                                    placeholder="Street Address"
+                                    className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                <input
+                                    type="text"
+                                    value={profileData.address?.city || ''}
+                                    onChange={(e) => setProfileData({
+                                        ...profileData,
+                                        address: {
+                                            ...profileData.address,
+                                            city: e.target.value
+                                        }
+                                    })}
+                                    disabled={isUpdatingAddress}
+                                    placeholder="City"
+                                    className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                />
+
+                                <input
+                                    type="text"
+                                    value={profileData.address?.state || ''}
+                                    onChange={(e) => setProfileData({
+                                        ...profileData,
+                                        address: {
+                                            ...profileData.address,
+                                            state: e.target.value
+                                        }
+                                    })}
+                                    disabled={isUpdatingAddress}
+                                    placeholder="State"
+                                    className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                <input
+                                    type="text"
+                                    value={profileData.address?.zipCode || ''}
+                                    onChange={(e) => setProfileData({
+                                        ...profileData,
+                                        address: {
+                                            ...profileData.address,
+                                            zipCode: e.target.value
+                                        }
+                                    })}
+                                    disabled={isUpdatingAddress}
+                                    placeholder="ZIP Code"
+                                    className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                />
+
+                                <input
+                                    type="text"
+                                    value={profileData.address?.country}
+                                    onChange={(e) => setProfileData({
+                                        ...profileData,
+                                        address: {
+                                            ...profileData.address,
+                                            country: e.target.value
+                                        }
+                                    })}
+                                    disabled={isUpdatingAddress}
+                                    placeholder="Country"
+                                    className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                />
+                            </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                            <input
-                                type="text"
-                                value={profileData.address?.city || ''}
-                                onChange={(e) => setProfileData({
-                                    ...profileData,
-                                    address: {
-                                        ...profileData.address,
-                                        city: e.target.value
-                                    }
-                                })}
-                                placeholder="City"
-                                className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200"
-                            />
-
-                            <input
-                                type="text"
-                                value={profileData.address?.state || ''}
-                                onChange={(e) => setProfileData({
-                                    ...profileData,
-                                    address: {
-                                        ...profileData.address,
-                                        state: e.target.value
-                                    }
-                                })}
-                                placeholder="State"
-                                className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                            <input
-                                type="text"
-                                value={profileData.address?.zipCode || ''}
-                                onChange={(e) => setProfileData({
-                                    ...profileData,
-                                    address: {
-                                        ...profileData.address,
-                                        zipCode: e.target.value
-                                    }
-                                })}
-                                placeholder="ZIP Code"
-                                className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200"
-                            />
-
-                            <input
-                                type="text"
-                                value={profileData.address?.country}
-                                onChange={(e) => setProfileData({
-                                    ...profileData,
-                                    address: {
-                                        ...profileData.address,
-                                        country: e.target.value
-                                    }
-                                })}
-                                placeholder="Country"
-                                className="w-full p-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200"
-                            />
-                        </div>
+                        {isUpdatingAddress && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="flex items-center gap-2 text-teal-600 text-xs"
+                            >
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-teal-600"></div>
+                                Updating your address...
+                            </motion.div>
+                        )}
                     </motion.div>
                 ) : (
                     <div className="text-gray-700 space-y-2">
                         {safeUser.address?.street ? (
-                            <div className="space-y-1">
-                                <p className="font-medium text-sm sm:text-base">{safeUser.address.street}</p>
-                                <p className="text-gray-600 text-xs sm:text-sm">
-                                    {safeUser.address.city}, {safeUser.address.state} {safeUser.address.zipCode}
-                                </p>
-                                <p className="text-gray-500 text-xs sm:text-sm">{safeUser.address.country}</p>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <p className="font-medium text-sm sm:text-base">{safeUser.address.street}</p>
+                                    <p className="text-gray-600 text-xs sm:text-sm">
+                                        {safeUser.address.city}, {safeUser.address.state} {safeUser.address.zipCode}
+                                    </p>
+                                    <p className="text-gray-500 text-xs sm:text-sm">{safeUser.address.country}</p>
+                                </div>
+                                {isUpdatingAddress && (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-teal-600"></div>
+                                )}
                             </div>
                         ) : (
-                            <div className="text-gray-500 bg-gray-50 p-4 rounded-lg text-center">
+                            <div className="text-gray-500 bg-gray-100 p-4 rounded-lg text-center">
                                 <FaMapMarkerAlt className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-gray-400" />
                                 <p className="text-sm">No address added</p>
                             </div>

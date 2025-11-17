@@ -15,7 +15,7 @@ import {
   FaConciergeBell,
   FaEnvelope,
   FaIdCard,
-  FaCalendarAlt
+  FaCogs
 } from "react-icons/fa";
 
 const Navbar = () => {
@@ -66,6 +66,7 @@ const Navbar = () => {
     { to: "/", label: "Home", icon: FaHome },
     { to: "/pricing", label: "Pricing", icon: FaDollarSign },
     { to: "/services", label: "Services", icon: FaConciergeBell },
+
   ];
 
   const dropdownVariants = {
@@ -279,6 +280,18 @@ const Navbar = () => {
                             <FaIdCard className="w-4 h-4 text-indigo-600" />
                           </div>
                           <span>Profile</span>
+                        </Link>
+                      </motion.div>
+                      <motion.div variants={itemVariants}>
+                        <Link
+                          to="/admin"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                            <FaCogs  className="w-4 h-4 text-red-600" />
+                          </div>
+                          <span>Admin Panel</span>
                         </Link>
                       </motion.div>
 

@@ -92,7 +92,7 @@ const updateProfile = asyncHandler(async (req, res) => {
     const avatarFile = req?.files?.avatar?.[0];
     if (avatarFile && !avatarValidator(avatarFile)) {
         fs.unlinkSync(avatarFile.path);
-        throw new ApiError(400, "Invalid avatar: only JPEG/PNG/WebP up to 5 MB allowed");
+        throw new ApiError(400, "Invalid avatar: only JPEG/PNG/WebP up to 2 MB allowed");
     }
 
     // ✅ Update allowed fields
@@ -145,7 +145,7 @@ const updateProfile = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, updatedUser, "✅ Profile updated successfully"));
+        .json(new ApiResponse(200, updatedUser, "Profile updated successfully"));
 });
 
 
@@ -516,6 +516,63 @@ const verifyEmail = asyncHandler(async (req, res) => {
 
 
 
+const updateDOB = asyncHandler(async (req, res) => {
+    const userId = req.user?._id;
+    const { dob } = req.body;
+
+    if (!dob) {
+        throw new ApiError(400, "Date of birth is required");
+    }
+
+    // dd/mm/yyyy → [dd, mm, yyyy]
+    const [day, month, year] = dob.split("/");
+
+    // Validate format
+    if (!day || !month || !year || year.length !== 4) {
+        throw new ApiError(400, "Invalid DOB format. Use dd/mm/yyyy");
+    }
+
+    const parsedDate = new Date(`${year}-${month}-${day}`);
+
+    // Validate valid date
+    if (isNaN(parsedDate.getTime())) {
+        throw new ApiError(400, "Invalid date value");
+    }
+
+    // No future DOB
+    if (parsedDate > new Date()) {
+        throw new ApiError(400, "DOB cannot be in the future");
+    }
+
+    // Optional: age check (remove if not needed)
+    const age = new Date().getFullYear() - parsedDate.getFullYear();
+    if (age < 0 || age > 120) {
+        throw new ApiError(400, "Entered DOB results in invalid age");
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { dob: parsedDate },
+        { new: true }
+    ).select("-password");
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            { user: updatedUser },
+            "Date of Birth updated successfully"
+        )
+    );
+});
+
+
+
+
+
+
+
+
+
 
 
 export {
@@ -529,5 +586,6 @@ export {
     addSecondaryEmail,
     verifySecondaryEmail,
     sendVerificationEmail,
-    verifyEmail
+    verifyEmail,
+    updateDOB
 };

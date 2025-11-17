@@ -2,7 +2,7 @@ import express from "express";
 import { verifyToken, authorizeRoles } from "../middlewares/auth.middleware.js";
 import { getProfile } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
-import { updateProfile, changePassword, deleteAccount, listUserSessions, addPhone, verifyPhone, addSecondaryEmail, verifySecondaryEmail } from "../controllers/user.controller.js";
+import { updateProfile, changePassword, deleteAccount, listUserSessions, addPhone, verifyPhone, addSecondaryEmail, verifySecondaryEmail, updateDOB } from "../controllers/user.controller.js";
 import { sendVerificationEmail, verifyEmail } from "../controllers/user.controller.js";
 
 const router = express.Router();
@@ -12,6 +12,7 @@ router.patch("/update-profile", verifyToken, upload.fields([{ name: "avatar", ma
 router.patch("/change-password", verifyToken, changePassword);
 router.delete("/delete-account", verifyToken, deleteAccount);
 router.get("/sessions", verifyToken, listUserSessions);
+router.patch("/update-dob", verifyToken, updateDOB);
 
 // Phone number routes
 router.post("/phone/add", verifyToken, addPhone);

@@ -29,6 +29,7 @@ const generateAccessToken = (user) => {
 
 
 const generateRefreshToken = (userId, sessionId) => {
+    console.log("refresh token expires in:", process.env.REFRESH_TOKEN_EXPIRE);
     return jwt.sign(
         { id: userId, sessionId },
         process.env.REFRESH_TOKEN_SECRET,

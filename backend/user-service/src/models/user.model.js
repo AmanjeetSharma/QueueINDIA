@@ -33,6 +33,10 @@ const userSchema = new Schema(
             trim: true,
             index: true
         },
+        dob: {
+            type: Date,
+            default: null
+        },
         email: {
             type: String,
             required: true,

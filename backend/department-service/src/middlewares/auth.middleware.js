@@ -1,9 +1,9 @@
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 
-// 🔹 Middleware to verify access token
+
+
 const verifyToken = asyncHandler(async (req, res, next) => {
     const token =
         req.cookies?.accessToken ||
@@ -13,24 +13,21 @@ const verifyToken = asyncHandler(async (req, res, next) => {
         throw new ApiError(401, "Unauthorized — No access token provided");
     }
 
-    let decoded;
     try {
-        decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+        // No DB call — trust user-service issued token
+        req.user = decoded;
+
+        next();
     } catch (err) {
         throw new ApiError(401, "Invalid or expired access token");
     }
-
-    const user = await User.findById(decoded._id).select("-password -sessions");
-    if (!user) {
-        throw new ApiError(404, "User not found");
-    }
-
-    req.user = user;
-    next();
 });
 
 
-// 🔹 Restrict access by user roles
+
+// Restrict access by user roles
 const authorizeRoles = (...roles) => {
     return (req, res, next) => {
         if (!roles.includes(req.user.role)) {

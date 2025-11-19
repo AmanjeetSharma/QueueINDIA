@@ -1,4 +1,116 @@
 import mongoose, { Schema } from "mongoose";
+// import tokenManagementSchema from "./tokenManagementSchema.model.js";
+
+
+
+
+// Token Management Schema (Embed inside Department)
+const tokenManagementSchema = new Schema(
+    {
+        // Token & Slot Logic
+        slotInterval: {
+            type: Number,
+            default: 15,
+            min: 5,
+            // ➜ Time between two tokens in minutes
+        },
+        maxDailyTokens: {
+            type: Number,
+            default: 300,
+            min: 50,
+            // ➜ Total number of tokens department can handle daily
+        },
+        maxTokensPerSlot: {
+            type: Number,
+            default: 10,
+            min: 1,
+            // ➜ Supports multiple counters per slot
+        },
+        queueType: {
+            type: String,
+            enum: ["Online", "Offline", "Hybrid"],
+            default: "Hybrid",
+            // ➜ Token generation mode: App / Counter / Both
+        },
+
+        // Operating Time Controls
+        slotStartTime: {
+            type: String,
+            default: "10:00",
+            // ➜ Token issue timing start
+        },
+        slotEndTime: {
+            type: String,
+            default: "17:00",
+            // ➜ Token issue timing end
+        },
+        bookingWindowDays: {
+            type: Number,
+            default: 7,
+            min: 1,
+            max: 30,
+            // ➜ User can book a token X days in advance
+        },
+
+        // Priority Queue System
+        allowPriorityTokens: {
+            type: Boolean,
+            default: true,
+            // ➜ for Senior Citizens, Differently-Abled, Pregnant women
+        },
+        priorityPercentage: {
+            type: Number,
+            default: 10,
+            min: 0,
+            max: 50,
+            // ➜ % reserved tokens for priority users
+        },
+        priorityCriteria: {
+            seniorCitizenAge: {
+                type: Number,
+                default: 60,
+                // ➜ Age >= 60 auto qualifies as priority
+            },
+            allowPregnantWomen: {
+                type: Boolean,
+                default: true
+            },
+            allowDifferentlyAbled: {
+                type: Boolean,
+                default: true
+            }
+        },
+
+        // Smart Queue Protection
+        autoStopOnOverload: {
+            type: Boolean,
+            default: true,
+            // ➜ When queue crosses safe wait time, stop token creation
+        },
+        realtimeWaitEstimation: {
+            type: Boolean,
+            default: true,
+            // ➜ Shows live ETA to users
+        },
+
+        // Tracking Tokens Issued (Runtime)
+        issuedTokenCount: {
+            type: Number,
+            default: 0,
+            // ➜ Helps calculate remaining tokens & crowd
+        },
+    },
+    { _id: false }
+);
+
+
+
+
+
+
+
+
+
 
 
 
@@ -94,62 +206,8 @@ const serviceSchema = new Schema(
             default: 15 // mins
         }
     },
-    { _id: false }
+    { _id: true }
 );
-
-
-
-
-
-
-
-
-
-
-
-const tokenManagementSchema = new Schema(
-    {
-        slotInterval: {
-            type: Number,
-            default: 15
-        }, // minutes per slot
-        maxDailyTokens: {
-            type: Number,
-            default: 100
-        },
-        queueType: {
-            type: String,
-            enum: ["Online", "Offline", "Hybrid"],
-            default: "Hybrid"
-        },
-        maxTokensPerSlot: {
-            type: Number,
-            default: 10,
-            // ➜ Number of people allowed to book the same time slot.
-            //    Useful when multiple counters support the same service.
-        },
-        allowPriorityTokens: {
-            type: Boolean,
-            default: true,
-            // ➜ Enable separate queue for senior citizens,
-            //    differently-abled, pregnant women etc.
-        },
-        priorityPercentage: {
-            type: Number,
-            default: 10,
-            // ➜ % of total daily tokens reserved for priority users.
-        },
-        autoStopOnOverload: {
-            type: Boolean,
-            default: true,
-            // ➜ Automatically stops token generation when overloaded
-            //    or long wait-time detected.
-        },
-    },
-    { _id: false }
-);
-
-
 
 
 
@@ -162,7 +220,7 @@ const tokenManagementSchema = new Schema(
 
 const departmentSchema = new Schema(
     {
-        // 🔹 Basic Info
+        // Basic Info
         departmentCategory: {
             type: String,
             required: true, // user enters manually (Super Admin can later classify)
@@ -175,35 +233,30 @@ const departmentSchema = new Schema(
             index: true
         },
 
-        // 🔹 Location
+        // Location
         address: addressSchema,
 
-        // 🔹 Contacts
+        // Contacts
         contact: {
             phone: { type: String, trim: true },
             email: { type: String, trim: true },
             website: { type: String, trim: true }
         },
 
-        // 🔹 Operational Info
+        // Operational Info
         workingHours: [workingHoursSchema],
         services: [serviceSchema],
         tokenManagement: tokenManagementSchema,
 
 
-        // 🔹 Permission & Ownership
-        admin: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true // Department Admin
-        },
+
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true // Super Admin
         },
 
-        // 🔹 Status
+        // Status
         status: {
             type: String,
             enum: ["active", "inactive", "under-maintenance"],
@@ -216,6 +269,14 @@ const departmentSchema = new Schema(
         // 🔹 Ratings
         ratings: [ratingSchema],
 
+        // Permission & Ownership
+        admins: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                required: true // Department Admin
+            },
+        ],
     },
     { timestamps: true }
 );

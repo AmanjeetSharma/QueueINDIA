@@ -16,8 +16,19 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 // Importing Routes
+import deptMainRoutes from "./routes/dept.main.routes.js";
+import deptAdminRoutes from "./routes/dept.admin.routes.js";
+// import deptServiceRoutes from "./routes/dept.service.routes.js";
+// import deptTokenRoutes from "./routes/dept.token.routes.js";
+// import deptRatingRoutes from "./routes/dept.rating.routes.js";
 
 // Using Routes
+app.use("/api/v1/departments", deptMainRoutes);
+app.use("/api/v1/departments", deptAdminRoutes);
+// app.use("/api/v1/departments", deptServiceRoutes);
+// app.use("/api/v1/departments", deptTokenRoutes);
+// app.use("/api/v1/departments", deptRatingRoutes);
+
 
 
 app.use(errorHandler);

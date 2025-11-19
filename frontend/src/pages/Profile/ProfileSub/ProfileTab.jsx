@@ -36,16 +36,16 @@ const ProfileTab = ({
         isPhoneVerified: user?.isPhoneVerified || false,
         secondaryEmail: user?.secondaryEmail || '',
         secondaryEmailVerified: user?.secondaryEmailVerified || false,
-        dob: user?.dob ? new Date(user.dob) : null, // Convert string to Date object
+        dob: user?.dob ? new Date(user.dob) : null, // only once!
         address: user?.address || {
             street: '',
             city: '',
             state: '',
             zipCode: '',
             country: ''
-        },
-        dob: user?.dob ? new Date(user.dob) : null
+        }
     };
+
 
     // Initialize phone data with current user phone when editing starts
     const handleEditPhone = () => {

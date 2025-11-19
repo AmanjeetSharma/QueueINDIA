@@ -33,7 +33,12 @@ const DEPARTMENT_SERVICE_URL = process.env.DEPARTMENT_SERVICE_URL;
 
 // -------- User Service (Auth, Profile, etc.) --------
 app.use(
-  ["/api/v1/auth", "/api/v1/users", "/api/v1/oauth2", "/api/v1/reset-password"],
+  [
+    "/api/v1/auth",
+    "/api/v1/users",
+    "/api/v1/oauth2",
+    "/api/v1/reset-password",
+  ],
   proxy(USER_SERVICE_URL, {
     proxyReqPathResolver: (req) => req.originalUrl,
     parseReqBody: true, // Let the proxy handle body parsing
@@ -54,7 +59,9 @@ app.use(
 
 // -------- Department Service --------
 app.use(
-  "/api/v1/department",
+  [
+    "/api/v1/departments"
+  ],
   proxy(DEPARTMENT_SERVICE_URL, {
     proxyReqPathResolver: (req) => req.originalUrl,
     parseReqBody: true,

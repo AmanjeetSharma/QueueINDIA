@@ -24,6 +24,7 @@ import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import oauthRoutes from "./routes/oauth.routes.js";
 import resetPasswordRoutes from "./routes/resetPassword.routes.js";
+import userDeptRoutes from "./routes/user.dept.routes.js";
 
 
 // Using Routes
@@ -31,6 +32,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/oauth2", oauthRoutes);
 app.use("/api/v1/reset-password", resetPasswordRoutes);
+app.use("/api/v1/users-dept", userDeptRoutes);
 
 
 app.use(errorHandler);

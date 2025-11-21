@@ -28,14 +28,20 @@ const forgotPassword = asyncHandler(async (req, res) => {
     }
 
     // Find user
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: email.toLowerCase() }).select("+password");
 
     // Always send generic message to avoid account enumeration
     if (!user) {
-        return res.status(200).json(
-            new ApiResponse(200, {}, "No account found with this email")
+        throw new ApiError(404, "No account is linked with this email address");
+    }
+
+    if (!user.password) {
+        throw new ApiError(
+            403,
+            "This account uses Google Sign-in. Please log in using Google first and set a password in profile if needed."
         );
     }
+
 
     // OPTIONAL: block if email is not verified
     // if (!user.isEmailVerified) {
@@ -66,6 +72,11 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
 
 
+
+
+
+
+
 // ================= RESET PASSWORD ===================
 const resetPassword = asyncHandler(async (req, res) => {
 
@@ -80,7 +91,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     }
 
 
-    const passwordCheck = passwordValidator(password);
+    const passwordCheck = passwordValidator(newPassword);
 
     if (!passwordCheck.valid) {
         throw new ApiError(
@@ -132,6 +143,15 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
+
 // ================= FORGOT PASSWORD VIA PHONE ===================
 const requestPhonePasswordReset = asyncHandler(async (req, res) => {
     const { phone } = req.body;
@@ -145,10 +165,17 @@ const requestPhonePasswordReset = asyncHandler(async (req, res) => {
     }
 
     // Phone must be unique → findOne
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ phone }).select("+password");
 
     if (!user) {
         throw new ApiError(404, "No account is linked with this phone number");
+    }
+
+    if (!user.password) {
+        throw new ApiError(
+            403,
+            "This account uses Google Sign-in. Please log in using Google first and set a password in profile if needed."
+        );
     }
 
     // Generate OTP
@@ -169,6 +196,7 @@ const requestPhonePasswordReset = asyncHandler(async (req, res) => {
         )
     );
 });
+
 
 
 

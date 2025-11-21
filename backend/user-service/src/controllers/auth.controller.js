@@ -57,7 +57,7 @@ const register = asyncHandler(async (req, res) => {
     if (avatarFile && !avatarValidator(avatarFile)) {
         fs.unlinkSync(avatarFile.path);
         console.log("🗑️  Removed avatar image from localServer due to → invalid format or size.");
-        throw new ApiError(400, "Invalid avatar: must be JPEG/PNG/WebP and ≤ 1 MB");
+        throw new ApiError(400, "Invalid avatar: must be JPEG/PNG/WebP and ≤ 2 MB");
     }
 
     // If user already exists
@@ -70,37 +70,10 @@ const register = asyncHandler(async (req, res) => {
                 }
                 throw new ApiError(409, "A user already exists with this email");
             } else {
-                // Google-only account — allow them to set password
-                const hashedPassword = await bcrypt.hash(password, 10);
-                existingUser.password = hashedPassword;
-                existingUser.name = name.trim();
-
-                if (avatarFile?.path) {
-                    const avatarResult = await uploadOnCloudinary(
-                        avatarFile.path,
-                        "QueueIndia/users/avatars"
-                    );
-                    if (!avatarResult) {
-                        throw new ApiError(500, "⚠️ Error uploading avatar image");
-                    }
-                    existingUser.avatar = avatarResult.url || "";
-                }
-
-                await existingUser.save();
-
-                const updatedUser = await User.findById(existingUser._id).select(
-                    "-password -sessions"
+                throw new ApiError(
+                    409,
+                    "This email is registered via Google Sign-in. Please log in using Google and set a password in profile if needed."
                 );
-
-                return res
-                    .status(200)
-                    .send(
-                        new ApiResponse(
-                            200,
-                            updatedUser,
-                            "✅ Password set successfully. You can now login using email/password or Google."
-                        )
-                    );
             }
         }
     }
@@ -178,7 +151,7 @@ const login = asyncHandler(async (req, res) => {
     if (!user.password) {
         throw new ApiError(
             401,
-            "This account was registered using Google. Please set a password first to log in manually."
+            "This account was registered using Google. Please set a password in profile to enable password login."
         );
     }
 

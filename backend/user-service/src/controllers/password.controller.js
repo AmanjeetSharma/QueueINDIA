@@ -32,7 +32,9 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
     // Always send generic message to avoid account enumeration
     if (!user) {
-        throw new ApiError(404, "No account is linked with this email address");
+        return res
+            .status(200)
+            .json(new ApiResponse(200, {}, "Reset email has been sent if the account exists."));
     }
 
     if (!user.password) {

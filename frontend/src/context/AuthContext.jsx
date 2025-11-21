@@ -394,7 +394,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Failed to send reset email';
             toast.error(errorMessage, {
-                duration: 3000,
+                duration: 7000,
                 position: "bottom-left"
             });
             throw new Error(errorMessage);
@@ -444,7 +444,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Failed to send OTP';
             toast.error(errorMessage, {
-                duration: 3000,
+                duration: 7000,
                 position: "bottom-left"
             });
             throw new Error(errorMessage);

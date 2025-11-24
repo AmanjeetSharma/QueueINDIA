@@ -19,19 +19,24 @@ const createDepartment = asyncHandler(async (req, res) => {
         address,
         contact,
         workingHours,
-        services,
+        services = [],   // optional now
         tokenManagement,
+        counters = []    // optional now
     } = req.body;
 
     const missing = [];
     if (!departmentCategory) missing.push("departmentCategory");
     if (!name) missing.push("name");
     if (!address) missing.push("address");
+
     if (missing.length) {
-        throw new ApiError(400, `Missing required field${missing.length > 1 ? "s" : ""}: ${missing.join(", ")}`);
+        throw new ApiError(
+            400,
+            `Missing required field${missing.length > 1 ? "s" : ""}: ${missing.join(", ")}`
+        );
     }
 
-    // Prevent duplicate department at same location
+    // 🔍 Prevent duplicate department at same location
     const exist = await Department.findOne({
         name: name.trim(),
         "address.city": address.city,
@@ -40,24 +45,68 @@ const createDepartment = asyncHandler(async (req, res) => {
 
     if (exist) throw new ApiError(409, "Department already exists in this location");
 
+    // 🛡 Ensure serviceCode uniqueness inside array
+    if (services.length) {
+        const codes = services.map(s => s.serviceCode);
+        const dupCode = codes.find((c, i) => codes.indexOf(c) !== i);
+        if (dupCode) {
+            throw new ApiError(400, `Duplicate serviceCode detected: ${dupCode}`);
+        }
+    }
+
+    // 🔁 Auto-fill missing optional fields for each service
+    const normalizedServices = services.map(service => ({
+        name: service.name,
+        serviceCode: service.serviceCode,
+        description: service.description || "",
+        avgServiceTime: service.avgServiceTime || 15,
+        avgWaitTime: service.avgWaitTime || null,
+        requiredDocuments: service.requiredDocuments || [],
+        bookingRequired: service.bookingRequired ?? true,
+        maxBookingsPerDay: service.maxBookingsPerDay || null,
+        counters: service.counters || []
+    }));
+
+    // 🔁 Validate consistent counter-service mapping
+    if (counters.length) {
+        counters.forEach(c => {
+            if (!c.counterNumber) {
+                throw new ApiError(400, "Every counter must have a counterNumber");
+            }
+
+            const invalidCodes = c.assignedServices?.filter(code =>
+                !normalizedServices.some(s => s.serviceCode === code)
+            );
+
+            if (invalidCodes.length) {
+                throw new ApiError(
+                    400,
+                    `Invalid assigned serviceCodes: ${invalidCodes.join(", ")}`
+                );
+            }
+        });
+    }
+
     const department = await Department.create({
         departmentCategory,
         name,
         address,
         contact,
         workingHours,
-        services,
+        services: normalizedServices,
         tokenManagement,
-        admins: [], // 👈 Empty list for now — will be managed later via admin routes
+        counters,
+        admins: [], // Add through Admin routes later
         createdBy: req.user._id,
     });
 
-    console.log(`📌 Department Created: ${department.name} (ID: ${department._id})`);
+    console.log(`🏛 Department Created → ${department.name} (ID: ${department._id})`);
 
     return res
         .status(201)
         .json(new ApiResponse(201, department, "Department created successfully"));
 });
+
 
 
 
@@ -86,12 +135,11 @@ const updateDepartment = asyncHandler(async (req, res) => {
         adminId => adminId.toString() === req.user._id.toString()
     );
 
-
     if (req.user.role === "ADMIN" && !isAssignedAdmin) {
         throw new ApiError(403, "You are not authorized to update this department");
     }
 
-    // Prevent duplicates on unique fields
+    // 🛑 Validate duplicate name + location
     if (updateData.name || updateData.address?.city || updateData.address?.pincode) {
         const exist = await Department.findOne({
             _id: { $ne: deptId },
@@ -100,7 +148,55 @@ const updateDepartment = asyncHandler(async (req, res) => {
             "address.pincode": updateData.address?.pincode || department.address.pincode
         });
 
-        if (exist) throw new ApiError(409, "Department already exists in this location");
+        if (exist) throw new ApiError(409, "Another department already exists at this location");
+    }
+
+    // 🟦 Normalize services (if updating)
+    if (updateData.services && Array.isArray(updateData.services)) {
+        // 🟡 Check duplicate serviceCode
+        const codes = updateData.services.map(s => s.serviceCode);
+        const dupCode = codes.find((c, i) => codes.indexOf(c) !== i);
+        if (dupCode) {
+            throw new ApiError(400, `Duplicate serviceCode detected: ${dupCode}`);
+        }
+
+        updateData.services = updateData.services.map(service => ({
+            name: service.name,
+            serviceCode: service.serviceCode,
+            description: service.description || "",
+            avgServiceTime: service.avgServiceTime || 15,
+            avgWaitTime: service.avgWaitTime || null,
+            requiredDocuments: service.requiredDocuments || [],
+            bookingRequired: service.bookingRequired ?? true,
+            maxBookingsPerDay: service.maxBookingsPerDay || null,
+            counters: service.counters || []
+        }));
+    }
+
+    // 🔹 Validate counters if provided
+    if (updateData.counters && Array.isArray(updateData.counters)) {
+        updateData.counters.forEach(counter => {
+            if (!counter.counterNumber) {
+                throw new ApiError(400, "Every counter must have a counterNumber");
+            }
+        });
+
+        // Ensure counter assigned services actually exist
+        const serviceList = updateData.services || department.services;
+        updateData.counters.forEach(counter => {
+            if (counter.assignedServices?.length) {
+                const invalidCodes = counter.assignedServices.filter(
+                    code => !serviceList.some(s => s.serviceCode === code)
+                );
+
+                if (invalidCodes.length) {
+                    throw new ApiError(
+                        400,
+                        `Invalid serviceCodes for counter: ${invalidCodes.join(", ")}`
+                    );
+                }
+            }
+        });
     }
 
     const updatedDept = await Department.findByIdAndUpdate(deptId, updateData, {
@@ -108,11 +204,11 @@ const updateDepartment = asyncHandler(async (req, res) => {
         runValidators: true
     });
 
-    console.log(`✅ Department updated from name: ${department.name} to ${updatedDept.name} (ID: ${updatedDept._id})`);
+    console.log(`✳️ Department Updated → ${department.name} ▸ ${updatedDept.name}`);
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, updatedDept, "Department updated successfully"));
+    return res.status(200).json(
+        new ApiResponse(200, updatedDept, "Department updated successfully")
+    );
 });
 
 
@@ -140,16 +236,24 @@ const getDepartments = asyncHandler(async (req, res) => {
 
     const filter = {};
 
-    // 🔍 Search by name (case-insensitive)
-    if (search) {
+    // 🔍 Search by name (case-insensitive) - Only apply if search has non-space content
+    if (search && search.trim().length > 0) {
         filter.name = { $regex: search.trim(), $options: "i" };
     }
 
-    // 🎯 Filters
-    if (category) filter.departmentCategory = { $regex: category.trim(), $options: "i" };
-    if (city) filter["address.city"] = { $regex: city.trim(), $options: "i" };
-    if (pincode) filter["address.pincode"] = pincode;
-    if (status) filter.status = status;
+    // 🎯 Filters - Only apply if they have non-space content
+    if (category && category.trim().length > 0) {
+        filter.departmentCategory = { $regex: category.trim(), $options: "i" };
+    }
+    if (city && city.trim().length > 0) {
+        filter["address.city"] = { $regex: city.trim(), $options: "i" };
+    }
+    if (pincode && pincode.trim().length > 0) {
+        filter["address.pincode"] = pincode.trim();
+    }
+    if (status && status.trim().length > 0) {
+        filter.status = status.trim();
+    }
 
     const safeLimit = Math.max(1, Math.min(parseInt(limit), 50));
     const safePage = Math.max(1, parseInt(page));
@@ -175,6 +279,31 @@ const getDepartments = asyncHandler(async (req, res) => {
         createdAt: dep.createdAt,
         updatedAt: dep.updatedAt
     }));
+
+    // Debug logging: show exactly which filters/search/pagination were used
+    const appliedFilters = {
+        search: search && search.trim().length > 0 ? search.trim() : null,
+        category: category && category.trim().length > 0 ? category.trim() : null,
+        city: city && city.trim().length > 0 ? city.trim() : null,
+        pincode: pincode && pincode.trim().length > 0 ? pincode.trim() : null,
+        status: status && status.trim().length > 0 ? status.trim() : null,
+        page: safePage,
+        limit: safeLimit,
+        skip
+    };
+
+    // Only show filters that were actually provided (avoid noisy nulls)
+    const usedFilters = Object.fromEntries(
+        Object.entries(appliedFilters).filter(([_, v]) => v !== null && v !== undefined)
+    );
+
+    console.log("📋 Fetched Departments List", {
+        page: safePage,
+        limit: safeLimit,
+        totalDepartmentsMatchingFilter: total,
+        filtersApplied: usedFilters,
+        selectedFields: "name departmentCategory address.city address.pincode contact.phone status createdAt"
+    });
 
     return res.status(200).json(
         new ApiResponse(200, {

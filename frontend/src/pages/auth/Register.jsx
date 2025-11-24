@@ -250,7 +250,7 @@ const Register = () => {
                             <div className="flex justify-center">
                                 <div className="relative">
                                     <motion.div
-                                        whileHover={{ scale: 1.05 }}
+                                        // whileHover={{ scale: 1.05 }}
                                         className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-100"
                                     >
                                         {avatarPreview ? (
@@ -270,7 +270,7 @@ const Register = () => {
                                         whileTap={{ scale: 0.9 }}
                                         type="button"
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-2 rounded-full shadow-md hover:bg-blue-700 transition-colors"
+                                        className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-2 rounded-full shadow-md hover:bg-blue-700 transition-colors cursor-pointer"
                                     >
                                         <FaCamera className="w-3 h-3" />
                                     </motion.button>
@@ -476,7 +476,6 @@ const Register = () => {
                         <motion.button
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.8 }}
                             whileHover={{
                                 scale: 1.01,
                                 backgroundColor: "#2563eb"
@@ -484,7 +483,7 @@ const Register = () => {
                             whileTap={{ scale: 0.99 }}
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm"
+                            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm cursor-pointer"
                         >
                             {isLoading ? (
                                 <>
@@ -496,7 +495,7 @@ const Register = () => {
                                     Creating account...
                                 </>
                             ) : (
-                                "Create account"
+                                "Sign Up"
                             )}
                         </motion.button>
                     </form>

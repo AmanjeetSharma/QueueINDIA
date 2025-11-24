@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FaUser,
   FaSignInAlt,
-  FaUserPlus,
   FaSignOutAlt,
   FaBars,
   FaTimes,
@@ -15,7 +14,8 @@ import {
   FaConciergeBell,
   FaEnvelope,
   FaIdCard,
-  FaCogs
+  FaBuilding,
+  FaShieldAlt
 } from "react-icons/fa";
 
 const Navbar = () => {
@@ -62,12 +62,62 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
   };
 
+  // Function to format role for display
+  const formatRole = (role) => {
+    if (!role) return '';
+
+    // Convert snake_case to Title Case with spaces
+    return role
+      .toLowerCase()
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Function to get role color and icon color
+  const getRoleColors = (role) => {
+    switch (role) {
+      case 'SUPER_ADMIN':
+        return {
+          shieldColor: 'text-red-600',
+          textColor: 'text-red-600',
+          bgColor: 'bg-red-50',
+          borderColor: 'border-red-200'
+        };
+      case 'ADMIN':
+        return {
+          shieldColor: 'text-purple-600',
+          textColor: 'text-purple-600',
+          bgColor: 'bg-purple-50',
+          borderColor: 'border-purple-200'
+        };
+      case 'DEPARTMENT_OFFICER':
+        return {
+          shieldColor: 'text-blue-600',
+          textColor: 'text-blue-600',
+          bgColor: 'bg-blue-50',
+          borderColor: 'border-blue-200'
+        };
+      case 'USER':
+      default:
+        return {
+          shieldColor: 'text-green-600',
+          textColor: 'text-green-600',
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200'
+        };
+    }
+  };
+
   const navLinks = [
     { to: "/", label: "Home", icon: FaHome },
-    { to: "/pricing", label: "Pricing", icon: FaDollarSign },
+    { to: "/departments", label: "Departments", icon: FaBuilding },
     { to: "/services", label: "Services", icon: FaConciergeBell },
-
+    { to: "/pricing", label: "Pricing", icon: FaDollarSign },
   ];
+
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const roleColors = getRoleColors(user?.role);
 
   const dropdownVariants = {
     hidden: {
@@ -219,7 +269,7 @@ const Navbar = () => {
                   >
                     Hi! {user?.name?.split(' ')[0] || 'User'}
                   </motion.p>
-                  <p className="text-xs text-gray-500">Welcome back</p>
+                  <p className={`text-xs font-medium`}>Welcome Back</p>
                 </div>
 
                 {/* Animated Dropdown Arrow */}
@@ -268,6 +318,12 @@ const Navbar = () => {
                       <div className="px-4 py-3 border-b border-gray-100">
                         <p className="font-semibold text-gray-900 truncate">{user?.name}</p>
                         <p className="text-sm text-gray-500 truncate">{user?.email}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <FaShieldAlt className={`w-3 h-3 ${roleColors.shieldColor}`} />
+                          <span className={`text-xs ${roleColors.textColor} font-medium`}>
+                            {formatRole(user?.role)}
+                          </span>
+                        </div>
                       </div>
 
                       <motion.div variants={itemVariants}>
@@ -282,20 +338,6 @@ const Navbar = () => {
                           <span>Profile</span>
                         </Link>
                       </motion.div>
-                      <motion.div variants={itemVariants}>
-                        <Link
-                          to="/admin"
-                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                            <FaCogs  className="w-4 h-4 text-red-600" />
-                          </div>
-                          <span>Admin Panel</span>
-                        </Link>
-                      </motion.div>
-
-
 
                       <motion.div variants={itemVariants}>
                         <Link
@@ -340,6 +382,8 @@ const Navbar = () => {
                         </Link>
                       </motion.div>
 
+
+
                       <motion.div variants={itemVariants}>
                         <Link
                           to="/contact"
@@ -374,6 +418,10 @@ const Navbar = () => {
                   animate={{ rotate: 0, opacity: 1 }}
                   exit={{ rotate: 90, opacity: 0 }}
                   transition={{ duration: 0.2 }}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent event bubbling
+                    closeMobileMenu();
+                  }}
                 >
                   <FaTimes className="w-6 h-6 text-gray-600" />
                 </motion.div>
@@ -471,7 +519,13 @@ const Navbar = () => {
                       )}
                       <div>
                         <p className="font-semibold text-gray-900">Hi! {user?.name?.split(' ')[0] || 'User'}</p>
-                        <p className="text-sm text-gray-500">Welcome back</p>
+                        <p className="text-sm text-gray-500">{user?.email}</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          <FaShieldAlt className={`w-3 h-3 ${roleColors.shieldColor}`} />
+                          <span className={`text-xs ${roleColors.textColor} font-medium`}>
+                            {formatRole(user?.role)}
+                          </span>
+                        </div>
                       </div>
                     </motion.div>
 
@@ -507,17 +561,6 @@ const Navbar = () => {
                       >
                         <FaSignInAlt className="w-5 h-5 text-gray-600" />
                         <span>Sign In</span>
-                      </Link>
-                    </motion.div>
-
-                    <motion.div variants={itemVariants} initial="hidden" animate="visible">
-                      <Link
-                        to="/register"
-                        className="flex items-center gap-3 py-3 px-4 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl transition-colors hover:shadow-lg"
-                        onClick={closeMobileMenu}
-                      >
-                        <FaUserPlus className="w-5 h-5" />
-                        <span>Create Account</span>
                       </Link>
                     </motion.div>
                   </>

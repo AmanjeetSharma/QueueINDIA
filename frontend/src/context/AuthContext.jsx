@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { axiosInstance } from "../lib/http";
 import toast from "react-hot-toast";
-import { FaEnvelope } from 'react-icons/fa';
 
 const AuthContext = createContext(null);
 

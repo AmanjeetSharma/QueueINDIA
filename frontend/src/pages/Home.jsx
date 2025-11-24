@@ -1,338 +1,310 @@
-import { useState, useEffect } from "react";
-import Card from "../components/Card";
-import { motion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
-
-// Animated Card Component
-const AnimatedCard = ({ title, desc, delay = 0 }) => {
-    const [ref, inView] = useInView({
-        triggerOnce: true,
-        threshold: 0.1,
-    });
-
-    return (
-        <motion.div
-            ref={ref}
-            initial={{ opacity: 0, y: 50 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay }}
-            whileHover={{ y: -5, scale: 1.02 }}
-            className="h-full"
-        >
-            <Card title={title} desc={desc} />
-        </motion.div>
-    );
-};
+import React from 'react';
+import { motion } from 'framer-motion';
+import {
+    Calendar,
+    Clock,
+    Users,
+    Shield,
+    Star,
+    ArrowRight,
+    PlayCircle,
+    CheckCircle2
+} from 'lucide-react';
 
 const Home = () => {
-    const [isVisible, setIsVisible] = useState(false);
+    const features = [
+        {
+            icon: <Calendar className="w-8 h-8" />,
+            title: "Easy Booking",
+            description: "Book appointments in just a few clicks with our intuitive interface"
+        },
+        {
+            icon: <Clock className="w-8 h-8" />,
+            title: "Real-time Updates",
+            description: "Get live queue status and estimated waiting times"
+        },
+        {
+            icon: <Users className="w-8 h-8" />,
+            title: "Multi-service Support",
+            description: "Book appointments for various services and departments"
+        },
+        {
+            icon: <Shield className="w-8 h-8" />,
+            title: "Secure & Reliable",
+            description: "Your data is protected with enterprise-grade security"
+        }
+    ];
 
-    useEffect(() => {
-        setIsVisible(true);
-    }, []);
+    const stats = [
+        { number: "50K+", label: "Happy Customers" },
+        { number: "200+", label: "Partner Services" },
+        { number: "95%", label: "Satisfaction Rate" },
+        { number: "24/7", label: "Support Available" }
+    ];
+
+    const testimonials = [
+        {
+            name: "Priya Sharma",
+            role: "Regular User",
+            content: "queueINDIA saved me hours of waiting time. The app is incredibly easy to use!",
+            rating: 5
+        },
+        {
+            name: "Rahul Verma",
+            role: "Business Owner",
+            content: "Managing customer queues has never been easier. Highly recommended!",
+            rating: 5
+        },
+        {
+            name: "Anita Patel",
+            role: "Student",
+            content: "The real-time updates help me plan my day better. Fantastic service!",
+            rating: 4
+        }
+    ];
+
+    const fadeInUp = {
+        initial: { opacity: 0, y: 60 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.6 }
+    };
+
+    const staggerContainer = {
+        animate: {
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-white to-indigo-50">
-            <main className="max-w-7xl mx-auto px-6 py-16">
-                {/* Hero Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-[80vh]">
-                    <motion.div
-                        initial={{ opacity: 0, x: -50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8 }}
-                    >
-                        <motion.h1
-                            className="text-5xl sm:text-6xl font-bold leading-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2, duration: 0.8 }}
-                        >
-                            Streamlining customer queues with{" "}
-                            <span className="relative inline-block">
-                                <span className="relative z-10">QueueINDIA</span>
-                                <motion.span
-                                    className="absolute bottom-2 left-0 w-full h-3 bg-indigo-200 opacity-40"
-                                    initial={{ scaleX: 0 }}
-                                    animate={{ scaleX: 1 }}
-                                    transition={{ delay: 0.8, duration: 0.6 }}
-                                />
-                            </span>
-                        </motion.h1>
-
-                        <motion.p
-                            className="mt-6 text-xl text-gray-600 leading-relaxed"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4, duration: 0.8 }}
-                        >
-                            A simple, fast and reliable way to manage queues and appointments.
-                            Reduce waiting times, improve service and get actionable insights.
-                        </motion.p>
-
-                        <motion.div
-                            className="mt-10 flex flex-wrap gap-6"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.6, duration: 0.8 }}
-                        >
-                            {/* Try Demo Button */}
-                            <motion.a
-                                href="#"
-                                className="px-8 py-4 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold relative overflow-hidden group"
-                            >
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="w-full h-full"
-                                >
-                                    <span className="relative z-10">Try Demo</span>
-                                    <div className="absolute inset-0 bg-linear-to-r from-indigo-700 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                </motion.button>
-                            </motion.a>
-
-                            {/* Learn More Button */}
-                            <motion.a
-                                href="/about"
-                                className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-indigo-400 hover:text-indigo-600 transition-all duration-300 font-semibold"
-                            >
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="w-full h-full"
-                                >
-                                    Learn More
-                                </motion.button>
-                            </motion.a>
-                        </motion.div>
-
-
-                        <motion.div
-                            className="mt-12 flex items-center space-x-8 text-sm"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.8, duration: 0.8 }}
-                        >
-                            <div className="flex items-center space-x-3">
-                                <motion.div
-                                    className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center shadow-sm"
-                                    whileHover={{ scale: 1.1, rotate: 5 }}
-                                >
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                </motion.div>
-                                <span className="text-gray-600 font-medium">No credit card required</span>
-                            </div>
-
-                            <div className="flex items-center space-x-3">
-                                <motion.div
-                                    className="w-10 h-10 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center shadow-sm"
-                                    whileHover={{ scale: 1.1, rotate: -5 }}
-                                >
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                </motion.div>
-                                <span className="text-gray-600 font-medium">Trusted by businesses</span>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-
-                    {/* Animated Hero Graphic */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8, delay: 0.3 }}
-                        className="relative"
-                    >
-                        <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-100 via-white to-purple-50 border border-gray-200 shadow-2xl">
-                            {/* Animated background elements */}
-                            <motion.div
-                                className="absolute top-0 left-0 w-full h-full"
-                                animate={{
-                                    background: [
-                                        "radial-gradient(circle at 20% 80%, rgba(199, 210, 254, 0.3) 0%, transparent 50%)",
-                                        "radial-gradient(circle at 80% 20%, rgba(199, 210, 254, 0.3) 0%, transparent 50%)",
-                                        "radial-gradient(circle at 20% 80%, rgba(199, 210, 254, 0.3) 0%, transparent 50%)",
-                                    ],
-                                }}
-                                transition={{ duration: 8, repeat: Infinity }}
-                            />
-
-                            {/* Main dashboard illustration */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <motion.div
-                                    className="w-4/5 h-4/5 bg-white rounded-xl shadow-2xl border border-gray-100 p-6"
-                                    initial={{ scale: 0.8, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    transition={{ delay: 0.8, duration: 0.6 }}
-                                >
-                                    {/* Dashboard content */}
-                                    <div className="flex flex-col h-full">
-                                        <div className="flex space-x-2 mb-4">
-                                            <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                                            <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                                            <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                                        </div>
-
-                                        <div className="grid grid-cols-3 gap-4 flex-1">
-                                            {[1, 2, 3, 4, 5, 6].map((item) => (
-                                                <motion.div
-                                                    key={item}
-                                                    className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-100"
-                                                    whileHover={{ scale: 1.05 }}
-                                                    animate={{
-                                                        y: [0, -5, 0],
-                                                    }}
-                                                    transition={{
-                                                        duration: 2,
-                                                        delay: item * 0.2,
-                                                        repeat: Infinity,
-                                                    }}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            </div>
-                        </div>
-
-                        {/* Floating elements */}
-                        <motion.div
-                            className="absolute -top-4 -right-4 w-24 h-24 bg-indigo-200 rounded-full opacity-20"
-                            animate={{
-                                y: [0, -20, 0],
-                                scale: [1, 1.1, 1],
-                            }}
-                            transition={{
-                                duration: 4,
-                                repeat: Infinity,
-                            }}
-                        />
-                        <motion.div
-                            className="absolute -bottom-6 -left-6 w-32 h-32 bg-purple-200 rounded-full opacity-20"
-                            animate={{
-                                y: [0, 20, 0],
-                                scale: [1, 1.2, 1],
-                            }}
-                            transition={{
-                                duration: 5,
-                                repeat: Infinity,
-                                delay: 1,
-                            }}
-                        />
-                    </motion.div>
-                </div>
-
-                {/* Features Section */}
-                <motion.section
-                    className="mt-32"
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true }}
-                >
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+            {/* Hero Section */}
+            <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-800 to-indigo-700 opacity-10"></div>
+                <div className="relative max-w-7xl mx-auto text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                    >
+                        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-gray-800 mb-6">
+                            Skip the Line,
+                            <span className="block bg-gradient-to-r from-purple-500 to-indigo-600 bg-clip-text text-transparent">Save Your Time</span>
+                        </h1>
+                        <p className="text-xl sm:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+                            India's premier queue management system. Book appointments, avoid waiting,
+                            and manage your time efficiently.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="bg-blue-600 text-white px-8 py-4 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-gray-700 transition-colors"
+                            >
+                                Get Started Now
+                                <ArrowRight className="w-5 h-5" />
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="border-2 border-gray-600 text-gray-700 px-8 py-4 rounded-full font-semibold text-lg flex items-center gap-2 hover:border-blue-600 hover:text-blue-600 transition-colors"
+                            >
+                                <PlayCircle className="w-5 h-5" />
+                                Watch Demo
+                            </motion.button>
+                        </div>
+                    </motion.div>
+
+                    {/* Stats Section */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.4 }}
+                        className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8"
+                    >
+                        {stats.map((stat, index) => (
+                            <motion.div
+                                key={index}
+                                whileHover={{ scale: 1.05 }}
+                                className="text-center"
+                            >
+                                <div className="text-3xl sm:text-4xl font-bold text-blue-600">{stat.number}</div>
+                                <div className="text-gray-600 mt-2">{stat.label}</div>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* Features Section */}
+            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+                <div className="max-w-7xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                         viewport={{ once: true }}
                         className="text-center mb-16"
                     >
-                        <h2 className="text-4xl font-bold text-gray-900">Core Features</h2>
-                        <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                            Everything you need to manage in-person and virtual queues effortlessly.
-                            Powered by cutting-edge technology for seamless customer experiences.
+                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                            Why Choose queueINDIA?
+                        </h2>
+                        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                            Experience the future of queue management with our comprehensive features
+                            designed to make your life easier.
                         </p>
                     </motion.div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {[
-                            { title: "Digital Tickets", desc: "Issue and track tickets instantly with mobile and kiosk integrations." },
-                            { title: "Real-time Dashboard", desc: "Monitor wait times, staff load and customer flow in real time." },
-                            { title: "Advanced Analytics", desc: "Get insights to optimize staffing and reduce wait times." },
-                            { title: "Smart Notifications", desc: "Notify customers via SMS or push when their turn is near." },
-                            { title: "Multi-location Support", desc: "Manage queues across multiple branches from one panel." },
-                            { title: "Fully Customizable", desc: "Tailor queue flows, priorities and service types to your business." },
-                        ].map((feature, index) => (
-                            <AnimatedCard
-                                key={feature.title}
-                                title={feature.title}
-                                desc={feature.desc}
-                                delay={index * 0.1}
-                            />
-                        ))}
-                    </div>
-                </motion.section>
-
-                {/* CTA Section */}
-                <motion.section
-                    className="mt-32 text-center"
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true }}
-                >
-                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-12 text-white shadow-2xl">
-                        <motion.h3
-                            className="text-3xl font-bold mb-4"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2, duration: 0.6 }}
-                            viewport={{ once: true }}
-                        >
-                            Ready to Transform Your Queue Management?
-                        </motion.h3>
-                        <motion.p
-                            className="text-indigo-100 text-lg mb-8 max-w-2xl mx-auto"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4, duration: 0.6 }}
-                            viewport={{ once: true }}
-                        >
-                            Join thousands of businesses already using QueueINDIA to enhance customer satisfaction and operational efficiency.
-                        </motion.p>
-                        <motion.button
-                            className="px-10 py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.6, duration: 0.6 }}
-                            viewport={{ once: true }}
-                        >
-                            Get Started Today
-                        </motion.button>
-                    </div>
-                </motion.section>
-            </main>
-
-            {/* Footer */}
-            <motion.footer
-                className="bg-white border-t mt-20"
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-            >
-                <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between text-sm text-gray-600">
-                    <div className="mb-4 md:mb-0 font-medium">
-                        © {new Date().getFullYear()} QueueINDIA. All rights reserved.
-                    </div>
-                    <div className="flex space-x-6">
-                        {["Privacy", "Terms", "Contact", "Support"].map((item) => (
-                            <motion.a
-                                key={item}
-                                href="#"
-                                className="hover:text-indigo-600 font-medium transition-colors duration-300"
-                                whileHover={{ y: -2 }}
+                    <motion.div
+                        variants={staggerContainer}
+                        initial="initial"
+                        whileInView="animate"
+                        viewport={{ once: true }}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+                    >
+                        {features.map((feature, index) => (
+                            <motion.div
+                                key={index}
+                                variants={fadeInUp}
+                                whileHover={{ y: -10 }}
+                                className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
                             >
-                                {item}
-                            </motion.a>
+                                <div className="text-blue-600 mb-4">{feature.icon}</div>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                                    {feature.title}
+                                </h3>
+                                <p className="text-gray-600 leading-relaxed">
+                                    {feature.description}
+                                </p>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* How It Works Section */}
+            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+                <div className="max-w-7xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        viewport={{ once: true }}
+                        className="text-center mb-16"
+                    >
+                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                            How It Works
+                        </h2>
+                        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                            Get started in just three simple steps
+                        </p>
+                    </motion.div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {[1, 2, 3].map((step, index) => (
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 40 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: index * 0.2 }}
+                                viewport={{ once: true }}
+                                className="text-center"
+                            >
+                                <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">
+                                    {step}
+                                </div>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                                    {step === 1 && "Select Service & Book Slot"}
+                                    {step === 2 && "Get Confirmation & QR Code"}
+                                    {step === 3 && "Arrive & Get Served"}
+                                </h3>
+                                <p className="text-gray-600">
+                                    {step === 1 && "Choose from various services and pick your preferred time slot"}
+                                    {step === 2 && "Receive instant confirmation with your unique QR code"}
+                                    {step === 3 && "Show your QR code and get served without waiting"}
+                                </p>
+                            </motion.div>
                         ))}
                     </div>
                 </div>
-            </motion.footer>
+            </section>
+
+            {/* Testimonials Section */}
+            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+                <div className="max-w-7xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        viewport={{ once: true }}
+                        className="text-center mb-16"
+                    >
+                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                            What Our Users Say
+                        </h2>
+                        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                            Join thousands of satisfied users who have transformed their waiting experience
+                        </p>
+                    </motion.div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {testimonials.map((testimonial, index) => (
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 40 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: index * 0.2 }}
+                                viewport={{ once: true }}
+                                className="bg-gray-50 p-8 rounded-2xl border border-gray-200"
+                            >
+                                <div className="flex items-center gap-1 mb-4">
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star
+                                            key={i}
+                                            className={`w-5 h-5 ${i < testimonial.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                                }`}
+                                        />
+                                    ))}
+                                </div>
+                                <p className="text-gray-600 mb-6 italic">"{testimonial.content}"</p>
+                                <div>
+                                    <div className="font-semibold text-gray-900">{testimonial.name}</div>
+                                    <div className="text-gray-500 text-sm">{testimonial.role}</div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA Section */}
+            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-indigo-700">
+                <div className="max-w-4xl mx-auto text-center">
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        viewport={{ once: true }}
+                    >
+                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+                            Ready to Skip the Queue?
+                        </h2>
+                        <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+                            Join queueINDIA today and experience the convenience of smart queue management.
+                        </p>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="bg-white text-blue-600 px-8 py-4 rounded-full font-semibold text-lg flex items-center gap-2 mx-auto hover:bg-gray-100 transition-colors"
+                        >
+                            <CheckCircle2 className="w-5 h-5" />
+                            Start Free Trial
+                        </motion.button>
+                        <p className="text-blue-200 mt-4">No credit card required • 14-day free trial</p>
+                    </motion.div>
+                </div>
+            </section>
         </div>
     );
 };

@@ -6,9 +6,13 @@ import { createDepartment, updateDepartment, getDepartments, deleteDepartment, g
 const router = express.Router();
 
 router.post("/create", verifyToken, authorizeRoles("SUPER_ADMIN"), createDepartment);
+
 router.patch("/update/:deptId", verifyToken, authorizeRoles("SUPER_ADMIN", "ADMIN"), updateDepartment);
-router.get("/all-departments", getDepartments);
+
 router.delete("/delete/:deptId", verifyToken, authorizeRoles("SUPER_ADMIN"), deleteDepartment);
+
+router.get("/all-departments", getDepartments);
+
 router.get("/department/:deptId", getDepartmentById);
 
 export default router;

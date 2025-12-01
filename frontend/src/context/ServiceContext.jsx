@@ -20,27 +20,6 @@ export const ServiceProvider = ({ children }) => {
     const [error, setError] = useState(null);
     const { user } = useAuth();
 
-    // Get all services of a department (public)
-    const getServices = async (deptId) => {
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await axiosInstance.get(`/departments/${deptId}/services`);
-            setServices(response.data.data || []);
-            return response.data;
-        } catch (err) {
-            const errorMsg = err?.response?.data?.message || 'Failed to fetch services';
-            setError(errorMsg);
-            toast.error(errorMsg, {
-                duration: 4000,
-                position: "bottom-left"
-            });
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
-
 
 
 
@@ -54,7 +33,11 @@ export const ServiceProvider = ({ children }) => {
             setLoading(true);
             setError(null);
             const response = await axiosInstance.get(`/departments/${deptId}/services/${serviceId}`);
-            setCurrentService(response.data.data);
+
+            // Transform service data
+            const serviceData = transformServiceData(response.data.data);
+            setCurrentService(serviceData);
+
             return response.data;
         } catch (err) {
             const errorMsg = err?.response?.data?.message || 'Failed to fetch service';
@@ -75,14 +58,22 @@ export const ServiceProvider = ({ children }) => {
 
 
 
-    
+
+
+
     // Add a new service to department (SUPER_ADMIN or assigned ADMIN)
     const addService = async (deptId, serviceData) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axiosInstance.post(`/departments/${deptId}/services`, serviceData);
-            setServices(prev => [...prev, response.data.data]);
+
+            const preparedData = prepareServiceData(serviceData);
+            const response = await axiosInstance.post(`/departments/${deptId}/services`, preparedData);
+
+            const newService = transformServiceData(response.data.data);
+
+            // Add to services list if we have one
+            setServices(prev => [...prev, newService]);
 
             toast.success('Service created successfully!', {
                 duration: 3000,
@@ -109,17 +100,26 @@ export const ServiceProvider = ({ children }) => {
 
 
 
+
     // Update service in a department (SUPER_ADMIN or assigned ADMIN)
     const updateService = async (deptId, serviceId, updateData) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axiosInstance.patch(`/departments/${deptId}/services/${serviceId}`, updateData);
+
+            const preparedData = prepareServiceData(updateData);
+            const response = await axiosInstance.put(`/departments/${deptId}/services/${serviceId}`, preparedData);
+
+            const updatedService = transformServiceData(response.data.data);
+
+            // Update services list if we have it
             setServices(prev =>
-                prev.map(service => service._id === serviceId ? response.data.data : service)
+                prev.map(service => service._id === serviceId ? updatedService : service)
             );
+
+            // Update current service if it's the one being updated
             if (currentService?._id === serviceId) {
-                setCurrentService(response.data.data);
+                setCurrentService(updatedService);
             }
 
             toast.success('Service updated successfully!', {
@@ -148,13 +148,19 @@ export const ServiceProvider = ({ children }) => {
 
 
 
+
     // Delete a service from department (SUPER_ADMIN or assigned ADMIN)
     const deleteService = async (deptId, serviceId) => {
         try {
             setLoading(true);
             setError(null);
+
             await axiosInstance.delete(`/departments/${deptId}/services/${serviceId}`);
+
+            // Remove from services list if we have it
             setServices(prev => prev.filter(service => service._id !== serviceId));
+
+            // Clear current service if it's the one being deleted
             if (currentService?._id === serviceId) {
                 setCurrentService(null);
             }
@@ -184,7 +190,57 @@ export const ServiceProvider = ({ children }) => {
 
 
 
-    
+
+
+
+    // Transform service data for consistency
+    const transformServiceData = (service) => {
+        if (!service) return null;
+
+        return {
+            ...service,
+            // Ensure tokenManagement has all required fields
+            tokenManagement: service.tokenManagement || {
+                maxDailyServiceTokens: null,
+                maxTokensPerSlot: 10,
+                queueType: "Hybrid",
+                timeBtwEverySlot: 15,
+                slotStartTime: "10:00",
+                slotEndTime: "17:00",
+                slotWindows: []
+            },
+            // Ensure requiredDocs is always an array
+            requiredDocs: service.requiredDocs || [],
+            // Ensure serviceCode is uppercase
+            serviceCode: service.serviceCode?.toUpperCase() || service.serviceCode
+        };
+    };
+
+    // Prepare service data for API
+    const prepareServiceData = (data) => {
+        return {
+            name: data.name,
+            serviceCode: data.serviceCode?.toUpperCase(),
+            description: data.description || "",
+            priorityAllowed: data.priorityAllowed ?? true,
+            isDocumentUploadRequired: data.isDocumentUploadRequired ?? true,
+            tokenManagement: data.tokenManagement || {
+                maxDailyServiceTokens: null,
+                maxTokensPerSlot: 10,
+                queueType: "Hybrid",
+                timeBtwEverySlot: 15,
+                slotStartTime: "10:00",
+                slotEndTime: "17:00",
+                slotWindows: []
+            },
+            requiredDocs: data.requiredDocs?.map(doc => ({
+                name: doc.name,
+                description: doc.description || "",
+                isMandatory: doc.isMandatory ?? true
+            })) || []
+        };
+    };
+
     // Clear error
     const clearError = () => setError(null);
 
@@ -196,14 +252,12 @@ export const ServiceProvider = ({ children }) => {
         currentService,
         loading,
         error,
-        getServices,
         getServiceById,
         addService,
         updateService,
         deleteService,
         clearError,
-        clearCurrentService,
-        setCurrentService
+        clearCurrentService
     };
 
     return (

@@ -18,45 +18,61 @@ export const DepartmentProvider = ({ children }) => {
     const [currentDepartment, setCurrentDepartment] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    
+
     // Pagination state
     const [total, setTotal] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
     const [limit, setLimit] = useState(9);
-    
+    const [filters, setFilters] = useState({});
+
     const { user } = useAuth();
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Get all departments with pagination and filters
     const getDepartments = useCallback(async (params = {}) => {
         try {
             setLoading(true);
             setError(null);
-            
-            // Build query string from params
-            const queryParams = new URLSearchParams();
-            
-            // Add all provided parameters to query
-            Object.entries(params).forEach(([key, value]) => {
-                if (value !== undefined && value !== null && value !== '') {
-                    queryParams.append(key, value);
-                }
-            });
 
-            // Ensure limit is always set
-            if (!params.limit) {
-                queryParams.append('limit', limit);
-            }
+            // Store active filters
+            const activeFilters = Object.fromEntries(
+                Object.entries(params).filter(([_, value]) =>
+                    value !== undefined && value !== null && value !== ''
+                )
+            );
+
+            // Remove pagination from filters for storage
+            const { page, limit, ...filterParams } = activeFilters;
+            setFilters(filterParams);
+
+            // Build query string
+            const queryParams = new URLSearchParams();
+            Object.entries(activeFilters).forEach(([key, value]) => {
+                queryParams.append(key, value);
+            });
 
             const response = await axiosInstance.get(`/departments/all-departments?${queryParams}`);
             const data = response.data.data;
-            
+
             setDepartments(data.departments || []);
             setTotal(data.total || 0);
             setTotalPages(data.totalPages || 1);
             setCurrentPage(data.page || 1);
             setLimit(data.limit || 10);
-            
+
             return response.data;
         } catch (err) {
             const errorMsg = err?.response?.data?.message || 'Failed to fetch departments';
@@ -69,7 +85,12 @@ export const DepartmentProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, [limit]);
+    }, []);
+
+
+
+
+
 
 
 
@@ -86,8 +107,9 @@ export const DepartmentProvider = ({ children }) => {
             setError(null);
             const response = await axiosInstance.get(`/departments/department/${deptId}`);
 
-            // The department data is in response.data.data
-            setCurrentDepartment(response.data.data);
+            // Transform the response to match new schema
+            const departmentData = transformDepartmentData(response.data.data);
+            setCurrentDepartment(departmentData);
 
             return response.data;
         } catch (err) {
@@ -112,13 +134,18 @@ export const DepartmentProvider = ({ children }) => {
 
 
 
+
+
+
     // Create department (SUPER_ADMIN only)
     const createDepartment = async (departmentData) => {
         try {
             setLoading(true);
             setError(null);
             const response = await axiosInstance.post('/departments', departmentData);
-            setDepartments(prev => [...prev, response.data.data]);
+
+            const newDept = transformDepartmentData(response.data.data);
+            setDepartments(prev => [...prev, newDept]);
 
             toast.success('Department created successfully!', {
                 duration: 3000,
@@ -149,17 +176,20 @@ export const DepartmentProvider = ({ children }) => {
 
 
 
+
     // Update department (SUPER_ADMIN or assigned ADMIN)
     const updateDepartment = async (deptId, updateData) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axiosInstance.patch(`/departments/${deptId}`, updateData);
+            const response = await axiosInstance.put(`/departments/${deptId}`, updateData);
+
+            const updatedDept = transformDepartmentData(response.data.data);
             setDepartments(prev =>
-                prev.map(dept => dept._id === deptId ? response.data.data : dept)
+                prev.map(dept => dept._id === deptId ? updatedDept : dept)
             );
             if (currentDepartment?._id === deptId) {
-                setCurrentDepartment(response.data.data);
+                setCurrentDepartment(updatedDept);
             }
 
             toast.success('Department updated successfully!', {
@@ -180,6 +210,12 @@ export const DepartmentProvider = ({ children }) => {
             setLoading(false);
         }
     };
+
+
+
+
+
+
 
 
 
@@ -226,6 +262,38 @@ export const DepartmentProvider = ({ children }) => {
 
 
 
+    
+
+
+    // Transform department data to match frontend expectations
+    const transformDepartmentData = (department) => {
+        if (!department) return null;
+
+        return {
+            ...department,
+            // Add compatibility fields if needed
+            stats: department.stats || {
+                totalServices: department.services?.length || 0,
+                totalAdmins: department.admins?.length || 0,
+                totalRatings: department.ratings?.length || 0,
+                averageRating: calculateAverageRating(department.ratings)
+            },
+            location: department.location || {
+                city: department.address?.city,
+                state: department.address?.state,
+                pincode: department.address?.pincode
+            }
+        };
+    };
+
+
+    // Calculate average rating
+    const calculateAverageRating = (ratings = []) => {
+        if (!ratings || ratings.length === 0) return 0;
+        const sum = ratings.reduce((acc, rating) => acc + (rating.rating || 0), 0);
+        return parseFloat((sum / ratings.length).toFixed(1));
+    };
+ 
 
     // Clear error
     const clearError = () => setError(null);
@@ -236,12 +304,11 @@ export const DepartmentProvider = ({ children }) => {
     // Load departments on mount
     const loadDepartments = useCallback(async () => {
         try {
-            await getDepartments();
+            await getDepartments({ page: 1, limit: 9 });
         } catch (error) {
-            // Error already handled in getDepartments
             console.error('Failed to load departments on mount:', error);
         }
-    }, []);
+    }, [getDepartments]);
 
     useEffect(() => {
         loadDepartments();
@@ -252,6 +319,11 @@ export const DepartmentProvider = ({ children }) => {
         currentDepartment,
         loading,
         error,
+        total,
+        totalPages,
+        currentPage,
+        limit,
+        filters,
         getDepartments,
         getDepartmentById,
         createDepartment,

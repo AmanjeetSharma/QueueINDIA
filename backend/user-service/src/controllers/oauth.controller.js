@@ -78,8 +78,8 @@ export const googleLogin = asyncHandler(async (req, res) => {
 
     const cookieOptions = {
         httpOnly: true,
-        secure: true,
-        sameSite: "None",
+        secure: false, // must remain true in production
+        sameSite: "Lax",
         path: "/",
     };
 

@@ -7,7 +7,6 @@ import { Department } from "../models/department.model.js";
 
 
 
-
 // Add a new service to a department
 const addService = asyncHandler(async (req, res) => {
     const { deptId } = req.params;
@@ -15,11 +14,10 @@ const addService = asyncHandler(async (req, res) => {
         name,
         serviceCode,
         description,
-        avgServiceTime,
-        requiredDocs,
-        maxDailyServiceTokens,
-        counters,
-        priorityAllowed
+        priorityAllowed = true,
+        isDocumentUploadRequired = true,
+        tokenManagement = {},
+        requiredDocs = []
     } = req.body;
 
     if (!name || !serviceCode) {
@@ -38,35 +36,33 @@ const addService = asyncHandler(async (req, res) => {
         throw new ApiError(403, "Not authorized to add service");
     }
 
-    // 🔁 Prevent duplicate serviceCode
-    if (department.services.some(s => s.serviceCode === serviceCode)) {
+    // 🔁 Prevent duplicate serviceCode (case-insensitive)
+    const uppercaseServiceCode = serviceCode.toUpperCase();
+    if (department.services.some(s => s.serviceCode === uppercaseServiceCode)) {
         throw new ApiError(409, "Service with this code already exists in this department");
     }
 
-    // 📝 Validate counter mapping if provided
-    if (counters && counters.length > 0) {
-        const invalidCounters = counters.filter(
-            c => !department.counters?.some(cnt => cnt.counterNumber === c)
-        );
-
-        if (invalidCounters.length > 0) {
-            throw new ApiError(
-                400,
-                `Invalid counters: ${invalidCounters.join(", ")}`
-            );
-        }
-    }
-
-    // 🟦 Build service object properly formatted
+    // 🟦 Build service object according to new schema
     const newService = {
         name,
-        serviceCode,
+        serviceCode: uppercaseServiceCode,
         description: description || "",
-        avgServiceTime: avgServiceTime || 15,
-        requiredDocs: requiredDocs || [],
-        maxDailyServiceTokens: maxDailyServiceTokens || null,
-        counters: counters || [],
-        priorityAllowed: priorityAllowed ?? true
+        priorityAllowed,
+        isDocumentUploadRequired,
+        tokenManagement: {
+            maxDailyServiceTokens: tokenManagement.maxDailyServiceTokens || null,
+            maxTokensPerSlot: tokenManagement.maxTokensPerSlot || 10,
+            queueType: tokenManagement.queueType || "Hybrid",
+            timeBtwEverySlot: tokenManagement.timeBtwEverySlot || 15,
+            slotStartTime: tokenManagement.slotStartTime || "10:00",
+            slotEndTime: tokenManagement.slotEndTime || "17:00",
+            slotWindows: tokenManagement.slotWindows || []
+        },
+        requiredDocs: requiredDocs.map(doc => ({
+            name: doc.name,
+            description: doc.description || "",
+            isMandatory: doc.isMandatory ?? true
+        }))
     };
 
     department.services.push(newService);
@@ -74,12 +70,18 @@ const addService = asyncHandler(async (req, res) => {
 
     const savedService = department.services[department.services.length - 1];
 
-    console.log(`🆕 Service Added: ${savedService.name} (${savedService.serviceCode})`);
+    console.log(`🆕 Service Added: ${savedService.name} (${savedService.serviceCode}) to ${department.name}`);
 
     return res.status(201).json(
         new ApiResponse(201, savedService, "Service added successfully")
     );
 });
+
+
+
+
+
+
 
 
 
@@ -111,26 +113,18 @@ const updateService = asyncHandler(async (req, res) => {
     if (!service) throw new ApiError(404, "Service not found");
 
     // 🔁 Prevent duplicate serviceCode if changed
-    if (updateData.serviceCode && updateData.serviceCode !== service.serviceCode) {
-        if (department.services.some(
-            s => s.serviceCode === updateData.serviceCode && s._id.toString() !== serviceId
-        )) {
+    if (updateData.serviceCode) {
+        const uppercaseServiceCode = updateData.serviceCode.toUpperCase();
+        if (uppercaseServiceCode !== service.serviceCode &&
+            department.services.some(
+                s => s.serviceCode === uppercaseServiceCode && s._id.toString() !== serviceId
+            )) {
             throw new ApiError(409, "Another service already has this serviceCode");
         }
+        updateData.serviceCode = uppercaseServiceCode;
     }
 
-    // 🧮 Validate counters if included
-    if (updateData.counters && Array.isArray(updateData.counters)) {
-        const invalidCounters = updateData.counters.filter(
-            c => !department.counters.some(cnt => cnt.counterNumber === c)
-        );
-
-        if (invalidCounters.length > 0) {
-            throw new ApiError(400, `Invalid counters: ${invalidCounters.join(", ")}`);
-        }
-    }
-
-    // 📄 Validate required docs if included
+    // 📄 Validate and normalize requiredDocs if included
     if (updateData.requiredDocs) {
         if (!Array.isArray(updateData.requiredDocs)) {
             throw new ApiError(400, "requiredDocs must be an array");
@@ -138,8 +132,23 @@ const updateService = asyncHandler(async (req, res) => {
         updateData.requiredDocs = updateData.requiredDocs.map(doc => ({
             name: doc.name,
             description: doc.description || "",
-            isMandatory: doc.isMandatory ?? true,
+            isMandatory: doc.isMandatory ?? true
         }));
+    }
+
+    // 🔄 Validate and normalize tokenManagement if included
+    if (updateData.tokenManagement) {
+        // Preserve existing values for missing fields
+        const tokenMgmt = service.tokenManagement || {};
+        updateData.tokenManagement = {
+            maxDailyServiceTokens: updateData.tokenManagement.maxDailyServiceTokens ?? tokenMgmt.maxDailyServiceTokens ?? null,
+            maxTokensPerSlot: updateData.tokenManagement.maxTokensPerSlot ?? tokenMgmt.maxTokensPerSlot ?? 10,
+            queueType: updateData.tokenManagement.queueType ?? tokenMgmt.queueType ?? "Hybrid",
+            timeBtwEverySlot: updateData.tokenManagement.timeBtwEverySlot ?? tokenMgmt.timeBtwEverySlot ?? 15,
+            slotStartTime: updateData.tokenManagement.slotStartTime ?? tokenMgmt.slotStartTime ?? "10:00",
+            slotEndTime: updateData.tokenManagement.slotEndTime ?? tokenMgmt.slotEndTime ?? "17:00",
+            slotWindows: updateData.tokenManagement.slotWindows ?? tokenMgmt.slotWindows ?? []
+        };
     }
 
     // 🟩 Apply the updates safely
@@ -147,22 +156,20 @@ const updateService = asyncHandler(async (req, res) => {
         name: updateData.name ?? service.name,
         serviceCode: updateData.serviceCode ?? service.serviceCode,
         description: updateData.description ?? service.description,
-        avgServiceTime: updateData.avgServiceTime ?? service.avgServiceTime,
-        maxDailyServiceTokens: updateData.maxDailyServiceTokens ?? service.maxDailyServiceTokens,
-        counters: updateData.counters ?? service.counters,
         priorityAllowed: updateData.priorityAllowed ?? service.priorityAllowed,
-        requiredDocs: updateData.requiredDocs ?? service.requiredDocs,
+        isDocumentUploadRequired: updateData.isDocumentUploadRequired ?? service.isDocumentUploadRequired,
+        tokenManagement: updateData.tokenManagement ?? service.tokenManagement,
+        requiredDocs: updateData.requiredDocs ?? service.requiredDocs
     });
 
     await department.save();
 
-    console.log(`📝 Service Updated: ${service.name} (${service.serviceCode})`);
+    console.log(`📝 Service Updated: ${service.name} (${service.serviceCode}) in ${department.name}`);
 
     return res.status(200).json(
         new ApiResponse(200, service, "Service updated successfully")
     );
 });
-
 
 
 

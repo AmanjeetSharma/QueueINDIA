@@ -1,55 +1,4 @@
 import mongoose, { Schema } from "mongoose";
-// import tokenManagementSchema from "./tokenManagementSchema.model.js";
-
-
-
-
-// Token Management Schema (Embed inside Department)
-const tokenManagementSchema = new Schema(
-    {
-        slotInterval: { type: Number, default: 15 },
-        maxDailyTokens: { type: Number, default: 300 },
-        maxTokensPerSlot: { type: Number, default: 10 },
-        queueType: {
-            type: String,
-            enum: ["Online", "Offline", "Hybrid"],
-            default: "Hybrid"
-        },
-
-        slotStartTime: { type: String, default: "10:00" },
-        slotEndTime: { type: String, default: "17:00" },
-        bookingWindowDays: { type: Number, default: 7 },
-
-        allowPriorityTokens: { type: Boolean, default: true },
-        priorityPercentage: { type: Number, default: 10 },
-        priorityCriteria: {
-            seniorCitizenAge: { type: Number, default: 60 },
-            allowPregnantWomen: { type: Boolean, default: true },
-            allowDifferentlyAbled: { type: Boolean, default: true }
-        },
-
-        autoStopOnOverload: { type: Boolean, default: true },
-        realtimeWaitEstimation: { type: Boolean, default: true },
-
-        issuedTokenCount: { type: Number, default: 0 }
-    },
-    { _id: false }
-);
-
-
-
-// Counter Schema (Embed inside Department)
-const counterSchema = new Schema(
-    {
-        counterNumber: { type: Number, required: true },
-        assignedServiceCodes: [String], // Which services supported here
-        isActive: { type: Boolean, default: true }
-    },
-    { _id: true }
-);
-
-
-
 
 
 
@@ -77,10 +26,6 @@ const ratingSchema = new Schema(
     },
     { timestamps: true, _id: false }
 );
-
-
-
-
 
 
 
@@ -131,21 +76,47 @@ const documentRequirementSchema = new Schema(
 
 
 
-// Service Schema
-const serviceSchema = new Schema(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Token Management Schema (Embed inside Department)
+const tokenManagementSchema = new Schema(
     {
-        name: { type: String, required: true, trim: true },
-        serviceCode: { type: String, required: true, uppercase: true, trim: true },
-        description: { type: String, trim: true },
-        avgServiceTime: { type: Number, default: 15 },
-
-        requiredDocs: [documentRequirementSchema],
-
         maxDailyServiceTokens: { type: Number, default: null },
-        counters: [Number],
-        priorityAllowed: { type: Boolean, default: true },
+        maxTokensPerSlot: { type: Number, default: 10 },
+        queueType: {
+            type: String,
+            enum: ["Online", "Offline", "Hybrid"],
+            default: "Hybrid"
+        },
+
+        timeBtwEverySlot: { type: Number, default: 15 },
+
+        slotStartTime: { type: String, default: "10:00" },
+        slotEndTime: { type: String, default: "17:00" },
+
+        slotWindows: [
+            {
+                start: { type: String, required: true }, // "10:00"
+                end: { type: String, required: true },   // "12:00"
+                maxTokens: { type: Number, required: true, default: 10 }
+            }
+        ],
     },
-    { _id: true }
+    { _id: false }
 );
 
 
@@ -153,6 +124,23 @@ const serviceSchema = new Schema(
 
 
 
+
+
+// Service Schema
+const serviceSchema = new Schema(
+    {
+        name: { type: String, required: true, trim: true },
+        serviceCode: { type: String, required: true, uppercase: true, trim: true },
+        description: { type: String, trim: true },
+        priorityAllowed: { type: Boolean, default: true },
+        isDocumentUploadRequired: { type: Boolean, default: true },
+
+        tokenManagement: tokenManagementSchema,
+        requiredDocs: [documentRequirementSchema],
+
+    },
+    { _id: true }
+);
 
 
 
@@ -182,11 +170,8 @@ const departmentSchema = new Schema(
         },
 
         // Operational Info
-        workingHours: [workingHoursSchema],
-        services: [serviceSchema],
-        tokenManagement: tokenManagementSchema,
-        counters: [counterSchema],
-
+        workingHours: [{ type: workingHoursSchema, default: [] }],
+        services: [{ type: serviceSchema, default: [] }],
 
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
@@ -194,25 +179,29 @@ const departmentSchema = new Schema(
             required: true // Super Admin
         },
 
-        // Status
         status: {
             type: String,
             enum: ["active", "inactive", "under-maintenance"],
             default: "active"
         },
+
         isSlotBookingEnabled: { type: Boolean, default: true },
-        isDocumentUploadRequired: { type: Boolean, default: true },
+        bookingWindowDays: { type: Number, default: 7, min: 1, max: 30 },
 
+        priorityCriteria: {
+            seniorCitizenAge: { type: Number, default: 60 },
+            allowPregnantWomen: { type: Boolean, default: true },
+            allowDifferentlyAbled: { type: Boolean, default: true }
+        },
 
-        // 🔹 Ratings
-        ratings: [ratingSchema],
+        ratings: [{ type: ratingSchema, default: [] }],
 
-        // Permission & Ownership
         admins: [
             {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "User",
-                required: true // Department Admin
+                required: true, // Department Admin,
+                default: []
             },
         ],
     },

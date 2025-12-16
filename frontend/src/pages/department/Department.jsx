@@ -458,7 +458,7 @@ const Departments = () => {
               <h3 className="text-lg font-semibold text-red-800 mb-2">Unable to load</h3>
               <p className="text-red-600 text-sm mb-3">{error}</p>
               <button
-                onClick={() => getDepartments({ page: 1, limit: 9 })}
+                onClick={() => getDepartments({ page: 1, limit: 6 })}
                 className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm font-medium"
               >
                 Try Again

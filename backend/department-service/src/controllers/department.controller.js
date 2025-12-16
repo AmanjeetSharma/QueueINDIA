@@ -310,6 +310,11 @@ const updateDepartment = asyncHandler(async (req, res) => {
 
 
 
+
+
+
+
+
 // Get Departments with Filters & Pagination
 const getDepartments = asyncHandler(async (req, res) => {
     const {
@@ -323,7 +328,7 @@ const getDepartments = asyncHandler(async (req, res) => {
         bookingEnabled,
         minRating,
         page = 1,
-        limit = 10,
+        limit = 6,
         sortBy = "createdAt",
         sortOrder = "desc"
     } = req.query;
@@ -382,7 +387,8 @@ const getDepartments = asyncHandler(async (req, res) => {
     sortOptions[sortField] = order === "asc" ? 1 : -1;
 
     // Pagination
-    const safeLimit = Math.max(1, Math.min(parseInt(limit), 50));
+    // const safeLimit = Math.max(1, Math.min(parseInt(limit), 50));
+    const safeLimit = 6;
     const safePage = Math.max(1, parseInt(page));
     const skip = (safePage - 1) * safeLimit;
 
@@ -482,6 +488,12 @@ const getDepartments = asyncHandler(async (req, res) => {
         }, "Departments fetched successfully")
     );
 });
+
+
+
+
+
+
 
 
 
@@ -619,4 +631,3 @@ export {
 // const adminUser = userServiceResponse.data?.data;
 
 // if (!adminUser) throw new ApiError(404, "Admin user not found");
-

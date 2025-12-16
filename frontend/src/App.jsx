@@ -2,6 +2,7 @@ import AppRoutes from "./routes/AppRoutes";
 import { AuthProvider } from "./context/AuthContext";
 import { DepartmentProvider } from "./context/DepartmentContext";
 import { ServiceProvider } from "./context/ServiceContext";
+import { BookingProvider } from "./context/BookingContext";
 import { Toaster } from "react-hot-toast";
 
 const App = () => {
@@ -9,6 +10,7 @@ const App = () => {
     <AuthProvider>
       <DepartmentProvider>
         <ServiceProvider>
+          <BookingProvider>
           <AppRoutes />
           <Toaster
             position="top-right"
@@ -35,6 +37,7 @@ const App = () => {
               },
             }}
           />
+          </BookingProvider>
         </ServiceProvider>
       </DepartmentProvider>
     </AuthProvider>

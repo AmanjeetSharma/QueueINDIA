@@ -1,18 +1,27 @@
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc.js";
-import timezone from "dayjs/plugin/timezone.js";
-
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Department } from "../models/department.model.js";
 import { Booking } from "../models/booking.model.js";
+import dayjs from "dayjs";
+import {
+    convertToMinutes,
+    convertToTimeString,
+    generateDynamicSlots,
+    getCurrentIST,
+    isSlotWithinWorkingHours,
+    isDateWithinBookingWindow,
+    TZ
+} from "../utils/bookingUtils.js";
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
-// Force timezone India
-const TZ = "Asia/Kolkata";
+
+
+
+
+
+
+
 
 // Get working days for a department
 const getWorkingDays = asyncHandler(async (req, res) => {
@@ -22,18 +31,16 @@ const getWorkingDays = asyncHandler(async (req, res) => {
     if (!department) throw new ApiError(404, "Department not found");
 
     const { workingHours, bookingWindowDays = 7 } = department;
-
     const results = [];
-    const today = dayjs().tz(TZ).startOf('day');
+    const today = getCurrentIST().startOf('day');
 
     for (let i = 0; i < bookingWindowDays; i++) {
         const date = today.add(i, "day");
-        const dayKey = date.format("ddd"); // "Mon", "Tue", etc.
+        const dayKey = date.format("ddd");
 
         const config = workingHours.find((w) => w.day === dayKey);
 
         if (!config) {
-            // If day not configured in working hours, assume closed
             results.push({
                 date: date.format("YYYY-MM-DD"),
                 day: dayKey,
@@ -57,10 +64,23 @@ const getWorkingDays = asyncHandler(async (req, res) => {
         });
     }
 
+    console.log(`Working days fetched! Dept: ${deptId} | Days Count: ${results.length}`);
+
     return res.status(200).json(
-        new ApiResponse(200, results, "Available working days returned successfully")
+        new ApiResponse(200, results, "Available working days fetched successfully")
     );
 });
+
+
+
+
+
+
+
+
+
+
+
 
 // Get available slots for a specific service and date
 const getAvailableSlots = asyncHandler(async (req, res) => {
@@ -80,130 +100,92 @@ const getAvailableSlots = asyncHandler(async (req, res) => {
         throw new ApiError(400, "This service requires priority access");
     }
 
-    // Get working hours for the date
-    const dayOfWeek = dayjs(date).tz(TZ).format("ddd");
+    // FIX: Properly parse the date string to get day of week
+    const selectedDate = dayjs(date).tz(TZ);
+    const dayOfWeek = selectedDate.format("ddd");
     const workingDay = department.workingHours.find((d) => d.day === dayOfWeek);
 
     if (!workingDay || workingDay.isClosed) {
         throw new ApiError(400, "Department is closed on the selected date");
     }
 
+    // Rest of the function remains the same...
     // Use service-specific token management or fallback to department
     const tokenManagement = service.tokenManagement || department.tokenManagement || {};
+
+    let slots = [];
 
     // Check if slot windows are configured
     if (!tokenManagement.slotWindows || tokenManagement.slotWindows.length === 0) {
         // Generate slots based on start/end time and interval
-        const slots = generateDynamicSlots(
+        slots = generateDynamicSlots(
             tokenManagement.slotStartTime || "10:00",
             tokenManagement.slotEndTime || "17:00",
             tokenManagement.timeBtwEverySlot || 15,
             tokenManagement.maxTokensPerSlot || 10
         );
+    } else {
+        tokenManagement.slotWindows.forEach((window) => {
+            const generatedSlots = generateDynamicSlots(
+                window.start,
+                window.end,
+                tokenManagement.timeBtwEverySlot || 15,
+                window.maxTokens || tokenManagement.maxTokensPerSlot || 10
+            );
 
-        // Check bookings for each slot
-        const results = await Promise.all(
-            slots.map(async (slot) => {
-                const totalBooked = await Booking.countDocuments({
-                    department: deptId,
-                    "service.serviceId": serviceId,
-                    date,
-                    slotTime: slot.time
-                });
-
-                return {
-                    ...slot,
-                    remaining: Math.max(0, slot.maxTokens - totalBooked),
-                    isFullyBooked: totalBooked >= slot.maxTokens,
-                    available: totalBooked < slot.maxTokens
-                };
-            })
-        );
-
-        return res.status(200).json(
-            new ApiResponse(200, results, "Available slots fetched successfully")
-        );
+            slots.push(...generatedSlots);
+        });
     }
 
-    // Use configured slot windows
-    const results = await Promise.all(
-        tokenManagement.slotWindows.map(async (window) => {
-            const slotTime = `${window.start}-${window.end}`;
 
+    // Filter slots within working hours
+    const filteredSlots = slots.filter(slot =>
+        isSlotWithinWorkingHours(slot, workingDay)
+    );
+
+    // Check bookings for each slot
+    const results = await Promise.all(
+        filteredSlots.map(async (slot) => {
             const totalBooked = await Booking.countDocuments({
                 department: deptId,
                 "service.serviceId": serviceId,
                 date,
-                slotTime
+                slotTime: slot.time
             });
 
+            const remaining = Math.max(0, slot.maxTokens - totalBooked);
+
             return {
-                time: slotTime,
-                start: window.start,
-                end: window.end,
-                maxTokens: window.maxTokens || tokenManagement.maxTokensPerSlot || 10,
-                remaining: Math.max(0, (window.maxTokens || tokenManagement.maxTokensPerSlot || 10) - totalBooked),
-                isFullyBooked: totalBooked >= (window.maxTokens || tokenManagement.maxTokensPerSlot || 10),
-                available: totalBooked < (window.maxTokens || tokenManagement.maxTokensPerSlot || 10),
-                slotWindow: window
+                ...slot,
+                remaining,
+                isFullyBooked: remaining === 0,
+                available: remaining > 0,
+                bookedCount: totalBooked
             };
         })
     );
 
-    // Filter out slots that are outside working hours
-    const filteredResults = results.filter(slot => {
-        if (!workingDay.isClosed) {
-            const slotStartTime = convertToMinutes(slot.start);
-            const slotEndTime = convertToMinutes(slot.end);
-            const openTime = convertToMinutes(workingDay.openTime);
-            const closeTime = convertToMinutes(workingDay.closeTime);
-
-            return slotStartTime >= openTime && slotEndTime <= closeTime;
-        }
-        return false;
-    });
+    console.log(`Available slots fetched! Dept: ${deptId} | Service: ${serviceId} | For Date: ${date}`);
 
     return res.status(200).json(
-        new ApiResponse(200, filteredResults, "Available slots fetched successfully")
+        new ApiResponse(200, results, "Available slots fetched successfully")
     );
 });
 
-// Helper function to generate dynamic slots
-const generateDynamicSlots = (startTime, endTime, intervalMinutes, maxTokensPerSlot) => {
-    const slots = [];
-    let currentTime = convertToMinutes(startTime);
-    const endTimeMinutes = convertToMinutes(endTime);
 
-    while (currentTime + intervalMinutes <= endTimeMinutes) {
-        const slotStart = convertToTimeString(currentTime);
-        const slotEnd = convertToTimeString(currentTime + intervalMinutes);
 
-        slots.push({
-            time: `${slotStart}-${slotEnd}`,
-            start: slotStart,
-            end: slotEnd,
-            maxTokens: maxTokensPerSlot,
-            interval: intervalMinutes
-        });
 
-        currentTime += intervalMinutes;
-    }
 
-    return slots;
-};
 
-// Helper function to convert time string to minutes
-const convertToMinutes = (timeString) => {
-    const [hours, minutes] = timeString.split(':').map(Number);
-    return hours * 60 + minutes;
-};
 
-// Helper function to convert minutes to time string
-const convertToTimeString = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-};
+
+
+
+
+
+
+
+
 
 // Create a new booking
 const createBooking = asyncHandler(async (req, res) => {
@@ -227,15 +209,12 @@ const createBooking = asyncHandler(async (req, res) => {
     }
 
     // Check if date is within booking window
-    const selectedDate = dayjs(date).tz(TZ);
-    const today = dayjs().tz(TZ).startOf('day');
-    const maxDate = today.add(department.bookingWindowDays || 7, 'day');
-
-    if (selectedDate.isBefore(today) || selectedDate.isAfter(maxDate)) {
+    if (!isDateWithinBookingWindow(date, department.bookingWindowDays || 7)) {
         throw new ApiError(400, `Selected date must be within ${department.bookingWindowDays || 7} days from today`);
     }
 
     // Check working hours for the date
+    const selectedDate = dayjs(date).tz(TZ);
     const dayOfWeek = selectedDate.format("ddd");
     const workingDay = department.workingHours.find((d) => d.day === dayOfWeek);
 
@@ -243,19 +222,14 @@ const createBooking = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Department is closed on the selected date");
     }
 
-    // Check slot availability
+    // Parse slot time
     const [slotStart, slotEnd] = slotTime.split('-');
     const slotStartMinutes = convertToMinutes(slotStart);
     const slotEndMinutes = convertToMinutes(slotEnd);
 
     // Validate slot time is within working hours
-    if (!workingDay.isClosed) {
-        const openTime = convertToMinutes(workingDay.openTime);
-        const closeTime = convertToMinutes(workingDay.closeTime);
-
-        if (slotStartMinutes < openTime || slotEndMinutes > closeTime) {
-            throw new ApiError(400, "Selected slot is outside working hours");
-        }
+    if (!isSlotWithinWorkingHours({ start: slotStart, end: slotEnd }, workingDay)) {
+        throw new ApiError(400, "Selected slot is outside working hours");
     }
 
     // Check capacity
@@ -283,7 +257,7 @@ const createBooking = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Selected slot is fully booked");
     }
 
-    // Check priority eligibility
+    // Check priority eligibility - UPDATED: Removed age check
     if (priorityType !== "NONE") {
         if (!service.priorityAllowed) {
             throw new ApiError(400, "Priority service is not allowed for this service");
@@ -292,9 +266,11 @@ const createBooking = asyncHandler(async (req, res) => {
         const priorityCriteria = department.priorityCriteria || {};
         switch (priorityType) {
             case "SENIOR_CITIZEN":
-                if (!req.user.age || req.user.age < (priorityCriteria.seniorCitizenAge || 60)) {
-                    throw new ApiError(400, "You are not eligible for senior citizen priority");
+                if (!priorityCriteria.seniorCitizenAge) {
+                    throw new ApiError(400, "Senior citizen priority is not available in this department");
                 }
+                // Note: Age verification will be done at the counter
+                // We cannot check age here since user model doesn't have age field
                 break;
             case "PREGNANT_WOMEN":
                 if (!priorityCriteria.allowPregnantWomen) {
@@ -306,6 +282,8 @@ const createBooking = asyncHandler(async (req, res) => {
                     throw new ApiError(400, "Differently abled priority is not allowed in this department");
                 }
                 break;
+            default:
+                throw new ApiError(400, "Invalid priority type");
         }
     }
 
@@ -317,6 +295,12 @@ const createBooking = asyncHandler(async (req, res) => {
     );
 
     const tokenNumber = (lastToken?.tokenNumber || 0) + 1;
+
+    // Determine initial status based on document requirement
+    let initialStatus = "APPROVED";
+    if (service.isDocumentUploadRequired) {
+        initialStatus = "PENDING_DOCS";
+    }
 
     // Create booking
     const booking = await Booking.create({
@@ -334,7 +318,7 @@ const createBooking = asyncHandler(async (req, res) => {
             end: slotEnd,
             maxTokens: maxTokens
         },
-        status: service.isDocumentUploadRequired ? "PENDING_DOCS" : "APPROVED",
+        status: initialStatus,
         priorityType,
         tokenNumber: tokenNumber,
         estimatedServiceTime: tokenManagement.timeBtwEverySlot || 15,
@@ -346,6 +330,8 @@ const createBooking = asyncHandler(async (req, res) => {
             serviceRequiresDocs: service.isDocumentUploadRequired
         }
     });
+
+    console.log(`Booking created! Booking ID: ${booking._id} | User: ${req.user._id} | Name: ${req.user.name} | Token no. ${tokenNumber}`); 
 
     return res.status(201).json(
         new ApiResponse(201, booking, "Booking created successfully")
@@ -360,203 +346,131 @@ const createBooking = asyncHandler(async (req, res) => {
 
 
 
-// // Get user's bookings
-// const getUserBookings = asyncHandler(async (req, res) => {
-//     const { status, page = 1, limit = 10 } = req.query;
 
-//     const filter = { user: req.user._id };
-//     if (status) {
-//         filter.status = status;
-//     }
 
-//     const bookings = await Booking.find(filter)
-//         .populate('department', 'name departmentCategory')
-//         .sort({ createdAt: -1 })
-//         .skip((page - 1) * limit)
-//         .limit(limit);
 
-//     const total = await Booking.countDocuments(filter);
 
-//     return res.status(200).json(
-//         new ApiResponse(200, {
-//             bookings,
-//             total,
-//             page: parseInt(page),
-//             totalPages: Math.ceil(total / limit),
-//             limit: parseInt(limit)
-//         }, "User bookings fetched successfully")
-//     );
-// });
 
-// // Get specific booking
-// const getBookingById = asyncHandler(async (req, res) => {
-//     const { bookingId } = req.params;
 
-//     const booking = await Booking.findById(bookingId)
-//         .populate('department', 'name address contact')
-//         .populate('user', 'firstName lastName email phone');
 
-//     if (!booking) {
-//         throw new ApiError(404, "Booking not found");
-//     }
+// Get user's bookings
+const getUserBookings = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const { status } = req.query;
 
-//     // Check authorization (user can see their own, admins can see all)
-//     if (booking.user.toString() !== req.user._id.toString() &&
-//         req.user.role !== 'SUPER_ADMIN' &&
-//         !req.user.managedDepartments?.includes(booking.department._id.toString())) {
-//         throw new ApiError(403, "Not authorized to view this booking");
-//     }
+    const query = { user: userId };
+    if (status) {
+        query.status = status;
+    }
 
-//     return res.status(200).json(
-//         new ApiResponse(200, booking, "Booking fetched successfully")
-//     );
-// });
+    const bookings = await Booking.find(query)
+        .sort({ date: 1, slotTime: 1 })
+        .populate('department', 'name address contact')
+        .lean();
 
-// // Update booking status (for admins)
-// const updateBookingStatus = asyncHandler(async (req, res) => {
-//     const { bookingId } = req.params;
-//     const { status, rejectionReason, tokenNumber } = req.body;
+    console.log(`User bookings fetched! User: ${userId} | Name: ${req.user.name} | Count: ${bookings.length}`);
 
-//     const booking = await Booking.findById(bookingId);
-//     if (!booking) throw new ApiError(404, "Booking not found");
+    return res.status(200).json(
+        new ApiResponse(200, bookings, "User bookings fetched successfully")
+    );
+});
 
-//     // Check if user is admin of this department
-//     const isDepartmentAdmin = req.user.managedDepartments?.includes(booking.department.toString());
-//     if (req.user.role !== 'SUPER_ADMIN' && !isDepartmentAdmin) {
-//         throw new ApiError(403, "Not authorized to update this booking");
-//     }
 
-//     // Update status
-//     if (status) {
-//         booking.status = status;
-//     }
 
-//     // Add rejection reason if provided
-//     if (rejectionReason) {
-//         booking.notes = rejectionReason;
-//     }
 
-//     // Assign token number if provided and status is APPROVED
-//     if (tokenNumber && status === 'APPROVED') {
-//         booking.tokenNumber = tokenNumber;
-//     }
 
-//     await booking.save();
 
-//     return res.status(200).json(
-//         new ApiResponse(200, booking, "Booking status updated successfully")
-//     );
-// });
 
-// // Cancel booking (user initiated)
-// const cancelBooking = asyncHandler(async (req, res) => {
-//     const { bookingId } = req.params;
 
-//     const booking = await Booking.findById(bookingId);
-//     if (!booking) throw new ApiError(404, "Booking not found");
 
-//     // Check if user owns this booking
-//     if (booking.user.toString() !== req.user._id.toString()) {
-//         throw new ApiError(403, "Not authorized to cancel this booking");
-//     }
 
-//     // Check if booking can be cancelled (only PENDING_DOCS or DOCS_SUBMITTED)
-//     if (!['PENDING_DOCS', 'DOCS_SUBMITTED'].includes(booking.status)) {
-//         throw new ApiError(400, `Booking cannot be cancelled in ${booking.status} status`);
-//     }
 
-//     booking.status = 'CANCELLED';
-//     await booking.save();
 
-//     return res.status(200).json(
-//         new ApiResponse(200, booking, "Booking cancelled successfully")
-//     );
-// });
 
-// // Upload documents for booking
-// const uploadBookingDocuments = asyncHandler(async (req, res) => {
-//     const { bookingId } = req.params;
-//     const { documents } = req.body; // Array of { name, description, documentUrl }
 
-//     const booking = await Booking.findById(bookingId);
-//     if (!booking) throw new ApiError(404, "Booking not found");
 
-//     // Check if user owns this booking
-//     if (booking.user.toString() !== req.user._id.toString()) {
-//         throw new ApiError(403, "Not authorized to upload documents for this booking");
-//     }
+// Get booking by ID
+const getBookingById = asyncHandler(async (req, res) => {
+    const { bookingId } = req.params;
 
-//     // Check if booking is in correct status
-//     if (booking.status !== 'PENDING_DOCS') {
-//         throw new ApiError(400, `Documents cannot be uploaded in ${booking.status} status`);
-//     }
+    const booking = await Booking.findById(bookingId)
+        .populate({
+            path: "department",
+            select: "name address contact"
+        })
+        .lean();
 
-//     // Validate documents
-//     if (!documents || !Array.isArray(documents) || documents.length === 0) {
-//         throw new ApiError(400, "At least one document is required");
-//     }
+    if (!booking) {
+        throw new ApiError(404, "Booking not found");
+    }
 
-//     // Add documents to booking
-//     booking.submittedDocs = documents.map(doc => ({
-//         name: doc.name,
-//         description: doc.description || '',
-//         isMandatory: doc.isMandatory || true,
-//         documentUrl: doc.documentUrl,
-//         status: 'PENDING'
-//     }));
+    // 🔒 HARD SECURITY CHECK
+    if (booking.user.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to view this booking");
+    }
+    
+    console.log(`Booking fetched! Booking ID: ${bookingId} | User: ${req.user._id} | Name: ${req.user.name}`);
 
-//     // Update status
-//     booking.status = 'DOCS_SUBMITTED';
-//     await booking.save();
+    return res.status(200).json(
+        new ApiResponse(200, booking, "Booking fetched successfully")
+    );
+});
 
-//     return res.status(200).json(
-//         new ApiResponse(200, booking, "Documents uploaded successfully")
-//     );
-// });
 
-// // Get all bookings for a department (admin view)
-// const getDepartmentBookings = asyncHandler(async (req, res) => {
-//     const { deptId } = req.params;
-//     const { date, status, serviceId, page = 1, limit = 20 } = req.query;
 
-//     // Check if user is admin of this department
-//     const isDepartmentAdmin = req.user.managedDepartments?.includes(deptId);
-//     if (req.user.role !== 'SUPER_ADMIN' && !isDepartmentAdmin) {
-//         throw new ApiError(403, "Not authorized to view bookings for this department");
-//     }
 
-//     const filter = { department: deptId };
 
-//     if (date) filter.date = date;
-//     if (status) filter.status = status;
-//     if (serviceId) filter['service.serviceId'] = serviceId;
 
-//     const bookings = await Booking.find(filter)
-//         .populate('user', 'firstName lastName email phone')
-//         .sort({ date: 1, tokenNumber: 1 })
-//         .skip((page - 1) * limit)
-//         .limit(limit);
 
-//     const total = await Booking.countDocuments(filter);
 
-//     return res.status(200).json(
-//         new ApiResponse(200, {
-//             bookings,
-//             total,
-//             page: parseInt(page),
-//             totalPages: Math.ceil(total / limit),
-//             limit: parseInt(limit)
-//         }, "Department bookings fetched successfully")
-//     );
-// });
+
+
+
+
+
+
+
+
+// Cancel booking
+const cancelBooking = asyncHandler(async (req, res) => {
+    const { bookingId } = req.params;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+        throw new ApiError(404, "Booking not found");
+    }
+
+    // 🔒 Ownership check
+    if (booking.user.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to cancel this booking");
+    }
+
+    // ❌ Business rules
+    if (booking.status === "CANCELLED") {
+        throw new ApiError(400, "Booking is already cancelled");
+    }
+
+    if (booking.status === "COMPLETED") {
+        throw new ApiError(400, "Cannot cancel a completed booking");
+    }
+
+    booking.status = "CANCELLED";
+    await booking.save();
+
+    console.log(`Booking cancelled! Booking ID: ${bookingId} | User: ${req.user._id} | Name: ${req.user.name}`);
+
+    return res.status(200).json(
+        new ApiResponse(200, booking, "Booking cancelled successfully")
+    );
+});
+
+
 export {
     getWorkingDays,
     getAvailableSlots,
     createBooking,
-    // getUserBookings,
-    // getBookingById,
-    // updateBookingStatus,
-    // cancelBooking,
-    // uploadBookingDocuments,
-    // getDepartmentBookings
+    getUserBookings,
+    getBookingById,
+    cancelBooking
 };

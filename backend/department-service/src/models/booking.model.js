@@ -1,150 +1,164 @@
 import mongoose from "mongoose";
 
-const bookingSchema = new mongoose.Schema(
-    {
-        user: {
+const bookingSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+
+    department: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Department",
+        required: true
+    },
+
+    service: {
+        serviceId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            ref: "Service",
             required: true
         },
-
-        department: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Department",
-            required: true
-        },
-
-        service: {
-            serviceId: {
-                type: mongoose.Schema.Types.ObjectId,
-                required: true
-            },
-            name: {
-                type: String,
-                required: true
-            },
-            serviceCode: {
-                type: String,
-                required: true
-            }
-        },
-
-        date: {
-            type: String, // Format: "2025-11-21"
-            required: true
-        },
-
-        slotTime: {
-            type: String, // Format: "10:00-11:00" (start-end)
-            required: true
-        },
-
-        slotWindow: {
-            start: {
-                type: String,
-                required: true
-            },
-            end: {
-                type: String,
-                required: true
-            },
-            maxTokens: {
-                type: Number,
-                required: true
-            }
-        },
-
-        submittedDocs: [
-            {
-                name: {
-                    type: String,
-                    required: true
-                },
-                description: {
-                    type: String,
-                    default: ""
-                },
-                isMandatory: {
-                    type: Boolean,
-                    default: true
-                },
-                documentUrl: {
-                    type: String,
-                    required: true
-                },
-                status: {
-                    type: String,
-                    enum: ["PENDING", "APPROVED", "REJECTED"],
-                    default: "PENDING"
-                },
-                rejectionReason: {
-                    type: String,
-                    default: ""
-                }
-            }
-        ],
-
-        status: {
+        name: {
             type: String,
-            enum: [
-                "PENDING_DOCS",      // Waiting for document upload
-                "DOCS_SUBMITTED",    // Documents uploaded, awaiting review
-                "UNDER_REVIEW",      // Documents being reviewed
-                "APPROVED",          // Approved, token assigned
-                "REJECTED",          // Rejected
-                "CANCELLED",         // User cancelled
-                "COMPLETED"          // Service completed
-            ],
-            default: "PENDING_DOCS"
+            required: true
         },
-
-        priorityType: {
+        serviceCode: {
             type: String,
-            enum: ["NONE", "SENIOR_CITIZEN", "PREGNANT_WOMEN", "DIFFERENTLY_ABLED"],
-            default: "NONE"
-        },
-
-        tokenNumber: {
-            type: Number,
-            default: null
-        },
-
-        estimatedServiceTime: {
-            type: Number, // in minutes
-            default: null
-        },
-
-        notes: {
-            type: String,
-            default: ""
-        },
-
-        metadata: {
-            queueType: {
-                type: String,
-                enum: ["Online", "Offline", "Hybrid"],
-                default: "Hybrid"
-            },
-            isDocumentUploadRequired: {
-                type: Boolean,
-                default: true
-            },
-            departmentName: {
-                type: String,
-                required: true
-            },
-            serviceRequiresDocs: {
-                type: Boolean,
-                default: true
-            }
+            required: true
         }
     },
+
+    date: {
+        type: String, // Format: "2025-11-21"
+        required: true
+    },
+
+    slotTime: {
+        type: String, // Format: "10:00-11:00" (start-end)
+        required: true
+    },
+
+    slotWindow: {
+        start: {
+            type: String,
+            required: true
+        },
+        end: {
+            type: String,
+            required: true
+        },
+        maxTokens: {
+            type: Number,
+            required: true
+        }
+    },
+
+    submittedDocs: [
+        {
+            name: { type: String, required: true },
+            documentUrl: { type: String, required: true },
+
+            uploadedAt: {
+                type: Date,
+                default: Date.now
+            },
+
+            status: {
+                type: String,
+                enum: ["PENDING", "APPROVED", "REJECTED"],
+                default: "PENDING"
+            },
+
+            rejectionReason: String
+        }
+    ],
+
+
+    status: {
+        type: String,
+        enum: [
+            "PENDING_DOCS",      // Waiting for document upload
+            "DOCS_SUBMITTED",    // Documents uploaded, awaiting review
+            "UNDER_REVIEW",      // Documents being reviewed
+            "APPROVED",          // Approved, token assigned
+            "REJECTED",          // Rejected
+            "CANCELLED",         // User cancelled
+            "COMPLETED"          // Service completed
+        ],
+        default: "PENDING_DOCS"
+    },
+
+    priorityType: {
+        type: String,
+        enum: ["NONE", "SENIOR_CITIZEN", "PREGNANT_WOMEN", "DIFFERENTLY_ABLED"],
+        default: "NONE"
+    },
+
+    tokenNumber: {
+        type: Number,
+        default: null
+    },
+
+    estimatedServiceTime: {
+        type: Number, // in minutes
+        default: null
+    },
+
+    bookingDescription: {
+        type: String,
+        trim: true,
+        minlength: 10
+    },
+
+
+    metadata: {
+        queueType: {
+            type: String,
+            enum: ["Online", "Offline", "Hybrid"],
+            default: "Hybrid"
+        },
+        isDocumentUploadRequired: {
+            type: Boolean,
+            default: true
+        },
+        departmentName: {
+            type: String,
+            required: true
+        },
+        serviceRequiresDocs: {
+            type: Boolean,
+            default: true
+        }
+    }
+},
     {
         timestamps: true,
         toJSON: { virtuals: true },
         toObject: { virtuals: true }
     }
 );
+
+
+
+
+
+
+bookingSchema.virtual('requiresDocumentUpload').get(function () {
+    return this.status === 'PENDING_DOCS' && this.metadata.serviceRequiresDocs;
+});
+
+// pre-save hook to handle document requirement
+bookingSchema.pre('save', function (next) {
+    if (!this.metadata.serviceRequiresDocs && this.status === 'PENDING_DOCS') {
+        this.status = 'DOCS_SUBMITTED';
+    }
+    next();
+});
+
+
+
+
 
 // Indexes for faster queries
 bookingSchema.index({ department: 1, date: 1, slotTime: 1 });

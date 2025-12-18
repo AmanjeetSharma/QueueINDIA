@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { axiosInstance } from '../lib/http';
 import toast from 'react-hot-toast';
@@ -14,24 +14,32 @@ export const useBooking = () => {
 };
 
 export const BookingProvider = ({ children }) => {
+    const [bookings, setBookings] = useState([]);
+    const [currentBooking, setCurrentBooking] = useState(null);
     const [availableDates, setAvailableDates] = useState([]);
     const [availableSlots, setAvailableSlots] = useState([]);
-    const [userBookings, setUserBookings] = useState([]);
-    const [currentBooking, setCurrentBooking] = useState(null);
-    const [departmentBookings, setDepartmentBookings] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
 
-    // ==================== BOOKING FLOW ====================
 
-    // Step 1: Get available working days for a department
+
+
+
+
+
+
+
+    // Get available working days for a department
     const getAvailableDates = async (deptId) => {
         try {
             setLoading(true);
             setError(null);
             const response = await axiosInstance.get(`/departments/${deptId}/booking/dates`);
-            setAvailableDates(response.data.data || []);
+
+            const dates = transformBookingDates(response.data.data);
+            setAvailableDates(dates);
+
             return response.data;
         } catch (err) {
             const errorMsg = err?.response?.data?.message || 'Failed to fetch available dates';
@@ -46,7 +54,15 @@ export const BookingProvider = ({ children }) => {
         }
     };
 
-    // Step 2: Get available slots for a specific service and date
+
+
+
+
+
+
+
+
+    // Get available slots for a specific service and date
     const getAvailableSlots = async (deptId, serviceId, date) => {
         try {
             setLoading(true);
@@ -54,7 +70,10 @@ export const BookingProvider = ({ children }) => {
             const response = await axiosInstance.get(`/departments/${deptId}/booking/${serviceId}/slots`, {
                 params: { date }
             });
-            setAvailableSlots(response.data.data || []);
+
+            const slots = transformBookingSlots(response.data.data);
+            setAvailableSlots(slots);
+
             return response.data;
         } catch (err) {
             const errorMsg = err?.response?.data?.message || 'Failed to fetch available slots';
@@ -69,20 +88,27 @@ export const BookingProvider = ({ children }) => {
         }
     };
 
-    // Step 3: Create a new booking
+
+
+
+
+
+
+
+    // Create a new booking
     const createBooking = async (deptId, serviceId, bookingData) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axiosInstance.post(
-                `/departments/${deptId}/booking/${serviceId}/book`,
-                bookingData
-            );
 
-            const newBooking = response.data.data;
+            const preparedData = prepareBookingData(bookingData);
+            const response = await axiosInstance.post(`/departments/${deptId}/booking/${serviceId}/book`, preparedData);
 
-            // Add to user bookings
-            setUserBookings(prev => [newBooking, ...prev]);
+            const newBooking = transformBookingData(response.data.data);
+
+            // Add to bookings list
+            setBookings(prev => [newBooking, ...prev]);
+            setCurrentBooking(newBooking);
 
             toast.success('Booking created successfully!', {
                 duration: 3000,
@@ -103,33 +129,28 @@ export const BookingProvider = ({ children }) => {
         }
     };
 
-    // Step 4: Upload documents for a booking
-    const uploadBookingDocuments = async (bookingId, documents) => {
+
+
+
+
+
+
+
+    // Get all bookings for the current user
+    const getUserBookings = async (filters = {}) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axiosInstance.post(`/bookings/${bookingId}/documents`, { documents });
 
-            // Update the booking in userBookings
-            setUserBookings(prev =>
-                prev.map(booking =>
-                    booking._id === bookingId ? response.data.data : booking
-                )
-            );
+            const params = { ...filters };
+            const response = await axiosInstance.get('/bookings/user', { params });
 
-            // Update current booking if it's the same
-            if (currentBooking?._id === bookingId) {
-                setCurrentBooking(response.data.data);
-            }
-
-            toast.success('Documents uploaded successfully!', {
-                duration: 3000,
-                position: "bottom-left"
-            });
+            const userBookings = response.data.data.map(transformBookingData);
+            setBookings(userBookings);
 
             return response.data;
         } catch (err) {
-            const errorMsg = err?.response?.data?.message || 'Failed to upload documents';
+            const errorMsg = err?.response?.data?.message || 'Failed to fetch bookings';
             setError(errorMsg);
             toast.error(errorMsg, {
                 duration: 4000,
@@ -141,44 +162,24 @@ export const BookingProvider = ({ children }) => {
         }
     };
 
-    // ==================== USER BOOKING MANAGEMENT ====================
 
-    // Get all bookings for the logged-in user
-    const getUserBookings = async (params = {}) => {
-        try {
-            setLoading(true);
-            setError(null);
 
-            const queryParams = new URLSearchParams();
-            Object.entries(params).forEach(([key, value]) => {
-                if (value !== undefined && value !== null && value !== '') {
-                    queryParams.append(key, value);
-                }
-            });
 
-            const response = await axiosInstance.get(`/bookings/my-bookings?${queryParams}`);
-            setUserBookings(response.data.data?.bookings || response.data.data || []);
-            return response.data;
-        } catch (err) {
-            const errorMsg = err?.response?.data?.message || 'Failed to fetch your bookings';
-            setError(errorMsg);
-            toast.error(errorMsg, {
-                duration: 4000,
-                position: "bottom-left"
-            });
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    // Get specific booking details
+
+
+
+    // Get a specific booking by ID
     const getBookingById = async (bookingId) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axiosInstance.get(`/bookings/booking/${bookingId}`);
-            setCurrentBooking(response.data.data);
+
+            const response = await axiosInstance.get(`/bookings/${bookingId}`);
+
+            const booking = transformBookingData(response.data.data);
+            setCurrentBooking(booking);
+
             return response.data;
         } catch (err) {
             const errorMsg = err?.response?.data?.message || 'Failed to fetch booking details';
@@ -193,23 +194,32 @@ export const BookingProvider = ({ children }) => {
         }
     };
 
-    // Cancel a booking (user can cancel before approval)
+
+
+
+
+
+
+    // Cancel a booking
     const cancelBooking = async (bookingId) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axiosInstance.patch(`/bookings/booking/${bookingId}/cancel`);
 
-            // Update in userBookings
-            setUserBookings(prev =>
+            const response = await axiosInstance.post(`/bookings/${bookingId}/cancel`);
+
+            const cancelledBooking = transformBookingData(response.data.data);
+
+            // Update bookings list
+            setBookings(prev =>
                 prev.map(booking =>
-                    booking._id === bookingId ? response.data.data : booking
+                    booking._id === bookingId ? cancelledBooking : booking
                 )
             );
 
-            // Update current booking if it's the same
+            // Update current booking if it's the one being cancelled
             if (currentBooking?._id === bookingId) {
-                setCurrentBooking(response.data.data);
+                setCurrentBooking(cancelledBooking);
             }
 
             toast.success('Booking cancelled successfully!', {
@@ -231,71 +241,54 @@ export const BookingProvider = ({ children }) => {
         }
     };
 
-    // ==================== DEPARTMENT ADMIN FUNCTIONS ====================
 
-    // Get all bookings for a department (admin view)
-    const getDepartmentBookings = async (deptId, params = {}) => {
+
+
+
+
+    
+
+    // Upload documents for a booking
+    const uploadDocuments = async (bookingId, documents) => {
         try {
             setLoading(true);
             setError(null);
 
-            const queryParams = new URLSearchParams();
-            Object.entries(params).forEach(([key, value]) => {
-                if (value !== undefined && value !== null && value !== '') {
-                    queryParams.append(key, value);
+            const formData = new FormData();
+            documents.forEach((doc, index) => {
+                formData.append('documents', doc.file);
+                formData.append(`documents[${index}][name]`, doc.name);
+                formData.append(`documents[${index}][description]`, doc.description || '');
+            });
+
+            const response = await axiosInstance.post(`/bookings/${bookingId}/documents`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
                 }
             });
 
-            const response = await axiosInstance.get(`/bookings/department/${deptId}/bookings?${queryParams}`);
-            setDepartmentBookings(response.data.data?.bookings || response.data.data || []);
-            return response.data;
-        } catch (err) {
-            const errorMsg = err?.response?.data?.message || 'Failed to fetch department bookings';
-            setError(errorMsg);
-            toast.error(errorMsg, {
-                duration: 4000,
-                position: "bottom-left"
-            });
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
+            const updatedBooking = transformBookingData(response.data.data);
 
-    // Update booking status (admin only)
-    const updateBookingStatus = async (bookingId, statusData) => {
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await axiosInstance.patch(`/bookings/booking/${bookingId}/status`, statusData);
-
-            // Update in departmentBookings
-            setDepartmentBookings(prev =>
+            // Update bookings list
+            setBookings(prev =>
                 prev.map(booking =>
-                    booking._id === bookingId ? response.data.data : booking
+                    booking._id === bookingId ? updatedBooking : booking
                 )
             );
 
-            // Update in userBookings if present
-            setUserBookings(prev =>
-                prev.map(booking =>
-                    booking._id === bookingId ? response.data.data : booking
-                )
-            );
-
-            // Update current booking if it's the same
+            // Update current booking
             if (currentBooking?._id === bookingId) {
-                setCurrentBooking(response.data.data);
+                setCurrentBooking(updatedBooking);
             }
 
-            toast.success('Booking status updated successfully!', {
+            toast.success('Documents uploaded successfully!', {
                 duration: 3000,
                 position: "bottom-left"
             });
 
             return response.data;
         } catch (err) {
-            const errorMsg = err?.response?.data?.message || 'Failed to update booking status';
+            const errorMsg = err?.response?.data?.message || 'Failed to upload documents';
             setError(errorMsg);
             toast.error(errorMsg, {
                 duration: 4000,
@@ -307,63 +300,149 @@ export const BookingProvider = ({ children }) => {
         }
     };
 
-    // ==================== HELPER FUNCTIONS ====================
 
-    // Check if a date is available for booking
-    const isDateAvailable = (dateString) => {
-        const date = availableDates.find(d => d.date === dateString);
-        return date && !date.isClosed && !date.isPast;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Transform booking dates data
+    const transformBookingDates = (dates) => {
+        if (!Array.isArray(dates)) return [];
+
+        return dates.map(date => ({
+            ...date,
+            // Ensure consistent date format
+            date: date.date || '',
+            // Ensure boolean values
+            isClosed: Boolean(date.isClosed),
+            isToday: Boolean(date.isToday),
+            isPast: Boolean(date.isPast),
+            // Format for display
+            displayDate: formatDisplayDate(date.date),
+            displayDay: formatDisplayDay(date.day)
+        }));
     };
 
-    // Get available slots for a specific date
-    const getSlotsForDate = (dateString) => {
-        return availableSlots.filter(slot => {
-            // Filter slots that are available and not fully booked
-            return slot.available && !slot.isFullyBooked;
-        });
+    // Transform booking slots data
+    const transformBookingSlots = (slots) => {
+        if (!Array.isArray(slots)) return [];
+
+        return slots.map(slot => ({
+            ...slot,
+            // Ensure numeric values
+            remaining: Number(slot.remaining) || 0,
+            maxTokens: Number(slot.maxTokens) || 0,
+            // Ensure boolean values
+            available: Boolean(slot.available),
+            isFullyBooked: Boolean(slot.isFullyBooked),
+            // Add formatted display values
+            displayTime: formatSlotTime(slot.time),
+            displayStart: formatTimeTo12Hour(slot.start),
+            displayEnd: formatTimeTo12Hour(slot.end),
+            // Add availability status
+            availabilityStatus: slot.remaining > 0 ? 'Available' : 'Full'
+        }));
     };
 
-    // Check if user can cancel a booking
-    const canCancelBooking = (booking) => {
-        if (!booking) return false;
-        return ['PENDING_DOCS', 'DOCS_SUBMITTED'].includes(booking.status);
-    };
-
-    // Check if booking requires document upload
-    const requiresDocumentUpload = (booking) => {
-        if (!booking) return false;
-        return booking.status === 'PENDING_DOCS' &&
-            booking.metadata?.isDocumentUploadRequired === true;
-    };
-
-    // Format booking for display
-    const formatBooking = (booking) => {
+    // Transform booking data
+    const transformBookingData = (booking) => {
         if (!booking) return null;
 
         return {
             ...booking,
-            formattedDate: booking.date,
-            formattedTime: booking.slotTime?.replace('-', ' - '),
-            isPriority: booking.priorityType !== 'NONE',
-            priorityLabel: getPriorityLabel(booking.priorityType),
-            statusLabel: getStatusLabel(booking.status)
+            // Ensure submittedDocs is always an array
+            submittedDocs: booking.submittedDocs || [],
+            // Ensure metadata exists
+            metadata: booking.metadata || {
+                queueType: "Hybrid",
+                isDocumentUploadRequired: true,
+                departmentName: "",
+                serviceRequiresDocs: true
+            },
+            // Add formatted display values
+            displayDate: formatDisplayDate(booking.date),
+            displayTime: formatSlotTime(booking.slotTime),
+            displayStatus: formatBookingStatus(booking.status),
+            // Add computed properties
+            requiresDocumentUpload: booking.status === 'PENDING_DOCS' && booking.metadata?.serviceRequiresDocs,
+            canCancel: ['PENDING_DOCS', 'DOCS_SUBMITTED', 'UNDER_REVIEW'].includes(booking.status)
         };
     };
 
-    // Get priority label
-    const getPriorityLabel = (priorityType) => {
-        const labels = {
-            'NONE': 'Regular',
-            'SENIOR_CITIZEN': 'Senior Citizen',
-            'PREGNANT_WOMEN': 'Pregnant Women',
-            'DIFFERENTLY_ABLED': 'Differently Abled'
+    // Prepare booking data for API
+    const prepareBookingData = (data) => {
+        return {
+            date: data.date,
+            slotTime: data.slotTime,
+            priorityType: data.priorityType || "NONE",
+            notes: data.notes || ""
         };
-        return labels[priorityType] || 'Regular';
     };
 
-    // Get status label
-    const getStatusLabel = (status) => {
-        const labels = {
+    // Helper: Format date for display
+    const formatDisplayDate = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-IN', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+    };
+
+    // Helper: Format day for display
+    const formatDisplayDay = (day) => {
+        const days = {
+            'Mon': 'Monday',
+            'Tue': 'Tuesday',
+            'Wed': 'Wednesday',
+            'Thu': 'Thursday',
+            'Fri': 'Friday',
+            'Sat': 'Saturday',
+            'Sun': 'Sunday'
+        };
+        return days[day] || day;
+    };
+
+    // Helper: Format slot time for display
+    const formatSlotTime = (slotTime) => {
+        if (!slotTime) return '';
+        const [start, end] = slotTime.split('-');
+        return `${formatTimeTo12Hour(start)} - ${formatTimeTo12Hour(end)}`;
+    };
+
+    // Helper: Convert 24-hour time to 12-hour format
+    const formatTimeTo12Hour = (time24) => {
+        if (!time24) return '';
+        const [hours, minutes] = time24.split(':').map(Number);
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const hours12 = hours % 12 || 12;
+        return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+    };
+
+    // Helper: Format booking status for display
+    const formatBookingStatus = (status) => {
+        const statusMap = {
             'PENDING_DOCS': 'Pending Documents',
             'DOCS_SUBMITTED': 'Documents Submitted',
             'UNDER_REVIEW': 'Under Review',
@@ -372,58 +451,89 @@ export const BookingProvider = ({ children }) => {
             'CANCELLED': 'Cancelled',
             'COMPLETED': 'Completed'
         };
-        return labels[status] || status;
+        return statusMap[status] || status;
     };
 
-    // Clear states
-    const clearAvailableDates = () => setAvailableDates([]);
-    const clearAvailableSlots = () => setAvailableSlots([]);
-    const clearUserBookings = () => setUserBookings([]);
-    const clearDepartmentBookings = () => setDepartmentBookings([]);
-    const clearCurrentBooking = () => setCurrentBooking(null);
-    const clearError = () => setError(null);
+    // Clear error
+    const clearError = useCallback(() => {
+        setError(null);
+    }, []);
+
+    // Clear current booking
+    const clearCurrentBooking = useCallback(() => {
+        setCurrentBooking(null);
+    }, []);
+
+    // Clear available data
+    const clearAvailableData = useCallback(() => {
+        setAvailableDates([]);
+        setAvailableSlots([]);
+    }, []);
+
+    // Check if slot is available
+    const checkSlotAvailability = useCallback((slot) => {
+        return slot?.available && slot?.remaining > 0;
+    }, []);
+
+    // Get upcoming bookings
+    const getUpcomingBookings = useCallback(() => {
+        const today = new Date().toISOString().split('T')[0];
+        return bookings.filter(booking =>
+            booking.status === 'APPROVED' &&
+            booking.date >= today
+        );
+    }, [bookings]);
+
+    // Get bookings requiring action (document upload)
+    const getPendingActionBookings = useCallback(() => {
+        return bookings.filter(booking =>
+            booking.requiresDocumentUpload &&
+            booking.status === 'PENDING_DOCS'
+        );
+    }, [bookings]);
+
+
+
+
+
+
+
+
+
+
+
 
     const value = {
         // State
+        bookings,
+        currentBooking,
         availableDates,
         availableSlots,
-        userBookings,
-        currentBooking,
-        departmentBookings,
         loading,
         error,
 
-        // Booking Flow Functions
+        // Actions
         getAvailableDates,
         getAvailableSlots,
         createBooking,
-        uploadBookingDocuments,
-
-        // User Booking Management
         getUserBookings,
         getBookingById,
         cancelBooking,
+        uploadDocuments,
 
-        // Department Admin Functions
-        getDepartmentBookings,
-        updateBookingStatus,
-
-        // Helper Functions
-        isDateAvailable,
-        getSlotsForDate,
-        canCancelBooking,
-        requiresDocumentUpload,
-        formatBooking,
-        getPriorityLabel,
-        getStatusLabel,
-
-        // Clear Functions
-        clearAvailableDates,
-        clearAvailableSlots,
-        clearUserBookings,
-        clearDepartmentBookings,
+        // Helpers
+        clearError,
         clearCurrentBooking,
-        clearError
+        clearAvailableData,
+        checkSlotAvailability,
+        getUpcomingBookings,
+        getPendingActionBookings,
+
+        // Utility functions (exported for convenience)
+        formatDisplayDate,
+        formatSlotTime,
+        formatTimeTo12Hour,
+        formatBookingStatus
     };
 
     return (

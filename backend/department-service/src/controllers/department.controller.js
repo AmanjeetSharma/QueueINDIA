@@ -325,17 +325,16 @@ const getDepartments = asyncHandler(async (req, res) => {
         state,
         status,
         serviceCode,
-        bookingEnabled,
         minRating,
         page = 1,
         limit = 6,
-        sortBy = "createdAt",
-        sortOrder = "desc"
+        sortBy = "name",
+        sortOrder = "asc"
     } = req.query;
 
     const filter = {};
 
-    // 🔍 Search by name OR service names (case-insensitive)
+    // 🔍 Search by name, services, or category
     if (search && search.trim().length > 0) {
         const searchTerm = search.trim();
         filter.$or = [
@@ -362,13 +361,12 @@ const getDepartments = asyncHandler(async (req, res) => {
         filter.status = status.trim();
     }
 
-    // New filters for the updated schema
+    // Service code filter
     if (serviceCode && serviceCode.trim().length > 0) {
         filter["services.serviceCode"] = serviceCode.trim().toUpperCase();
     }
-    if (bookingEnabled !== undefined) {
-        filter.isSlotBookingEnabled = bookingEnabled === "true" || bookingEnabled === true;
-    }
+
+    // Rating filter
     if (minRating && !isNaN(minRating)) {
         const ratingNum = parseFloat(minRating);
         if (ratingNum >= 1 && ratingNum <= 5) {
@@ -378,31 +376,30 @@ const getDepartments = asyncHandler(async (req, res) => {
 
     // Handle sorting
     const sortOptions = {};
-    const validSortFields = ["name", "departmentCategory", "status", "createdAt", "updatedAt"];
+    const validSortFields = ["name", "departmentCategory", "status"];
     const validSortOrder = ["asc", "desc"];
 
-    const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
-    const order = validSortOrder.includes(sortOrder) ? sortOrder : "desc";
+    const sortField = validSortFields.includes(sortBy) ? sortBy : "name";
+    const order = validSortOrder.includes(sortOrder) ? sortOrder : "asc";
 
     sortOptions[sortField] = order === "asc" ? 1 : -1;
 
     // Pagination
-    // const safeLimit = Math.max(1, Math.min(parseInt(limit), 50));
     const safeLimit = 6;
     const safePage = Math.max(1, parseInt(page));
     const skip = (safePage - 1) * safeLimit;
 
     const total = await Department.countDocuments(filter);
 
-    // Fields to select (WITHOUT population to avoid User model error)
+    // Fetch departments
     const departments = await Department.find(filter)
-        .select("name departmentCategory address.city address.state address.pincode contact.phone contact.email status isSlotBookingEnabled services ratings createdAt updatedAt admins")
+        .select("name departmentCategory address.city address.state address.pincode contact.phone contact.email status services ratings admins")
         .sort(sortOptions)
         .skip(skip)
         .limit(safeLimit)
         .lean();
 
-    // 🪄 Enhanced response formatting (without population)
+    // Format response
     const formattedDepartments = departments.map(dep => {
         // Calculate average rating
         const avgRating = dep.ratings?.length > 0
@@ -415,7 +412,7 @@ const getDepartments = asyncHandler(async (req, res) => {
         // Get service names
         const serviceNames = dep.services?.map(s => s.name).slice(0, 3) || [];
 
-        // Count active admins (excluding null/undefined)
+        // Count active admins
         const adminCount = dep.admins?.filter(admin => admin).length || 0;
 
         return {
@@ -432,20 +429,17 @@ const getDepartments = asyncHandler(async (req, res) => {
                 email: dep.contact?.email
             },
             status: dep.status,
-            isSlotBookingEnabled: dep.isSlotBookingEnabled,
             stats: {
                 totalServices: serviceCount,
                 totalAdmins: adminCount,
                 totalRatings: dep.ratings?.length || 0,
                 averageRating: parseFloat(avgRating.toFixed(1))
             },
-            servicesPreview: serviceNames,
-            createdAt: dep.createdAt,
-            updatedAt: dep.updatedAt
+            servicesPreview: serviceNames
         };
     });
 
-    // Debug logging: show applied filters
+    // Applied filters for debugging
     const appliedFilters = {
         search: search && search.trim().length > 0 ? search.trim() : null,
         category: category && category.trim().length > 0 ? category.trim() : null,
@@ -454,13 +448,11 @@ const getDepartments = asyncHandler(async (req, res) => {
         pincode: pincode && pincode.trim().length > 0 ? pincode.trim() : null,
         status: status && status.trim().length > 0 ? status.trim() : null,
         serviceCode: serviceCode && serviceCode.trim().length > 0 ? serviceCode.trim().toUpperCase() : null,
-        bookingEnabled: bookingEnabled !== undefined ? (bookingEnabled === "true" || bookingEnabled === true) : null,
         minRating: minRating && !isNaN(minRating) ? parseFloat(minRating) : null,
         sortBy: sortField,
         sortOrder: order,
         page: safePage,
-        limit: safeLimit,
-        skip
+        limit: safeLimit
     };
 
     // Only show filters that were actually provided

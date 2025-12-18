@@ -15,7 +15,11 @@ import {
   FaEnvelope,
   FaIdCard,
   FaBuilding,
-  FaShieldAlt
+  FaShieldAlt,
+  FaTachometerAlt,
+  FaUserShield,
+  FaUserTie,
+  FaUserCog
 } from "react-icons/fa";
 
 const Navbar = () => {
@@ -116,7 +120,6 @@ const Navbar = () => {
     { to: "/pricing", label: "Pricing", icon: FaDollarSign },
   ];
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const roleColors = getRoleColors(user?.role);
 
   const dropdownVariants = {
@@ -310,7 +313,7 @@ const Navbar = () => {
                   initial="hidden"
                   animate="visible"
                   exit="exit"
-                  className="absolute right-0 mt-3 w-64 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200 py-3 z-50"
+                  className="absolute right-0 mt-3 w-72 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200 py-3 z-50"
                 >
                   {isAuthenticated ? (
                     // Authenticated user menu
@@ -325,6 +328,78 @@ const Navbar = () => {
                           </span>
                         </div>
                       </div>
+
+                      {/* Role-Specific Panel Links */}
+                      {user?.role === 'SUPER_ADMIN' && (
+                        <motion.div variants={itemVariants}>
+                          <Link
+                            to="/super-admin-panel"
+                            className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-red-50 transition-colors group"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                              <FaUserShield className="w-4 h-4 text-red-600" />
+                            </div>
+                            <div>
+                              <span className="font-medium">Super Admin Panel</span>
+                              <p className="text-xs text-gray-500">Full system control</p>
+                            </div>
+                          </Link>
+                        </motion.div>
+                      )}
+
+                      {user?.role === 'ADMIN' && (
+                        <motion.div variants={itemVariants}>
+                          <Link
+                            to="/admin-panel"
+                            className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-purple-50 transition-colors group"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                              <FaUserCog className="w-4 h-4 text-purple-600" />
+                            </div>
+                            <div>
+                              <span className="font-medium">Admin Panel</span>
+                              <p className="text-xs text-gray-500">Administration tools</p>
+                            </div>
+                          </Link>
+                        </motion.div>
+                      )}
+
+                      {user?.role === 'DEPARTMENT_OFFICER' && (
+                        <motion.div variants={itemVariants}>
+                          <Link
+                            to="/officer-panel"
+                            className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors group"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                              <FaUserTie className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <span className="font-medium">Officer Panel</span>
+                              <p className="text-xs text-gray-500">Department management</p>
+                            </div>
+                          </Link>
+                        </motion.div>
+                      )}
+
+                      {/* Dashboard Link - Universal for all roles */}
+                      <motion.div variants={itemVariants}>
+                        <Link
+                          to="/dashboard"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                            <FaTachometerAlt className="w-4 h-4 text-indigo-600" />
+                          </div>
+                          <div>
+                            <span className="font-medium">Dashboard</span>
+                            <p className="text-xs text-gray-500">User dashboard</p>
+                          </div>
+                        </Link>
+                      </motion.div>
 
                       <motion.div variants={itemVariants}>
                         <Link
@@ -382,7 +457,18 @@ const Navbar = () => {
                         </Link>
                       </motion.div>
 
-
+                      <motion.div variants={itemVariants}>
+                        <Link
+                          to="/register"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                            <FaUser className="w-4 h-4 text-green-600" />
+                          </div>
+                          <span>Sign Up</span>
+                        </Link>
+                      </motion.div>
 
                       <motion.div variants={itemVariants}>
                         <Link
@@ -529,6 +615,70 @@ const Navbar = () => {
                       </div>
                     </motion.div>
 
+                    {/* Role-Specific Panels in Mobile */}
+                    {user?.role === 'SUPER_ADMIN' && (
+                      <motion.div variants={itemVariants} initial="hidden" animate="visible">
+                        <Link
+                          to="/super-admin-panel"
+                          className="flex items-center gap-3 py-3 px-4 hover:bg-red-50 rounded-xl transition-colors"
+                          onClick={closeMobileMenu}
+                        >
+                          <FaUserShield className="w-5 h-5 text-red-600" />
+                          <div>
+                            <span className="font-medium">Super Admin Panel</span>
+                            <p className="text-xs text-gray-500">Full system control</p>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    )}
+
+                    {user?.role === 'ADMIN' && (
+                      <motion.div variants={itemVariants} initial="hidden" animate="visible">
+                        <Link
+                          to="/admin-panel"
+                          className="flex items-center gap-3 py-3 px-4 hover:bg-purple-50 rounded-xl transition-colors"
+                          onClick={closeMobileMenu}
+                        >
+                          <FaUserCog className="w-5 h-5 text-purple-600" />
+                          <div>
+                            <span className="font-medium">Admin Panel</span>
+                            <p className="text-xs text-gray-500">Administration tools</p>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    )}
+
+                    {user?.role === 'DEPARTMENT_OFFICER' && (
+                      <motion.div variants={itemVariants} initial="hidden" animate="visible">
+                        <Link
+                          to="/officer-panel"
+                          className="flex items-center gap-3 py-3 px-4 hover:bg-blue-50 rounded-xl transition-colors"
+                          onClick={closeMobileMenu}
+                        >
+                          <FaUserTie className="w-5 h-5 text-blue-600" />
+                          <div>
+                            <span className="font-medium">Officer Panel</span>
+                            <p className="text-xs text-gray-500">Department management</p>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    )}
+
+                    {/* Universal Dashboard in Mobile */}
+                    <motion.div variants={itemVariants} initial="hidden" animate="visible">
+                      <Link
+                        to="/dashboard"
+                        className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-xl transition-colors mb-2"
+                        onClick={closeMobileMenu}
+                      >
+                        <FaTachometerAlt className="w-5 h-5 text-gray-600" />
+                        <div>
+                          <span className="font-medium">Dashboard</span>
+                          <p className="text-xs text-gray-500">User dashboard</p>
+                        </div>
+                      </Link>
+                    </motion.div>
+
                     <motion.div variants={itemVariants} initial="hidden" animate="visible">
                       <Link
                         to="/profile"
@@ -563,6 +713,17 @@ const Navbar = () => {
                         <span>Sign In</span>
                       </Link>
                     </motion.div>
+
+                    <motion.div variants={itemVariants} initial="hidden" animate="visible">
+                      <Link
+                        to="/register"
+                        className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-xl transition-colors mb-2"
+                        onClick={closeMobileMenu}
+                      >
+                        <FaUser className="w-5 h-5 text-gray-600" />
+                        <span>Sign Up</span>
+                      </Link>
+                    </motion.div>
                   </>
                 )}
               </div>
@@ -574,4 +735,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default Navbar

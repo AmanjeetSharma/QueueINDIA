@@ -41,12 +41,11 @@ const Departments = () => {
     pincode: '',
     status: '',
     serviceCode: '',
-    bookingEnabled: '',
     minRating: ''
   });
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState('createdAt');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
 
   // Load initial filters from context if available
   useEffect(() => {
@@ -86,7 +85,6 @@ const Departments = () => {
       pincode: '',
       status: '',
       serviceCode: '',
-      bookingEnabled: '',
       minRating: ''
     };
     setFilters(resetFilters);
@@ -287,18 +285,6 @@ const Departments = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Booking</label>
-                  <select
-                    value={filters.bookingEnabled}
-                    onChange={(e) => handleFilterChange('bookingEnabled', e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                  >
-                    <option value="">All</option>
-                    <option value="true">Booking Enabled</option>
-                    <option value="false">Walk-in Only</option>
-                  </select>
-                </div>
-                <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1.5">Min Rating</label>
                   <select
                     value={filters.minRating}
@@ -340,7 +326,7 @@ const Departments = () => {
           <div className="flex items-center gap-3 pt-3 mt-3 border-t border-slate-200">
             <span className="text-xs text-slate-600 font-medium">Sort by:</span>
             <div className="flex gap-1">
-              {['name', 'createdAt', 'status'].map((field) => (
+              {['name', 'departmentCategory', 'status'].map((field) => (
                 <button
                   key={field}
                   onClick={() => handleSortChange(field)}
@@ -350,7 +336,7 @@ const Departments = () => {
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  {field === 'createdAt' ? 'Date' : field.charAt(0).toUpperCase() + field.slice(1)}
+                  {field === 'departmentCategory' ? 'Category' : field.charAt(0).toUpperCase() + field.slice(1)}
                   {sortBy === field && (
                     <span className="ml-1">
                       {sortOrder === 'asc' ? '↑' : '↓'}
@@ -471,7 +457,7 @@ const Departments = () => {
   );
 };
 
-// Updated Department Card with new schema data
+// Department Card Component
 const DepartmentCard = ({ department, index, getCategoryIcon, getStatusBadge }) => {
   const location = department.location || {};
   const stats = department.stats || {};

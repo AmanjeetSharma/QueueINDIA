@@ -32,7 +32,11 @@ const Home = () => {
     });
 
     useEffect(() => {
-        getDepartments();
+        const fetchData = async () => {
+            await getDepartments(); 
+        };
+
+        fetchData();
 
         // Simulated stats - replace with actual API call
         setStats({

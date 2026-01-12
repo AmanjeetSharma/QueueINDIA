@@ -1,158 +1,139 @@
-import { Booking } from '../models/booking.model.js';
-import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinaryFile.js';
+import fs from "fs";
+import { Booking } from "../models/booking.model.js";
+import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinaryFile.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
+// utils/cloudinaryHelpers.js
+/**
+ * 🧩 Extract Cloudinary public_id from a Cloudinary URL
+ * - Handles versioned URLs (v12345)
+ * - Removes file extension
+ */
+export const extractPublicId = (url) => {
+    if (!url) return null;
 
+    // Example:
+    // https://res.cloudinary.com/.../upload/v1766390157/queueindia/bookings/xxx.jpg
+    const parts = url.split("/upload/")[1];
+    if (!parts) return null;
 
+    // Remove version (v12345/)
+    const withoutVersion = parts.replace(/^v\d+\//, "");
 
-
-
-
-
-// Upload documents for a booking
-const uploadDocuments = async (req, res) => {
-    try {
-        const { bookingId } = req.params;
-        const { documents } = req.body; // Array of document objects
-
-        // Find booking
-        const booking = await Booking.findById(bookingId);
-        if (!booking) {
-            return res.status(404).json({
-                success: false,
-                message: 'Booking not found'
-            });
-        }
-
-        // Check if user owns this booking
-        if (booking.user.toString() !== req.user.id) {
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized access to booking'
-            });
-        }
-
-        // Check if booking is in PENDING_DOCS status
-        if (booking.status !== 'PENDING_DOCS') {
-            return res.status(400).json({
-                success: false,
-                message: `Cannot upload documents. Current status: ${booking.status}`
-            });
-        }
-
-        // Process each document
-        const uploadedDocs = [];
-
-        for (const doc of documents) {
-            // Upload to Cloudinary
-            const cloudinaryResult = await uploadToCloudinary(
-                doc.base64Content, // Expecting base64 string
-                `queueindia/bookings/${bookingId}/documents`
-            );
-
-            uploadedDocs.push({
-                name: doc.name,
-                description: doc.description || '',
-                isMandatory: doc.isMandatory || true,
-                documentUrl: cloudinaryResult.url,
-                status: 'PENDING'
-            });
-        }
-
-        // Update booking
-        booking.submittedDocs = uploadedDocs;
-        booking.status = 'DOCS_SUBMITTED';
-        booking.updatedAt = Date.now();
-
-        await booking.save();
-
-        // Populate user and department info
-        await booking.populate([
-            { path: 'user', select: 'name email phone' },
-            { path: 'department', select: 'name serviceCode' }
-        ]);
-
-        res.status(200).json({
-            success: true,
-            message: 'Documents uploaded successfully',
-            data: booking
-        });
-
-    } catch (error) {
-        console.error('Document upload error:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message || 'Failed to upload documents'
-        });
-    }
+    // Remove extension (.jpg, .png, .pdf)
+    return withoutVersion.replace(/\.[^/.]+$/, "");
 };
 
 
+const uploadDocument = asyncHandler(async (req, res) => {
+    const { bookingId } = req.params;
+    const { docId } = req.body;  
+    // console.log("📥 uploadDocument called");
+    // console.log("bookingId:", bookingId);
+    // console.log("docId (requiredDocId):", docId);
+    // console.log("file:", req.file?.originalname);
 
+    /* ───────────── VALIDATIONS ───────────── */
 
+    if (!req.file) {
+        throw new ApiError(400, "File is required");
+    }
 
+    if (!docId) {
+        throw new ApiError(400, "docId (requiredDocId) is required");
+    }
 
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+        throw new ApiError(404, "Booking not found");
+    }
 
+    // 🔒 Ownership check
+    if (booking.user.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to upload documents for this booking");
+    }
 
+    // ❌ Block invalid states
+    if (!["PENDING_DOCS", "DOCS_SUBMITTED"].includes(booking.status)) {
+        throw new ApiError(
+            400,
+            `Cannot upload documents in ${booking.status} state`
+        );
+    }
 
+    /* ───────────── FIND DOCUMENT BY requiredDocId ───────────── */
 
+    const doc = booking.submittedDocs.find(
+        d => d.requiredDocId.toString() === docId
+    );
 
+    if (!doc) {
+        throw new ApiError(400, "Invalid document reference");
+    }
 
+    /* ───────────── DELETE OLD FILE (IF EXISTS) ───────────── */
 
-
-// Get document requirements for a booking
-const getDocumentRequirements = async (req, res) => {
-    try {
-        const { bookingId } = req.params;
-
-        const booking = await Booking.findById(bookingId)
-            .select('submittedDocs status metadata')
-            .populate('service.serviceId', 'requiredDocs');
-
-        if (!booking) {
-            return res.status(404).json({
-                success: false,
-                message: 'Booking not found'
-            });
-        }
-
-        // Get required docs from service
-        const requiredDocs = booking.service?.serviceId?.requiredDocs || [];
-
-        res.status(200).json({
-            success: true,
-            data: {
-                requiredDocs,
-                submittedDocs: booking.submittedDocs,
-                status: booking.status,
-                isDocumentUploadRequired: booking.metadata.serviceRequiresDocs
+    if (doc.documentUrl) {
+        try {
+            const publicId = extractPublicId(doc.documentUrl);
+            if (publicId) {
+                await deleteFromCloudinary(publicId);
             }
-        });
-
-    } catch (error) {
-        console.error('Get document requirements error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch document requirements'
-        });
+        } catch (err) {
+            console.error("⚠️ Failed to delete old file:", err.message);
+        }
     }
-};
 
+    /* ───────────── UPLOAD NEW FILE ───────────── */
 
+    const uploadedDoc = await uploadToCloudinary(
+        req.file.path,
+        `queueindia/bookings/${bookingId}`
+    );
 
+    /* ───────────── UPDATE DOCUMENT ENTRY ───────────── */
 
+    doc.documentUrl = uploadedDoc.url;
+    doc.uploadedAt = new Date();
+    doc.status = "PENDING";
+    doc.rejectionReason = "";
 
+    /* ───────────── UPDATE BOOKING STATUS ───────────── */
 
+    const allUploaded = booking.submittedDocs.every(
+        d => Boolean(d.documentUrl)
+    );
 
+    booking.status = allUploaded
+        ? "DOCS_SUBMITTED"
+        : "PENDING_DOCS";
 
+    await booking.save();
 
+    /* ───────────── CLEAN TEMP FILE ───────────── */
 
+    if (req.file?.path && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+        console.log("🧹 Temp file deleted:", req.file.path);
+    }
 
+    /* ───────────── RESPONSE (FRONTEND-ALIGNED) ───────────── */
 
+    const responseBooking = {
+        ...booking.toObject(),
+        documents: {
+            required: booking.submittedDocs,
+            submittedCount: booking.submittedDocs.length
+        }
+    };
 
+    console.log(`Document uploaded for bookingId: ${bookingId}, docId: ${docId}`);
 
+    return res.status(200).json(
+        new ApiResponse(200, responseBooking, "Document uploaded successfully")
+    );
+});
 
-
-export {
-    uploadDocuments,
-    getDocumentRequirements
-};
+export { uploadDocument };

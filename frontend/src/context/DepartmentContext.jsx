@@ -310,10 +310,6 @@ export const DepartmentProvider = ({ children }) => {
         }
     }, [getDepartments]);
 
-    useEffect(() => {
-        loadDepartments();
-    }, [loadDepartments]);
-
     const value = {
         departments,
         currentDepartment,

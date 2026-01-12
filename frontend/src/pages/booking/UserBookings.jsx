@@ -1,56 +1,122 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useBooking } from '../../context/BookingContext';
-import { 
+import { useAuth } from '../../context/AuthContext';
+import {
   FaCalendarAlt, 
-  FaClock, 
+  FaClock,
   FaCheckCircle,
   FaHourglassHalf,
   FaTimes,
   FaFileUpload,
   FaEye,
   FaFilter,
-  FaSearch
+  FaSearch,
+  FaExclamationTriangle,
+  FaSync
 } from 'react-icons/fa';
 
 const UserBookings = () => {
   const { bookings, getUserBookings, loading, cancelBooking } = useBooking();
+  const { user, isAuthenticated } = useAuth();
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [cancellingId, setCancellingId] = useState(null);
+  const [cancelModal, setCancelModal] = useState({
+    isOpen: false,
+    bookingId: null,
+    serviceName: '',
+    date: '',
+    time: ''
+  });
+  
+  const hasFetchedInitial = useRef(false);
 
+  // Auto-fetch on mount and auth changes
   useEffect(() => {
-    getUserBookings();
-  }, []);
+    const fetchInitialBookings = async () => {
+      if (isAuthenticated && !hasFetchedInitial.current) {
+        try {
+          await getUserBookings();
+          hasFetchedInitial.current = true;
+        } catch (error) {
+          console.error('Failed to fetch bookings:', error);
+          hasFetchedInitial.current = false; // Reset on error
+        }
+      }
+    };
+
+    fetchInitialBookings();
+  }, [isAuthenticated, getUserBookings]);
+
+  // Reset the flag when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      hasFetchedInitial.current = false;
+    }
+  }, [isAuthenticated]);
+
+  const handleRefresh = async () => {
+    try {
+      await getUserBookings();
+    } catch (error) {
+      console.error('Failed to refresh bookings:', error);
+    }
+  };
 
   const filteredBookings = bookings.filter(booking => {
-    // Status filter
     if (filter !== 'all' && booking.status !== filter) return false;
-    
-    // Search filter
+
     if (search) {
       const searchLower = search.toLowerCase();
       return (
-        booking.service.name.toLowerCase().includes(searchLower) ||
-        booking.metadata.departmentName.toLowerCase().includes(searchLower) ||
+        booking.service?.name?.toLowerCase().includes(searchLower) ||
+        booking.metadata?.departmentName?.toLowerCase().includes(searchLower) ||
         booking.tokenNumber?.toString().includes(search) ||
-        booking._id.toLowerCase().includes(searchLower)
+        booking._id?.toLowerCase().includes(searchLower)
       );
     }
-    
+
     return true;
   });
 
-  const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
-    
-    setCancellingId(bookingId);
+  const handleCancelClick = (booking) => {
+    setCancelModal({
+      isOpen: true,
+      bookingId: booking._id,
+      serviceName: booking.service?.name || 'Unknown Service',
+      date: formatDate(booking.date),
+      time: formatTime(booking.slotTime)
+    });
+  };
+
+  const handleCancelConfirm = async () => {
+    if (!cancelModal.bookingId) return;
+
+    setCancellingId(cancelModal.bookingId);
     try {
-      await cancelBooking(bookingId);
+      await cancelBooking(cancelModal.bookingId);
+      setCancelModal({
+        isOpen: false,
+        bookingId: null,
+        serviceName: '',
+        date: '',
+        time: ''
+      });
     } finally {
       setCancellingId(null);
     }
+  };
+
+  const handleCancelClose = () => {
+    setCancelModal({
+      isOpen: false,
+      bookingId: null,
+      serviceName: '',
+      date: '',
+      time: ''
+    });
   };
 
   const getStatusConfig = (status) => {
@@ -67,11 +133,16 @@ const UserBookings = () => {
   };
 
   const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    if (!dateStr) return 'N/A';
+    try {
+      return new Date(dateStr).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return 'Invalid Date';
+    }
   };
 
   const formatTime = (slotTime) => {
@@ -80,13 +151,47 @@ const UserBookings = () => {
     return `${start} - ${end}`;
   };
 
+  // Show loading only on initial load when there are no bookings
+  if (loading && bookings.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-slate-600">Loading your bookings...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">My Bookings</h1>
-          <p className="text-slate-600">View and manage all your appointments</p>
+        {/* Header with Refresh Button */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">My Bookings</h1>
+            <p className="text-slate-600">View and manage all your appointments</p>
+          </div>
+          
+          <button
+            onClick={handleRefresh}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-colors font-medium disabled:opacity-50"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Refreshing...
+              </>
+            ) : (
+              <>
+                <FaSync />
+                Refresh Bookings
+              </>
+            )}
+          </button>
         </div>
 
         {/* Filters and Search */}
@@ -125,19 +230,22 @@ const UserBookings = () => {
           </div>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-slate-600">Loading your bookings...</p>
+        {/* Loading indicator for refresh */}
+        {loading && bookings.length > 0 && (
+          <div className="flex items-center justify-center gap-2 mb-4 p-3 bg-blue-50 rounded-xl">
+            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-blue-700 text-sm font-medium">Updating bookings...</span>
           </div>
-        ) : filteredBookings.length === 0 ? (
+        )}
+
+        {filteredBookings.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl shadow-lg">
             <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <FaCalendarAlt className="text-slate-400 text-2xl" />
             </div>
             <h3 className="text-lg font-semibold text-slate-900 mb-2">No bookings found</h3>
             <p className="text-slate-600 mb-4">
-              {bookings.length === 0 
+              {bookings.length === 0
                 ? "You haven't made any bookings yet."
                 : "No bookings match your current filters."
               }
@@ -157,7 +265,7 @@ const UserBookings = () => {
             {filteredBookings.map((booking, index) => {
               const statusConfig = getStatusConfig(booking.status);
               const StatusIcon = statusConfig.icon;
-              
+
               return (
                 <motion.div
                   key={booking._id}
@@ -181,14 +289,16 @@ const UserBookings = () => {
                             </div>
                           )}
                         </div>
-                        
+
                         <h3 className="text-lg font-bold text-slate-900 mb-2">
-                          {booking.service.name}
-                          <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded ml-2">
-                            {booking.service.serviceCode}
-                          </span>
+                          {booking.service?.name || 'Unknown Service'}
+                          {booking.service?.serviceCode && (
+                            <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded ml-2">
+                              {booking.service.serviceCode}
+                            </span>
+                          )}
                         </h3>
-                        
+
                         <div className="flex flex-wrap gap-4 text-sm text-slate-600">
                           <div className="flex items-center gap-2">
                             <FaCalendarAlt />
@@ -200,7 +310,7 @@ const UserBookings = () => {
                           </div>
                           <div>
                             <span className="text-slate-900 font-medium">
-                              {booking.metadata.departmentName}
+                              {booking.metadata?.departmentName || 'Unknown Department'}
                             </span>
                           </div>
                         </div>
@@ -215,8 +325,8 @@ const UserBookings = () => {
                           <FaEye />
                           View Details
                         </Link>
-                        
-                        {booking.status === 'PENDING_DOCS' && booking.metadata.serviceRequiresDocs && (
+
+                        {booking.status === 'PENDING_DOCS' && booking.metadata?.serviceRequiresDocs && (
                           <Link
                             to={`/bookings/${booking._id}`}
                             className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-colors font-medium"
@@ -225,10 +335,10 @@ const UserBookings = () => {
                             Upload Docs
                           </Link>
                         )}
-                        
+
                         {['PENDING_DOCS', 'DOCS_SUBMITTED', 'UNDER_REVIEW', 'APPROVED'].includes(booking.status) && (
                           <button
-                            onClick={() => handleCancelBooking(booking._id)}
+                            onClick={() => handleCancelClick(booking)}
                             disabled={cancellingId === booking._id}
                             className="inline-flex items-center gap-2 px-4 py-2.5 border-2 border-red-600 text-red-600 rounded-xl hover:bg-red-50 transition-colors font-medium disabled:opacity-50"
                           >
@@ -254,6 +364,97 @@ const UserBookings = () => {
           </div>
         )}
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      <AnimatePresence>
+        {cancelModal.isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={handleCancelClose}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            />
+
+            {/* Modal */}
+            <div className="fixed inset-0 flex items-center justify-center z-50 px-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+              >
+                {/* Modal Header */}
+                <div className="p-6 border-b border-slate-200">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center">
+                      <FaExclamationTriangle className="text-red-600 text-xl" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900">Cancel Booking</h3>
+                      <p className="text-slate-600 text-sm">Are you sure you want to cancel this appointment?</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Body */}
+                <div className="p-6">
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                      <span className="font-medium text-slate-700">Service:</span>
+                      <span className="font-semibold text-slate-900">{cancelModal.serviceName}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                      <span className="font-medium text-slate-700">Date:</span>
+                      <span className="font-semibold text-slate-900">{cancelModal.date}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                      <span className="font-medium text-slate-700">Time:</span>
+                      <span className="font-semibold text-slate-900">{cancelModal.time}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                    <p className="text-sm text-amber-800 font-medium">
+                      ⚠️ Cancellation cannot be undone. You'll need to book a new appointment.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
+                  <button
+                    onClick={handleCancelClose}
+                    disabled={cancellingId === cancelModal.bookingId}
+                    className="px-6 py-3 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium disabled:opacity-50"
+                  >
+                    Keep Booking
+                  </button>
+                  <button
+                    onClick={handleCancelConfirm}
+                    disabled={cancellingId === cancelModal.bookingId}
+                    className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {cancellingId === cancelModal.bookingId ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Cancelling...
+                      </>
+                    ) : (
+                      <>
+                        <FaTimes />
+                        Yes, Cancel Booking
+                      </>
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

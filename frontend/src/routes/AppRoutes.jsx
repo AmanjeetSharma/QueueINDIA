@@ -45,9 +45,12 @@ import OfficerPanel from "../pages/admin/officerPanel/OfficerPanel.jsx";
 
 import NotFound from "../pages/NotFound.jsx";
 
+import ScrollToTop from "../components/ScrollToTop.jsx";
+
 const AppRoutes = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Navbar />
 
       <Routes>
@@ -177,9 +180,18 @@ const AppRoutes = () => {
           <Route path="time" element={<BookingTimeSelect />} />
           <Route path="details" element={<BookingDetailsForm />} />
           <Route path="confirm" element={<BookingConfirmation />} />
-          <Route path="success" element={<BookingSuccess />} />
+          {/* Remove success from here */}
         </Route>
 
+        {/* Add separate success route */}
+        <Route
+          path="/booking-success/:bookingId"
+          element={
+            <ProtectedRoute>
+              <BookingSuccess />
+            </ProtectedRoute>
+          }
+        />
 
 
 

@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDepartment } from '../../context/DepartmentContext';
 import { Link } from 'react-router-dom';
-import { 
-  FaBuilding, 
-  FaMapMarkerAlt, 
-  FaPhone, 
+import {
+  FaBuilding,
+  FaMapMarkerAlt,
+  FaPhone,
   FaEnvelope,
-  FaClock, 
-  FaArrowRight, 
+  FaClock,
+  FaArrowRight,
   FaCar,
   FaSearch,
   FaFilter,
@@ -21,10 +21,10 @@ import {
 } from 'react-icons/fa';
 
 const Departments = () => {
-  const { 
-    departments, 
-    loading, 
-    error, 
+  const {
+    departments,
+    loading,
+    error,
     getDepartments,
     total,
     totalPages,
@@ -47,6 +47,15 @@ const Departments = () => {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
 
+  useEffect(() => {
+    getDepartments({
+      page: 1,
+      limit,
+      sortBy,
+      sortOrder
+    });
+  }, []);
+
   // Load initial filters from context if available
   useEffect(() => {
     if (activeFilters) {
@@ -66,13 +75,13 @@ const Departments = () => {
     const cleanFilters = Object.fromEntries(
       Object.entries(filters).filter(([_, value]) => value !== '' && value !== null)
     );
-    
-    getDepartments({ 
-      ...cleanFilters, 
-      page: 1, 
-      limit, 
-      sortBy, 
-      sortOrder 
+
+    getDepartments({
+      ...cleanFilters,
+      page: 1,
+      limit,
+      sortBy,
+      sortOrder
     });
   };
 
@@ -102,16 +111,16 @@ const Departments = () => {
     const newOrder = sortBy === field && sortOrder === 'desc' ? 'asc' : 'desc';
     setSortBy(field);
     setSortOrder(newOrder);
-    
+
     const cleanFilters = Object.fromEntries(
       Object.entries(filters).filter(([_, value]) => value !== '' && value !== null)
     );
-    getDepartments({ 
-      ...cleanFilters, 
-      page: currentPage, 
-      limit, 
-      sortBy: field, 
-      sortOrder: newOrder 
+    getDepartments({
+      ...cleanFilters,
+      page: currentPage,
+      limit,
+      sortBy: field,
+      sortOrder: newOrder
     });
   };
 
@@ -137,8 +146,8 @@ const Departments = () => {
       'under-maintenance': { bg: 'bg-amber-100', text: 'text-amber-800', dot: 'bg-amber-500' }
     }[status] || { bg: 'bg-slate-100', text: 'text-slate-800', dot: 'bg-slate-500' };
 
-    const displayStatus = status === 'under-maintenance' ? 'Maintenance' : 
-                         status?.charAt(0).toUpperCase() + status?.slice(1);
+    const displayStatus = status === 'under-maintenance' ? 'Maintenance' :
+      status?.charAt(0).toUpperCase() + status?.slice(1);
 
     return (
       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
@@ -148,7 +157,7 @@ const Departments = () => {
     );
   };
 
-  const hasActiveFilters = Object.values(filters).some(value => 
+  const hasActiveFilters = Object.values(filters).some(value =>
     value !== '' && value !== null && value !== undefined
   );
 
@@ -193,11 +202,10 @@ const Departments = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-3 py-2.5 border rounded-lg text-sm font-medium transition-colors ${
-                  showFilters || hasActiveFilters
+                className={`flex items-center gap-2 px-3 py-2.5 border rounded-lg text-sm font-medium transition-colors ${showFilters || hasActiveFilters
                     ? 'bg-blue-50 border-blue-200 text-blue-700'
                     : 'border-slate-300 hover:bg-slate-50 text-slate-700'
-                }`}
+                  }`}
               >
                 <FaFilter className="w-3.5 h-3.5" />
                 Filters
@@ -305,7 +313,7 @@ const Departments = () => {
           {hasActiveFilters && (
             <div className="flex items-center gap-2 pt-3 mt-3 border-t border-slate-200">
               <span className="text-xs text-slate-600">Active:</span>
-              {Object.entries(filters).map(([key, value]) => 
+              {Object.entries(filters).map(([key, value]) =>
                 value && (
                   <span key={key} className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
                     {key}: {value}
@@ -330,11 +338,10 @@ const Departments = () => {
                 <button
                   key={field}
                   onClick={() => handleSortChange(field)}
-                  className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                    sortBy === field
+                  className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${sortBy === field
                       ? 'bg-blue-600 text-white'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
+                    }`}
                 >
                   {field === 'departmentCategory' ? 'Category' : field.charAt(0).toUpperCase() + field.slice(1)}
                   {sortBy === field && (
@@ -384,7 +391,7 @@ const Departments = () => {
               <FaChevronLeft className="w-3 h-3" />
               Prev
             </button>
-            
+
             <div className="flex gap-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const page = i + 1;
@@ -392,11 +399,10 @@ const Departments = () => {
                   <button
                     key={page}
                     onClick={() => handlePageChange(page)}
-                    className={`w-8 h-8 rounded text-sm font-medium transition-colors ${
-                      page === currentPage
+                    className={`w-8 h-8 rounded text-sm font-medium transition-colors ${page === currentPage
                         ? 'bg-blue-600 text-white'
                         : 'border border-slate-300 hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     {page}
                   </button>
@@ -421,7 +427,7 @@ const Departments = () => {
             <FaBuilding className="w-12 h-12 mx-auto text-slate-300 mb-3" />
             <h3 className="text-lg font-semibold text-slate-900 mb-2">No departments found</h3>
             <p className="text-slate-500 text-sm mb-3">
-              {hasActiveFilters 
+              {hasActiveFilters
                 ? 'Try adjusting your search criteria'
                 : 'No departments available'
               }
@@ -462,7 +468,7 @@ const DepartmentCard = ({ department, index, getCategoryIcon, getStatusBadge }) 
   const location = department.location || {};
   const stats = department.stats || {};
   const contact = department.contact || {};
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -518,7 +524,7 @@ const DepartmentCard = ({ department, index, getCategoryIcon, getStatusBadge }) 
                 <span>{stats.totalServices} services</span>
               </div>
             )}
-            
+
             {stats.averageRating > 0 && (
               <div className="flex items-center gap-1 text-xs text-slate-500">
                 <FaStar className="w-3 h-3 text-amber-500" />

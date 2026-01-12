@@ -110,7 +110,7 @@ export const BookingProvider = ({ children }) => {
             setBookings(prev => [newBooking, ...prev]);
             setCurrentBooking(newBooking);
 
-            toast.success('Booking created successfully!', {
+            toast.success('Booking done successfully!', {
                 duration: 3000,
                 position: "bottom-left"
             });
@@ -138,12 +138,13 @@ export const BookingProvider = ({ children }) => {
 
     // Get all bookings for the current user
     const getUserBookings = async (filters = {}) => {
+        // console.log("🔥 getUserBookings CALLED", filters);
         try {
             setLoading(true);
             setError(null);
 
             const params = { ...filters };
-            const response = await axiosInstance.get('/bookings/user', { params });
+            const response = await axiosInstance.get('/departments/bookings/user', { params });
 
             const userBookings = response.data.data.map(transformBookingData);
             setBookings(userBookings);
@@ -171,11 +172,12 @@ export const BookingProvider = ({ children }) => {
 
     // Get a specific booking by ID
     const getBookingById = async (bookingId) => {
+        // console.log("🔥 getBookingById CALLED", bookingId);
         try {
             setLoading(true);
             setError(null);
 
-            const response = await axiosInstance.get(`/bookings/${bookingId}`);
+            const response = await axiosInstance.get(`/departments/bookings/${bookingId}`);
 
             const booking = transformBookingData(response.data.data);
             setCurrentBooking(booking);
@@ -206,7 +208,7 @@ export const BookingProvider = ({ children }) => {
             setLoading(true);
             setError(null);
 
-            const response = await axiosInstance.post(`/bookings/${bookingId}/cancel`);
+            const response = await axiosInstance.post(`departments/bookings/${bookingId}/cancel`);
 
             const cancelledBooking = transformBookingData(response.data.data);
 
@@ -246,26 +248,31 @@ export const BookingProvider = ({ children }) => {
 
 
 
-    
+
 
     // Upload documents for a booking
-    const uploadDocuments = async (bookingId, documents) => {
+    const uploadDocuments = async (bookingId, { docId, file, name, description }) => {
         try {
             setLoading(true);
             setError(null);
 
+            // Create FormData for single file upload
             const formData = new FormData();
-            documents.forEach((doc, index) => {
-                formData.append('documents', doc.file);
-                formData.append(`documents[${index}][name]`, doc.name);
-                formData.append(`documents[${index}][description]`, doc.description || '');
-            });
+            formData.append('file', file); // Single file field named 'file'
+            formData.append('docId', docId); // docId from the document object
 
-            const response = await axiosInstance.post(`/bookings/${bookingId}/documents`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
+            // Note: name and description are already stored in submittedDocs
+            // They might not be needed in the request body since they're already in the booking
+
+            const response = await axiosInstance.post(
+                `/departments/bookings/${bookingId}/documents/upload`,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
                 }
-            });
+            );
 
             const updatedBooking = transformBookingData(response.data.data);
 
@@ -281,25 +288,29 @@ export const BookingProvider = ({ children }) => {
                 setCurrentBooking(updatedBooking);
             }
 
-            toast.success('Documents uploaded successfully!', {
-                duration: 3000,
-                position: "bottom-left"
-            });
-
             return response.data;
         } catch (err) {
-            const errorMsg = err?.response?.data?.message || 'Failed to upload documents';
+            const errorMsg = err?.response?.data?.message || 'Failed to upload document';
             setError(errorMsg);
+
             toast.error(errorMsg, {
-                duration: 4000,
-                position: "bottom-left"
+                duration: 4000, // Time in milliseconds for the toast to be visible
+                position: 'bottom-left', // Position of the toast on the screen (bottom-left, top-right, etc.)
+                style: {
+                    background: '#FF4D4D', // Custom background color
+                    color: '#FFF', // Text color
+                    borderRadius: '8px', // Rounded corners
+                    padding: '16px', // Padding inside the toast
+                    fontWeight: 'bold', // Bold text
+                    fontSize: '16px', // Text size
+                },
+                icon: '⚠️', // Optional: you can add a custom icon or use a default one
             });
             throw err;
         } finally {
             setLoading(false);
         }
     };
-
 
 
 
@@ -364,29 +375,37 @@ export const BookingProvider = ({ children }) => {
     };
 
     // Transform booking data
-    const transformBookingData = (booking) => {
-        if (!booking) return null;
+  const transformBookingData = (booking) => {
+    if (!booking) return null;
 
-        return {
-            ...booking,
-            // Ensure submittedDocs is always an array
-            submittedDocs: booking.submittedDocs || [],
-            // Ensure metadata exists
-            metadata: booking.metadata || {
-                queueType: "Hybrid",
-                isDocumentUploadRequired: true,
-                departmentName: "",
-                serviceRequiresDocs: true
-            },
-            // Add formatted display values
-            displayDate: formatDisplayDate(booking.date),
-            displayTime: formatSlotTime(booking.slotTime),
-            displayStatus: formatBookingStatus(booking.status),
-            // Add computed properties
-            requiresDocumentUpload: booking.status === 'PENDING_DOCS' && booking.metadata?.serviceRequiresDocs,
-            canCancel: ['PENDING_DOCS', 'DOCS_SUBMITTED', 'UNDER_REVIEW'].includes(booking.status)
-        };
+    return {
+        ...booking,
+
+        // ✅ FIX: map backend response correctly
+        submittedDocs: booking.documents?.required || [],
+
+        metadata: booking.metadata || {
+            queueType: "Hybrid",
+            isDocumentUploadRequired: true,
+            departmentName: "",
+            serviceRequiresDocs: true
+        },
+
+        // Display helpers
+        displayDate: formatDisplayDate(booking.date),
+        displayTime: formatSlotTime(booking.slotTime),
+        displayStatus: formatBookingStatus(booking.status),
+
+        // Computed flags
+        requiresDocumentUpload:
+            booking.status === 'PENDING_DOCS' &&
+            booking.metadata?.serviceRequiresDocs,
+
+        canCancel: ['PENDING_DOCS', 'DOCS_SUBMITTED', 'UNDER_REVIEW']
+            .includes(booking.status)
     };
+};
+
 
     // Prepare booking data for API
     const prepareBookingData = (data) => {

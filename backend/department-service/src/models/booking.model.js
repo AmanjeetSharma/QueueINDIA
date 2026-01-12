@@ -6,7 +6,10 @@ const bookingSchema = new mongoose.Schema({
         ref: "User",
         required: true
     },
-
+    userName: {
+        type: String,
+        required: true
+    },
     department: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Department",
@@ -56,21 +59,34 @@ const bookingSchema = new mongoose.Schema({
 
     submittedDocs: [
         {
+            requiredDocId: {
+                type: mongoose.Schema.Types.ObjectId,
+                required: true
+            },
+
             name: { type: String, required: true },
-            documentUrl: { type: String, required: true },
+            description: { type: String, default: "" },
+
+            documentUrl: {
+                type: String,
+                default: null
+            },
 
             uploadedAt: {
                 type: Date,
-                default: Date.now
+                default: null
             },
 
             status: {
                 type: String,
-                enum: ["PENDING", "APPROVED", "REJECTED"],
-                default: "PENDING"
+                enum: ["NOT_UPLOADED", "PENDING", "APPROVED", "REJECTED"],
+                default: "NOT_UPLOADED"
             },
 
-            rejectionReason: String
+            rejectionReason: {
+                type: String,
+                default: ""
+            }
         }
     ],
 

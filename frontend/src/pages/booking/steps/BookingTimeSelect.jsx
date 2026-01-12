@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useBooking } from '../../../context/BookingContext';
-import { 
-  FaClock, 
-  FaCheck, 
+import {
+  FaClock,
+  FaCheck,
   FaTimes,
   FaArrowLeft,
   FaArrowRight,
@@ -15,10 +15,12 @@ const BookingTimeSelect = () => {
   const { deptId, serviceId } = useParams();
   const { bookingData, onStepComplete, onStepBack } = useOutletContext();
   const navigate = useNavigate();
-  
+
+  const [isNavigating, setIsNavigating] = useState(false);
+
   const { availableSlots, getAvailableSlots, loading, error, checkSlotAvailability } = useBooking();
   const [selectedSlot, setSelectedSlot] = useState(bookingData.slotTime);
-  const [timeFilter, setTimeFilter] = useState('all'); // 'all', 'morning', 'afternoon', 'evening'
+  const [timeFilter, setTimeFilter] = useState('all');
 
   useEffect(() => {
     if (deptId && serviceId && bookingData.date) {
@@ -34,13 +36,18 @@ const BookingTimeSelect = () => {
 
   const handleNext = () => {
     if (!selectedSlot) {
-      alert('Please select a time slot to continue');
+      alert('Please select a time slot to proceed.');
       return;
-    }
+    };
 
-    onStepComplete({ slotTime: selectedSlot });
-    navigate('../details');
-  };
+    setIsNavigating(true);
+
+    setTimeout(() => {
+      onStepComplete({ slotTime: selectedSlot });
+      navigate('../details');
+      setIsNavigating(false);
+    }, 1000);
+  }
 
   const handleBack = () => {
     onStepBack();
@@ -56,10 +63,10 @@ const BookingTimeSelect = () => {
 
   const filterSlots = (slots) => {
     if (timeFilter === 'all') return slots;
-    
+
     return slots.filter(slot => {
       const hour = parseInt(slot.start.split(':')[0]);
-      
+
       switch (timeFilter) {
         case 'morning':
           return hour >= 6 && hour < 12;
@@ -81,32 +88,32 @@ const BookingTimeSelect = () => {
 
   if (loading) {
     return (
-      <div className="py-12 text-center">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-slate-600">Loading available time slots...</p>
+      <div className="py-8 text-center">
+        <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <p className="text-slate-600 text-sm">Loading available slots...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="py-12 text-center">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <FaTimes className="text-red-600 text-2xl" />
+      <div className="py-8 text-center">
+        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+          <FaTimes className="text-red-600 text-xl" />
         </div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">Unable to load time slots</h3>
-        <p className="text-slate-600 mb-4">{error}</p>
-        <div className="flex gap-3 justify-center">
+        <h3 className="text-base font-semibold text-slate-900 mb-1">Unable to load time slots</h3>
+        <p className="text-slate-600 text-sm mb-3">{error}</p>
+        <div className="flex gap-2 justify-center">
           <button
             onClick={handleBack}
-            className="inline-flex items-center gap-2 border border-slate-300 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors"
+            className="inline-flex items-center gap-1 border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors text-sm"
           >
-            <FaArrowLeft />
-            Back to Dates
+            <FaArrowLeft className="text-xs" />
+            Back
           </button>
           <button
             onClick={() => getAvailableSlots(deptId, serviceId, bookingData.date)}
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors text-sm"
           >
             Try Again
           </button>
@@ -118,189 +125,200 @@ const BookingTimeSelect = () => {
   const filteredSlots = filterSlots(availableSlots);
 
   return (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <FaClock className="text-purple-600 text-2xl" />
-        </div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">Select Time Slot</h2>
-        <p className="text-slate-600">
-          {bookingData.date && (
-            <span className="font-medium text-blue-600">
-              {new Date(bookingData.date).toLocaleDateString('en-IN', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-              })}
-            </span>
-          )}
-        </p>
-      </div>
-
-      {/* Time Filters */}
-      <div className="flex flex-wrap gap-2 justify-center mb-6">
-        {['all', 'morning', 'afternoon', 'evening'].map((filter) => (
-          <button
-            key={filter}
-            onClick={() => setTimeFilter(filter)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors capitalize ${
-              timeFilter === filter
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            {filter === 'all' ? 'All Times' : filter}
-          </button>
-        ))}
-      </div>
-
-      {/* Time Slots Grid */}
-      {filteredSlots.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FaUserClock className="text-slate-400 text-2xl" />
-          </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">No slots available</h3>
-          <p className="text-slate-600 mb-4">
-            {timeFilter !== 'all' 
-              ? 'No slots available for this time period. Try another filter.'
-              : 'No available slots for the selected date. Please choose another date.'
-            }
+    <div className="space-y-4">
+      {/* Top Navigation with Next Button */}
+      <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">Choose Your Time</h2>
+          <p className="text-slate-500 text-xs mt-0.5">
+            {bookingData.date && (
+              <span>
+                {new Date(bookingData.date).toLocaleDateString('en-IN', {
+                  weekday: 'short',
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                })}
+              </span>
+            )}
           </p>
-          <button
-            onClick={handleBack}
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <FaArrowLeft />
-            Back to Dates
-          </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {filteredSlots.map((slot, index) => {
-            const availability = getSlotAvailability(slot);
-            const isSelected = selectedSlot === slot.time;
-            const isAvailable = checkSlotAvailability(slot);
 
-            return (
-              <motion.button
-                key={slot.time}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                onClick={() => handleSlotSelect(slot)}
-                disabled={!isAvailable}
-                className={`relative p-4 rounded-xl transition-all duration-300 ${
-                  isSelected
-                    ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg scale-105'
-                    : !isAvailable
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                    : 'bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md border border-slate-200'
-                }`}
-                whileHover={isAvailable ? { scale: 1.02 } : {}}
-                whileTap={isAvailable ? { scale: 0.98 } : {}}
-              >
-                {/* Selected Check */}
-                {isSelected && (
-                  <div className="absolute -top-2 -right-2 bg-white text-blue-600 w-6 h-6 rounded-full flex items-center justify-center">
-                    <FaCheck className="text-xs" />
-                  </div>
-                )}
-
-                {/* Slot Time */}
-                <div className="text-center mb-3">
-                  <div className={`text-xl font-bold mb-1 ${
-                    isSelected ? 'text-white' : 'text-slate-900'
-                  }`}>
-                    {formatTimeDisplay(slot.start)}
-                  </div>
-                  <div className={`text-sm ${
-                    isSelected ? 'text-blue-100' : 'text-slate-600'
-                  }`}>
-                    to {formatTimeDisplay(slot.end)}
-                  </div>
-                </div>
-
-                {/* Availability Status */}
-                <div className="mt-2 pt-2 border-t border-opacity-20">
-                  {!isAvailable ? (
-                    <div className="text-center">
-                      <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
-                        Fully Booked
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <span className={`text-xs font-medium ${
-                          availability === 'limited'
-                            ? 'text-amber-600 bg-amber-50 px-2 py-1 rounded-full'
-                            : 'text-green-600 bg-green-50 px-2 py-1 rounded-full'
-                        }`}>
-                          {availability === 'limited' ? 'Limited' : 'Available'}
-                        </span>
-                      </div>
-                      <div className={`text-xs ${
-                        isSelected ? 'text-blue-200' : 'text-slate-500'
-                      }`}>
-                        {slot.remaining} left
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </motion.button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 justify-center mt-6">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full"></div>
-          <span className="text-sm text-slate-600">Selected</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-          <span className="text-sm text-slate-600">Available</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-          <span className="text-sm text-slate-600">Limited</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-          <span className="text-sm text-slate-600">Full</span>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="flex justify-between pt-8 border-t border-slate-200">
-        <motion.button
-          onClick={handleBack}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="inline-flex items-center gap-2 px-6 py-3 border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium"
-        >
-          <FaArrowLeft />
-          Back to Dates
-        </motion.button>
-        
         <motion.button
           onClick={handleNext}
-          disabled={!selectedSlot}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className={`inline-flex items-center gap-2 px-8 py-3 rounded-xl font-medium text-white shadow-lg ${
-            selectedSlot
-              ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
-              : 'bg-slate-300 text-slate-500 cursor-not-allowed'
-          }`}
+          disabled={!selectedSlot || isNavigating}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={`inline-flex items-center gap-1.5 px-5 py-2 rounded-lg font-medium text-white text-sm ${selectedSlot && !isNavigating
+            ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-sm'
+            : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+            }`}
         >
-          Next: Add Details
-          <FaArrowRight />
+          {isNavigating ? (
+            <>
+              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Loading...
+            </>
+          ) : (
+            <>
+              Next: Choose time
+              <FaArrowRight className="text-xs" />
+            </>
+          )}
         </motion.button>
+      </div>
+
+      {/* Main Content */}
+      <div className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
+        {/* Header Section */}
+        <div className="mb-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <FaClock className="text-white text-sm" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Available Time Slots</h3>
+              <p className="text-slate-600 text-xs">Select a convenient time for your appointment</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Time Filters */}
+        <div className="mb-4">
+          <p className="text-xs font-medium text-slate-700 mb-2">Filter by time</p>
+          <div className="flex flex-wrap gap-2">
+            {['all', 'morning', 'afternoon', 'evening'].map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setTimeFilter(filter)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all capitalize ${timeFilter === filter
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+              >
+                {filter === 'all' ? 'All Times' : filter}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Time Slots Grid */}
+        {filteredSlots.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <FaUserClock className="text-slate-400 text-lg" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 mb-1">No slots available</h3>
+            <p className="text-slate-600 text-xs mb-4 max-w-xs mx-auto">
+              {timeFilter !== 'all'
+                ? 'No time slots available for this time period.'
+                : 'No available slots for the selected date.'
+              }
+            </p>
+            <button
+              onClick={handleBack}
+              className="inline-flex items-center gap-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium"
+            >
+              <FaArrowLeft className="text-xs" />
+              Back to Dates
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+            {filteredSlots.map((slot, index) => {
+              const availability = getSlotAvailability(slot);
+              const isSelected = selectedSlot === slot.time;
+              const isAvailable = checkSlotAvailability(slot);
+
+              return (
+                <button
+                  key={slot.time}
+                  onClick={() => handleSlotSelect(slot)}
+                  disabled={!isAvailable}
+                  className={`relative p-2.5 rounded-lg transition-all ${isSelected
+                    ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white scale-105'
+                    : !isAvailable
+                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
+                      : 'bg-white text-slate-700 hover:bg-blue-50 border border-slate-200 hover:border-blue-300'
+                    }`}
+                >
+                  {/* Selected Check */}
+                  {isSelected && (
+                    <div className="absolute -top-1.5 -right-1.5 bg-white text-blue-600 w-5 h-5 rounded-full flex items-center justify-center border border-blue-600">
+                      <FaCheck className="text-[8px]" />
+                    </div>
+                  )}
+
+                  {/* Slot Time */}
+                  <div className="text-center">
+                    <div className={`text-sm font-bold mb-0.5 ${isSelected ? 'text-white' : 'text-slate-900'
+                      }`}>
+                      {formatTimeDisplay(slot.start)}
+                    </div>
+                    <div className={`text-[10px] ${isSelected ? 'text-blue-100' : 'text-slate-500'
+                      }`}>
+                      to {formatTimeDisplay(slot.end)}
+                    </div>
+                  </div>
+
+                  {/* Availability Status */}
+                  <div className="mt-1.5 pt-1.5 border-t border-opacity-20">
+                    <div className="text-center">
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${!isAvailable
+                        ? 'text-red-600 bg-red-50'
+                        : availability === 'limited'
+                          ? 'text-amber-600 bg-amber-50'
+                          : 'text-green-600 bg-green-50'
+                        }`}>
+                        {!isAvailable ? 'Booked' : availability === 'limited' ? 'Limited' : 'Open'}
+                      </span>
+                      {isAvailable && (
+                        <p className={`text-[10px] mt-1 font-medium ${isSelected ? 'text-blue-200' : 'text-slate-500'
+                          }`}>
+                          {slot.remaining} slots
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Legend */}
+        <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 mt-4">
+          <p className="text-xs font-medium text-slate-700 mb-2">Status Legend</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+              <span className="text-xs text-slate-600">Selected</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-xs text-slate-600">Available</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+              <span className="text-xs text-slate-600">Limited</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+              <span className="text-xs text-slate-600">Booked</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Navigation */}
+      <div className="flex justify-center pt-4 border-t border-slate-200">
+        <button
+          onClick={handleBack}
+          className="inline-flex items-center gap-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors text-sm font-medium"
+        >
+          <FaArrowLeft className="text-xs" />
+          Back to Dates
+        </button>
       </div>
     </div>
   );

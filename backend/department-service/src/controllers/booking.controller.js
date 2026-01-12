@@ -190,9 +190,15 @@ const getAvailableSlots = asyncHandler(async (req, res) => {
 // Create a new booking
 const createBooking = asyncHandler(async (req, res) => {
     const { deptId, serviceId } = req.params;
-    const { date, slotTime, priorityType = "NONE", notes = "" } = req.body;
+    const {
+        date,
+        slotTime,
+        priorityType = "NONE",
+        bookingDescription
+    } = req.body;
 
-    // Validate required fields
+    /* ─────────────────── VALIDATIONS ─────────────────── */
+
     if (!date || !slotTime) {
         throw new ApiError(400, "Date and slotTime are required");
     }
@@ -203,46 +209,55 @@ const createBooking = asyncHandler(async (req, res) => {
     const service = department.services.id(serviceId);
     if (!service) throw new ApiError(404, "Service not found in this department");
 
-    // Check if department allows booking
     if (!department.isSlotBookingEnabled) {
         throw new ApiError(400, "Online booking is not enabled for this department");
     }
 
-    // Check if date is within booking window
+    /* ───────────── BOOKING WINDOW CHECK ───────────── */
+
     if (!isDateWithinBookingWindow(date, department.bookingWindowDays || 7)) {
-        throw new ApiError(400, `Selected date must be within ${department.bookingWindowDays || 7} days from today`);
+        throw new ApiError(
+            400,
+            `Selected date must be within ${department.bookingWindowDays || 7} days from today`
+        );
     }
 
-    // Check working hours for the date
+    /* ───────────── WORKING DAY CHECK ───────────── */
+
     const selectedDate = dayjs(date).tz(TZ);
     const dayOfWeek = selectedDate.format("ddd");
-    const workingDay = department.workingHours.find((d) => d.day === dayOfWeek);
+
+    const workingDay = department.workingHours.find(
+        d => d.day === dayOfWeek
+    );
 
     if (!workingDay || workingDay.isClosed) {
         throw new ApiError(400, "Department is closed on the selected date");
     }
 
-    // Parse slot time
-    const [slotStart, slotEnd] = slotTime.split('-');
+    /* ───────────── SLOT VALIDATION ───────────── */
+
+    const [slotStart, slotEnd] = slotTime.split("-");
     const slotStartMinutes = convertToMinutes(slotStart);
     const slotEndMinutes = convertToMinutes(slotEnd);
 
-    // Validate slot time is within working hours
     if (!isSlotWithinWorkingHours({ start: slotStart, end: slotEnd }, workingDay)) {
         throw new ApiError(400, "Selected slot is outside working hours");
     }
 
-    // Check capacity
-    const tokenManagement = service.tokenManagement || department.tokenManagement || {};
+    /* ───────────── CAPACITY CHECK ───────────── */
+
+    const tokenManagement =
+        service.tokenManagement || department.tokenManagement || {};
+
     let maxTokens = tokenManagement.maxTokensPerSlot || 10;
 
-    // Check if there's a specific slot window
-    if (tokenManagement.slotWindows && tokenManagement.slotWindows.length > 0) {
-        const slotWindow = tokenManagement.slotWindows.find(
-            window => window.start === slotStart && window.end === slotEnd
+    if (tokenManagement.slotWindows?.length) {
+        const window = tokenManagement.slotWindows.find(
+            w => w.start === slotStart && w.end === slotEnd
         );
-        if (slotWindow) {
-            maxTokens = slotWindow.maxTokens || maxTokens;
+        if (window) {
+            maxTokens = window.maxTokens || maxTokens;
         }
     }
 
@@ -257,37 +272,41 @@ const createBooking = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Selected slot is fully booked");
     }
 
-    // Check priority eligibility - UPDATED: Removed age check
+    /* ───────────── PRIORITY VALIDATION ───────────── */
+
     if (priorityType !== "NONE") {
         if (!service.priorityAllowed) {
             throw new ApiError(400, "Priority service is not allowed for this service");
         }
 
-        const priorityCriteria = department.priorityCriteria || {};
+        const criteria = department.priorityCriteria || {};
+
         switch (priorityType) {
             case "SENIOR_CITIZEN":
-                if (!priorityCriteria.seniorCitizenAge) {
-                    throw new ApiError(400, "Senior citizen priority is not available in this department");
+                if (!criteria.seniorCitizenAge) {
+                    throw new ApiError(400, "Senior citizen priority not enabled");
                 }
-                // Note: Age verification will be done at the counter
-                // We cannot check age here since user model doesn't have age field
                 break;
+
             case "PREGNANT_WOMEN":
-                if (!priorityCriteria.allowPregnantWomen) {
-                    throw new ApiError(400, "Pregnant women priority is not allowed in this department");
+                if (!criteria.allowPregnantWomen) {
+                    throw new ApiError(400, "Pregnant women priority not enabled");
                 }
                 break;
+
             case "DIFFERENTLY_ABLED":
-                if (!priorityCriteria.allowDifferentlyAbled) {
-                    throw new ApiError(400, "Differently abled priority is not allowed in this department");
+                if (!criteria.allowDifferentlyAbled) {
+                    throw new ApiError(400, "Differently abled priority not enabled");
                 }
                 break;
+
             default:
                 throw new ApiError(400, "Invalid priority type");
         }
     }
 
-    // Generate token number (next available for that day)
+    /* ───────────── TOKEN NUMBER ───────────── */
+
     const lastToken = await Booking.findOne(
         { department: deptId, date },
         { tokenNumber: 1 },
@@ -296,33 +315,57 @@ const createBooking = asyncHandler(async (req, res) => {
 
     const tokenNumber = (lastToken?.tokenNumber || 0) + 1;
 
-    // Determine initial status based on document requirement
-    let initialStatus = "APPROVED";
-    if (service.isDocumentUploadRequired) {
-        initialStatus = "PENDING_DOCS";
-    }
+    /* ───────────── PREFILL SUBMITTED DOCS ───────────── */
 
-    // Create booking
+    const submittedDocs = service.requiredDocs.map(doc => ({
+        requiredDocId: doc._id,
+
+        name: doc.name,
+        description: doc.description || "",
+
+        documentUrl: null,
+        uploadedAt: null,
+
+        status: "NOT_UPLOADED",
+        rejectionReason: ""
+    }));
+
+
+    /* ───────────── INITIAL STATUS ───────────── */
+
+    const initialStatus = service.isDocumentUploadRequired
+        ? "PENDING_DOCS"
+        : "DOCS_SUBMITTED";
+
+    /* ───────────── CREATE BOOKING ───────────── */
+
     const booking = await Booking.create({
         user: req.user._id,
+        userName: req.user.name,
         department: deptId,
+
         service: {
             serviceId: service._id,
             name: service.name,
             serviceCode: service.serviceCode
         },
+
         date,
         slotTime,
+
         slotWindow: {
             start: slotStart,
             end: slotEnd,
-            maxTokens: maxTokens
+            maxTokens
         },
+
+        submittedDocs,
         status: initialStatus,
         priorityType,
-        tokenNumber: tokenNumber,
+        tokenNumber,
         estimatedServiceTime: tokenManagement.timeBtwEverySlot || 15,
-        notes,
+        bookingDescription,
+
         metadata: {
             queueType: tokenManagement.queueType || "Hybrid",
             isDocumentUploadRequired: service.isDocumentUploadRequired,
@@ -331,12 +374,17 @@ const createBooking = asyncHandler(async (req, res) => {
         }
     });
 
-    console.log(`Booking created! Booking ID: ${booking._id} | User: ${req.user._id} | Name: ${req.user.name} | Token no. ${tokenNumber}`); 
+    console.log(
+        `✅ Booking created | ID: ${booking._id} | User: ${req.user._id} | Token: ${tokenNumber}`
+    );
 
     return res.status(201).json(
         new ApiResponse(201, booking, "Booking created successfully")
     );
 });
+
+
+
 
 
 
@@ -359,21 +407,34 @@ const getUserBookings = asyncHandler(async (req, res) => {
     const { status } = req.query;
 
     const query = { user: userId };
-    if (status) {
-        query.status = status;
-    }
+    if (status) query.status = status;
 
     const bookings = await Booking.find(query)
         .sort({ date: 1, slotTime: 1 })
-        .populate('department', 'name address contact')
+        .select(`
+            date
+            slotTime
+            status
+            tokenNumber
+            service
+            metadata.departmentName
+            metadata.serviceRequiresDocs
+        `)
         .lean();
 
-    console.log(`User bookings fetched! User: ${userId} | Name: ${req.user.name} | Count: ${bookings.length}`);
+    console.log(
+        `User bookings fetched | User: ${userId} | Count: ${bookings.length}`
+    );
 
     return res.status(200).json(
-        new ApiResponse(200, bookings, "User bookings fetched successfully")
+        new ApiResponse(
+            200,
+            bookings,
+            bookings.length ? "User bookings fetched successfully" : "No bookings found"
+        )
     );
 });
+
 
 
 
@@ -396,7 +457,7 @@ const getBookingById = asyncHandler(async (req, res) => {
     const booking = await Booking.findById(bookingId)
         .populate({
             path: "department",
-            select: "name address contact"
+            select: "name address contact services"
         })
         .lean();
 
@@ -404,15 +465,74 @@ const getBookingById = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Booking not found");
     }
 
-    // 🔒 HARD SECURITY CHECK
+    // 🔒 Security check
     if (booking.user.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not authorized to view this booking");
     }
-    
-    console.log(`Booking fetched! Booking ID: ${bookingId} | User: ${req.user._id} | Name: ${req.user.name}`);
+
+    // 🔍 Find service config from department
+    const serviceFromDept = booking.department.services.find(
+        s => s._id.toString() === booking.service.serviceId.toString()
+    );
+
+    if (!serviceFromDept) {
+        throw new ApiError(500, "Service configuration not found for this booking");
+    }
+
+    /**
+     * 🧠 Merge required docs + submitted docs
+     * This array WILL BE booking.submittedDocs
+     * Frontend already expects this
+     */
+    const mergedDocs = serviceFromDept.requiredDocs.map(reqDoc => {
+        const submitted = booking.submittedDocs.find(
+            d => d.name === reqDoc.name
+        );
+
+        return {
+            _id: reqDoc._id,               // ✅ frontend uses this as docId
+            name: reqDoc.name,
+            description: reqDoc.description,
+            isMandatory: reqDoc.isMandatory,
+
+            documentUrl: submitted?.documentUrl || null,
+            uploadedAt: submitted?.uploadedAt || null,
+            status: submitted?.status || "NOT_UPLOADED",
+            rejectionReason: submitted?.rejectionReason || ""
+        };
+    });
+
+    const response = {
+        _id: booking._id,
+        date: booking.date,
+        slotTime: booking.slotTime,
+        status: booking.status,
+        priorityType: booking.priorityType,
+        tokenNumber: booking.tokenNumber,
+        estimatedServiceTime: booking.estimatedServiceTime,
+        bookingDescription: booking.bookingDescription || "",
+
+        department: {
+            name: booking.department.name,
+            address: booking.department.address,
+            contact: booking.department.contact
+        },
+
+        service: booking.service,
+
+        // ✅ THIS IS WHAT FIXES THE UI
+        submittedDocs: mergedDocs,
+
+        metadata: booking.metadata,
+        createdAt: booking.createdAt
+    };
+
+    console.log(
+        `Booking details fetched | Booking: ${bookingId} | User: ${req.user._id}`
+    );
 
     return res.status(200).json(
-        new ApiResponse(200, booking, "Booking fetched successfully")
+        new ApiResponse(200, response, "Booking fetched successfully")
     );
 });
 

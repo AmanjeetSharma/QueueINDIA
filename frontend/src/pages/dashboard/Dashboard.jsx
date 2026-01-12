@@ -83,7 +83,7 @@ const Dashboard = () => {
       description: "Book a new service",
       icon: FaCalendarAlt,
       color: "from-blue-500 to-cyan-500",
-      link: "/services",
+      link: "/departments",
       action: "Book Now"
     },
     {

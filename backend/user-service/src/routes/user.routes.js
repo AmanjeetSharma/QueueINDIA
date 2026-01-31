@@ -2,8 +2,26 @@ import express from "express";
 import { verifyToken, authorizeRoles } from "../middlewares/auth.middleware.js";
 import { getProfile } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
-import { updateProfile, changePassword, deleteAccount, listUserSessions, addPhone, verifyPhone, addSecondaryEmail, verifySecondaryEmail, updateDOB } from "../controllers/user.controller.js";
 import { sendVerificationEmail, verifyEmail } from "../controllers/user.controller.js";
+import {
+    updateProfile,
+    changePassword,
+    deleteAccount,
+    listUserSessions,
+    addPhone,
+    verifyPhone,
+    addSecondaryEmail,
+    verifySecondaryEmail,
+    updateDOB,
+} from "../controllers/user.controller.js";
+
+import {
+    getAllUsers,
+    forceLogoutUser,
+    resetUserPasswordAdmin,
+    changeUserRole,
+    deleteUserByAdmin
+} from "../controllers/user.admin.controller.js";
 
 const router = express.Router();
 
@@ -26,5 +44,11 @@ router.get("/verify-email/:token", verifyEmail);
 router.post("/email/add-secondary", verifyToken, addSecondaryEmail);
 router.post("/email/verify-secondary", verifyToken, verifySecondaryEmail);
 
+// Super Admin routes
+router.get("/admin/all-users", verifyToken, authorizeRoles("SUPER_ADMIN"), getAllUsers);
+router.route("/admin/:userId/force-logout").post(verifyToken, authorizeRoles("SUPER_ADMIN"), forceLogoutUser);
+router.route("/admin/:userId/reset-password").post(verifyToken, authorizeRoles("SUPER_ADMIN"), resetUserPasswordAdmin);
+router.route("/admin/:userId/change-role").patch(verifyToken, authorizeRoles("SUPER_ADMIN"), changeUserRole);
+router.route("/admin/:userId/delete-user").delete(verifyToken, authorizeRoles("SUPER_ADMIN"), deleteUserByAdmin);
 
 export default router;

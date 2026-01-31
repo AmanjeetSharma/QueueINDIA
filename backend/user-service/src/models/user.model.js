@@ -90,6 +90,7 @@ const userSchema = new Schema(
             enum: ["USER", "ADMIN", "DEPARTMENT_OFFICER", "SUPER_ADMIN"],
             default: "USER",
         },
+        // department association
         departmentId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Department",
@@ -130,7 +131,10 @@ const userSchema = new Schema(
             type: addressSchema,
             default: {},
         },
-        sessions: [sessionSchema]
+        sessions: {
+            type: [sessionSchema],
+            default: [],
+        },
     }, { timestamps: true }
 )
 

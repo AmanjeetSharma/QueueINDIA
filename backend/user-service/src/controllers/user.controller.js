@@ -572,9 +572,6 @@ const updateDOB = asyncHandler(async (req, res) => {
 
 
 
-
-
-
 export {
     getProfile,
     updateProfile,
@@ -587,5 +584,5 @@ export {
     verifySecondaryEmail,
     sendVerificationEmail,
     verifyEmail,
-    updateDOB
+    updateDOB,
 };

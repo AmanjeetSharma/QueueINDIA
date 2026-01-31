@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import serviceSchema from "./service.model.js";
-
+import slugify from "slugify";
 
 
 
@@ -128,8 +128,27 @@ const departmentSchema = new Schema(
                 default: []
             },
         ],
+        departmentSlug: {
+            type: String,
+            unique: true,
+            required: true,
+            index: true,    
+        },
     },
     { timestamps: true }
 );
+
+
+departmentSchema.pre("validate", function (next) {
+    if (!this.departmentSlug && this.name) {
+        this.departmentSlug = slugify(this.name, {
+            lower: true,
+            strict: true,
+            trim: true
+        });
+    }
+    next();
+});
+
 
 export const Department = mongoose.model("Department", departmentSchema);

@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-
+import slugify from "slugify";
 
 
 
@@ -65,8 +65,22 @@ const serviceSchema = new Schema(
 
         tokenManagement: tokenManagementSchema,
         requiredDocs: [documentRequirementSchema],
+        serviceSlug: { type: String, required: true, unique: true, lowercase: true, trim: true },
 
     },
     { _id: true }
 );
+
+serviceSchema.pre('validate', function (next) {
+    if (!this.serviceSlug && this.name) {
+        this.serviceSlug = slugify(this.name, {
+            lower: true,
+            strict: true,
+            trim: true
+        });
+    }
+    next();
+});
+
+
 export default serviceSchema;

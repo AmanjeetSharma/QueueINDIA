@@ -150,6 +150,8 @@ const createDepartment = asyncHandler(async (req, res) => {
         ratings: []
     });
 
+    await department.save();
+
     console.log(`🏛 Department Created → ${department.name} (ID: ${department._id})`);
 
     return res
@@ -181,78 +183,66 @@ const createDepartment = asyncHandler(async (req, res) => {
 // Update Department
 const updateDepartment = asyncHandler(async (req, res) => {
     const { deptId } = req.params;
-    const updateData = { ...req.body };
+    const updateData = req.body;
 
-    if (!deptId) throw new ApiError(400, "Department ID required");
-
-    const department = await Department.findById(deptId);
-    if (!department) throw new ApiError(404, "Department not found");
-
-    // Authorization: ADMIN can only update their own dept
-    const isAssignedAdmin = department.admins?.some(
-        adminId => adminId.toString() === req.user._id.toString()
-    );
-
-    if (req.user.role === "ADMIN" && !isAssignedAdmin) {
-        throw new ApiError(403, "You are not authorized to update this department");
+    if (!deptId) {
+        throw new ApiError(400, "Department ID is required");
     }
 
-    // 🛑 Validate duplicate name + location
-    if (updateData.name || updateData.address?.city || updateData.address?.pincode) {
-        const exist = await Department.findOne({
+    // 🔍 Fetch department FIRST (important)
+    const department = await Department.findById(deptId);
+    if (!department) {
+        throw new ApiError(404, "Department not found");
+    }
+
+    // 🔐 AUTHORIZATION
+    // SUPER_ADMIN → full access
+    // ADMIN → only assigned department
+    if (req.user.role === "ADMIN") {
+        const isAssigned = department.admins.some(
+            adminId => adminId.toString() === req.user._id.toString()
+        );
+
+        if (!isAssigned) {
+            throw new ApiError(403, "You are not authorized to update this department");
+        }
+    }
+
+    // 🛑 DUPLICATE CHECK (name + location)
+    if (
+        updateData.name ||
+        updateData.address?.city ||
+        updateData.address?.pincode
+    ) {
+        const duplicate = await Department.findOne({
             _id: { $ne: deptId },
             name: updateData.name?.trim() || department.name,
             "address.city": updateData.address?.city || department.address.city,
             "address.pincode": updateData.address?.pincode || department.address.pincode
         });
 
-        if (exist) throw new ApiError(409, "Another department already exists at this location");
-    }
-
-    // 🟦 Normalize services (if updating)
-    if (updateData.services && Array.isArray(updateData.services)) {
-        // 🟡 Check duplicate serviceCode
-        const codes = updateData.services.map(s => s.serviceCode?.toUpperCase());
-        const dupCode = codes.find((c, i) => codes.indexOf(c) !== i);
-        if (dupCode) {
-            throw new ApiError(400, `Duplicate serviceCode detected: ${dupCode}`);
+        if (duplicate) {
+            throw new ApiError(409, "Another department already exists at this location");
         }
-
-        updateData.services = updateData.services.map(service => ({
-            name: service.name,
-            serviceCode: service.serviceCode?.toUpperCase(),
-            description: service.description || "",
-            priorityAllowed: service.priorityAllowed ?? true,
-            isDocumentUploadRequired: service.isDocumentUploadRequired ?? true,
-            tokenManagement: service.tokenManagement || department.services?.find(s => s.serviceCode === service.serviceCode)?.tokenManagement || {
-                maxDailyServiceTokens: null,
-                maxTokensPerSlot: 10,
-                queueType: "Hybrid",
-                timeBtwEverySlot: 15,
-                slotStartTime: "10:00",
-                slotEndTime: "17:00",
-                slotWindows: []
-            },
-            requiredDocs: service.requiredDocs?.map(doc => ({
-                name: doc.name,
-                description: doc.description || "",
-                isMandatory: doc.isMandatory ?? true
-            })) || []
-        }));
     }
 
-    // 🟦 Normalize working hours (if updating)
-    if (updateData.workingHours && Array.isArray(updateData.workingHours)) {
-        updateData.workingHours.forEach(wh => {
-            if (!wh.isClosed && (!wh.openTime || !wh.closeTime)) {
-                throw new ApiError(400, `Open and close times are required for ${wh.day} when not closed`);
-            }
-        });
+    // ───── UPDATE BASIC FIELDS ─────
+    if (updateData.departmentCategory !== undefined) {
+        department.departmentCategory = updateData.departmentCategory;
     }
 
-    // 🟦 Normalize address if provided
+    if (updateData.name !== undefined) {
+        department.name = updateData.name; 
+        // 🔥 slug will auto-update via model hook
+    }
+
+    if (updateData.status !== undefined) {
+        department.status = updateData.status;
+    }
+
+    // ───── ADDRESS ─────
     if (updateData.address) {
-        updateData.address = {
+        department.address = {
             street: updateData.address.street || department.address.street,
             city: updateData.address.city || department.address.city,
             district: updateData.address.district || department.address.district,
@@ -261,40 +251,92 @@ const updateDepartment = asyncHandler(async (req, res) => {
         };
     }
 
-    // 🟦 Normalize contact if provided
+    // ───── CONTACT ─────
     if (updateData.contact) {
-        updateData.contact = {
+        department.contact = {
             phone: updateData.contact.phone || department.contact.phone,
             email: updateData.contact.email || department.contact.email,
             website: updateData.contact.website || department.contact.website
         };
     }
 
-    // 🟦 Normalize priorityCriteria if provided
+    // ───── WORKING HOURS ─────
+    if (Array.isArray(updateData.workingHours)) {
+        updateData.workingHours.forEach(wh => {
+            if (!wh.isClosed && (!wh.openTime || !wh.closeTime)) {
+                throw new ApiError(
+                    400,
+                    `Open and close times are required for ${wh.day}`
+                );
+            }
+        });
+        department.workingHours = updateData.workingHours;
+    }
+
+    // ───── SERVICES ─────
+    if (Array.isArray(updateData.services)) {
+        const codes = updateData.services.map(s => s.serviceCode?.toUpperCase());
+        const dupCode = codes.find((c, i) => codes.indexOf(c) !== i);
+
+        if (dupCode) {
+            throw new ApiError(400, `Duplicate serviceCode detected: ${dupCode}`);
+        }
+
+        department.services = updateData.services.map(service => ({
+            name: service.name,
+            serviceCode: service.serviceCode?.toUpperCase(),
+            description: service.description || "",
+            priorityAllowed: service.priorityAllowed ?? true,
+            isDocumentUploadRequired: service.isDocumentUploadRequired ?? true,
+            tokenManagement: service.tokenManagement,
+            requiredDocs: service.requiredDocs?.map(doc => ({
+                name: doc.name,
+                description: doc.description || "",
+                isMandatory: doc.isMandatory ?? true
+            })) || []
+        }));
+    }
+
+    // ───── PRIORITY CRITERIA ─────
     if (updateData.priorityCriteria) {
-        updateData.priorityCriteria = {
-            seniorCitizenAge: Math.max(updateData.priorityCriteria.seniorCitizenAge || department.priorityCriteria.seniorCitizenAge, 0),
-            allowPregnantWomen: updateData.priorityCriteria.allowPregnantWomen ?? department.priorityCriteria.allowPregnantWomen,
-            allowDifferentlyAbled: updateData.priorityCriteria.allowDifferentlyAbled ?? department.priorityCriteria.allowDifferentlyAbled
+        department.priorityCriteria = {
+            seniorCitizenAge: Math.max(
+                updateData.priorityCriteria.seniorCitizenAge ??
+                department.priorityCriteria.seniorCitizenAge,
+                0
+            ),
+            allowPregnantWomen:
+                updateData.priorityCriteria.allowPregnantWomen ??
+                department.priorityCriteria.allowPregnantWomen,
+            allowDifferentlyAbled:
+                updateData.priorityCriteria.allowDifferentlyAbled ??
+                department.priorityCriteria.allowDifferentlyAbled
         };
     }
 
-    // 🟦 Clamp bookingWindowDays between 1-30
+    // ───── BOOKING WINDOW ─────
     if (updateData.bookingWindowDays !== undefined) {
-        updateData.bookingWindowDays = Math.min(Math.max(updateData.bookingWindowDays, 1), 30);
+        department.bookingWindowDays = Math.min(
+            Math.max(updateData.bookingWindowDays, 1),
+            30
+        );
     }
 
-    const updatedDept = await Department.findByIdAndUpdate(deptId, updateData, {
-        new: true,
-        runValidators: true
-    });
+    // ───── SLOT BOOKING ─────
+    if (updateData.isSlotBookingEnabled !== undefined) {
+        department.isSlotBookingEnabled = updateData.isSlotBookingEnabled;
+    }
 
-    console.log(`✳️ Department Updated → ${department.name} ▸ ${updatedDept.name}`);
+    // ✅ SAVE (IMPORTANT)
+    await department.save(); // hooks + validation + slug update
+
+    console.log(`✳️ Department Updated → ${department.name}`);
 
     return res.status(200).json(
-        new ApiResponse(200, updatedDept, "Department updated successfully")
+        new ApiResponse(200, department, "Department updated successfully")
     );
 });
+
 
 
 

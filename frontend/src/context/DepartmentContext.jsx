@@ -140,9 +140,10 @@ export const DepartmentProvider = ({ children }) => {
     // Create department (SUPER_ADMIN only)
     const createDepartment = async (departmentData) => {
         try {
+            console.log('Creating department with data:', departmentData);
             setLoading(true);
             setError(null);
-            const response = await axiosInstance.post('/departments', departmentData);
+            const response = await axiosInstance.post('/departments/create', departmentData);
 
             const newDept = transformDepartmentData(response.data.data);
             setDepartments(prev => [...prev, newDept]);
@@ -182,7 +183,7 @@ export const DepartmentProvider = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axiosInstance.put(`/departments/${deptId}`, updateData);
+            const response = await axiosInstance.put(`/departments/update/${deptId}`, updateData);
 
             const updatedDept = transformDepartmentData(response.data.data);
             setDepartments(prev =>

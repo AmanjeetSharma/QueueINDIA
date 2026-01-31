@@ -18,7 +18,7 @@ connectDB()
         const PORT = process.env.PORT || 3001;
 
         app.listen(PORT, () => {
-            console.log(chalk.yellowBright(`🚀 User Service is live on PORT:`));
+            console.log(chalk.yellowBright(`🚀 User Service is live on PORT: `));
             console.log(chalk.cyanBright(`http://localhost:${PORT}`));
             console.log(chalk.gray(`-----------------------------------------`));
         });

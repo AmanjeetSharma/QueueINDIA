@@ -10,7 +10,11 @@ dotenv.config();
 const app = express();
 
 // Global Middleware
-app.use(cors({ origin: process.env.CORS_ORIGIN, credentials: true }));
+app.use(cors({
+  origin: [process.env.CORS_ORIGIN],
+  credentials: true
+}));
+app.set("trust proxy", 1); // Trust first proxy
 app.use(cookieParser());
 
 // Important: Remove global body parsing for proxy routes

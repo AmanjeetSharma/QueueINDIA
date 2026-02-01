@@ -195,8 +195,8 @@ const login = asyncHandler(async (req, res) => {
     // Secure cookies
     const cookieOptions = {
         httpOnly: true,
-        secure: false, // must remain true in production
-        sameSite: "Lax",
+        secure: true, // must remain true in production
+        sameSite: "None",
         path: "/",
     };
 
@@ -266,8 +266,8 @@ const logout = asyncHandler(async (req, res) => {
 
     const cookieOptions = {
         httpOnly: true,
-        secure: false, // use true in production
-        sameSite: "Lax",
+        secure: true, // use true in production
+        sameSite: "None",
         path: "/",
     };
 
@@ -326,8 +326,8 @@ const logoutAllDevices = asyncHandler(async (req, res) => {
 
     const cookieOptions = {
         httpOnly: true,
-        secure: false, // use true in production
-        sameSite: "Lax",
+        secure: true, // use true in production
+        sameSite: "None",
         path: "/",
     };
 
@@ -395,9 +395,9 @@ const refresh = asyncHandler(async (req, res) => {
 
     const cookieOptions = {
         httpOnly: true,
-        secure: false, // true in production
-        sameSite: "Lax",
-        path: "/", // ✅ corrected from 'Path' (case-sensitive bug)
+        secure: true, // true in production
+        sameSite: "None",
+        path: "/",
     };
 
     return res

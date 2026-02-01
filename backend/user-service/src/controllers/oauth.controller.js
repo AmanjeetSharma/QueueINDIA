@@ -4,6 +4,7 @@ import { generateAccessToken, generateRefreshToken, generateSessionId } from '..
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { getCookieOptions } from '../config/getCookieOptions.js';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -76,12 +77,7 @@ export const googleLogin = asyncHandler(async (req, res) => {
 
     await user.save();
 
-    const cookieOptions = {
-        httpOnly: true,
-        secure: true, // must remain true in production
-        sameSite: "None",
-        path: "/",
-    };
+    const cookieOptions = getCookieOptions();
 
     return res
         .status(200)

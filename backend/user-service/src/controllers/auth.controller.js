@@ -8,6 +8,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { emailValidator, passwordValidator, avatarValidator } from "../utils/validators.js";
 import { generateAccessToken, generateRefreshToken, generateSessionId } from '../utils/token.js';
+import { getCookieOptions } from "../config/getCookieOptions.js";
 
 
 
@@ -192,17 +193,12 @@ const login = asyncHandler(async (req, res) => {
         "-password -sessions"
     );
 
-    // Secure cookies
-    const cookieOptions = {
-        httpOnly: true,
-        secure: true, // must remain true in production
-        sameSite: "None",
-        path: "/",
-    };
-
+    
     console.log(
         `✅ ${user.name} logged in successfully. Device: ${deviceName}`
     );
+
+    const cookieOptions = getCookieOptions();
 
     return res
         .status(200)
@@ -264,12 +260,7 @@ const logout = asyncHandler(async (req, res) => {
         await user.save();
     }
 
-    const cookieOptions = {
-        httpOnly: true,
-        secure: true, // use true in production
-        sameSite: "None",
-        path: "/",
-    };
+    const cookieOptions = getCookieOptions();
 
     console.log(`✅ ${user.name} logged out successfully from device: ${session?.device || "Unknown Device"}`);
     return res
@@ -324,12 +315,7 @@ const logoutAllDevices = asyncHandler(async (req, res) => {
     });
     await user.save();
 
-    const cookieOptions = {
-        httpOnly: true,
-        secure: true, // use true in production
-        sameSite: "None",
-        path: "/",
-    };
+    const cookieOptions = getCookieOptions();
 
     console.log(
         `✅ ${user.name} logged out from all devices: ${user.sessions.map((s) => s.device || "Unknown Device").join(", ")}`
@@ -393,12 +379,7 @@ const refresh = asyncHandler(async (req, res) => {
         `✅ Access token refreshed successfully for user: "${user.name}" | Device: ${session.device || "Unknown Device"}`
     );
 
-    const cookieOptions = {
-        httpOnly: true,
-        secure: true, // true in production
-        sameSite: "None",
-        path: "/",
-    };
+    const cookieOptions = getCookieOptions();
 
     return res
         .status(200)

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useBooking } from '../../context/BookingContext';
 import { useAuth } from '../../context/AuthContext';
 import {
-  FaCalendarAlt, 
+  FaCalendarAlt,
   FaClock,
   FaCheckCircle,
   FaHourglassHalf,
@@ -30,7 +30,7 @@ const UserBookings = () => {
     date: '',
     time: ''
   });
-  
+
   const hasFetchedInitial = useRef(false);
 
   // Auto-fetch on mount and auth changes
@@ -42,7 +42,6 @@ const UserBookings = () => {
           hasFetchedInitial.current = true;
         } catch (error) {
           console.error('Failed to fetch bookings:', error);
-          hasFetchedInitial.current = false; // Reset on error
         }
       }
     };
@@ -174,7 +173,7 @@ const UserBookings = () => {
             <h1 className="text-3xl font-bold text-slate-900 mb-2">My Bookings</h1>
             <p className="text-slate-600">View and manage all your appointments</p>
           </div>
-          
+
           <button
             onClick={handleRefresh}
             disabled={loading}

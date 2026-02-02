@@ -12,7 +12,7 @@ import ProtectedAuthRoute from "./ProtectedAuthRoute";
 import AuthorizedRoles from "./AuthorizedRoles";
 
 // Info page imports
-import Services from "../pages/info/Services.jsx";
+import HowThingsWork from "../pages/info/HowThingsWork.jsx";
 import Contact from "../pages/info/Contact.jsx";
 import Pricing from "../pages/info/Pricing.jsx";
 import AboutUs from "../pages/info/AboutUs.jsx";
@@ -40,12 +40,17 @@ import Dashboard from "../pages/dashboard/Dashboard.jsx";
 
 //Panel imports
 import SuperAdminPanel from "../pages/admin/superAdminPanel/SuperAdminPanel.jsx";
+import UserManagementTab from "../pages/admin/superAdminPanel/components/UserManagement/UserManagementTab.jsx";
+import DepartmentManagementTab from "../pages/admin/superAdminPanel/components/DepartmentManagement/DepartmentManagementTab.jsx";
+import DashboardTab from "../pages/admin/superAdminPanel/components/DashboardTab.jsx";
+
 import AdminPanel from "../pages/admin/adminPanel/AdminPanel.jsx";
 import OfficerPanel from "../pages/admin/officerPanel/OfficerPanel.jsx";
 
 import NotFound from "../pages/NotFound.jsx";
 
 import ScrollToTop from "../components/ScrollToTop.jsx";
+
 
 const AppRoutes = () => {
   return (
@@ -115,7 +120,13 @@ const AppRoutes = () => {
 
 
 
+
+
+
         {/* Role-specific panels with authorization */}
+
+
+        {/* Super Admin Panel Routes */}
         <Route
           path="/super-admin-panel"
           element={
@@ -123,7 +134,42 @@ const AppRoutes = () => {
               <SuperAdminPanel />
             </AuthorizedRoles>
           }
+        >
+        </Route>
+
+        <Route
+          path="/super-admin-panel/dashboard"
+          element={
+            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
+              <DashboardTab />
+            </AuthorizedRoles>
+          }
         />
+
+        <Route
+          path="/super-admin-panel/users"
+          element={
+            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
+              <UserManagementTab />
+            </AuthorizedRoles>
+          }
+        />
+
+        <Route
+          path="/super-admin-panel/departments"
+          element={
+            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
+              <DepartmentManagementTab />
+            </AuthorizedRoles>
+          }
+        />
+
+
+
+
+
+
+
 
         <Route
           path="/admin-panel"
@@ -207,7 +253,7 @@ const AppRoutes = () => {
         <Route path="/departments/:deptId/services/:serviceId" element={<ServiceDetails />} />
 
         {/* Public routes */}
-        <Route path="/services" element={<Services />} />
+        <Route path="/how-things-work" element={<HowThingsWork />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<AboutUs />} />

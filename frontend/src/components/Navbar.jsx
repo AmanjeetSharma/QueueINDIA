@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { FiTrendingUp } from "react-icons/fi";
 import {
   FaUser,
   FaSignInAlt,
@@ -11,7 +12,6 @@ import {
   FaChevronDown,
   FaHome,
   FaDollarSign,
-  FaConciergeBell,
   FaEnvelope,
   FaIdCard,
   FaBuilding,
@@ -116,7 +116,7 @@ const Navbar = () => {
   const navLinks = [
     { to: "/", label: "Home", icon: FaHome },
     { to: "/departments", label: "Departments", icon: FaBuilding },
-    { to: "/services", label: "Services", icon: FaConciergeBell },
+    { to: "/how-things-work", label: "How Things Work", icon: FiTrendingUp },
     { to: "/pricing", label: "Pricing", icon: FaDollarSign },
   ];
 

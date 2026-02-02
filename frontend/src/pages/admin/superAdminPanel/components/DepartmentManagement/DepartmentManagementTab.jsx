@@ -63,28 +63,25 @@ const DepartmentManagementTab = () => {
   const [filters, setFilters] = useState({
     city: 'ALL',
     state: 'ALL',
-    sortBy: 'name', // Changed to match API default
+    sortBy: 'name',
     sortOrder: 'asc'
   });
   
-  // Updated pagination structure to match API response
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalDepartments: 0,
-    limit: 6 // Changed to match API default
+    limit: 6
   });
 
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [shouldFetch, setShouldFetch] = useState(true);
 
-  // Fetch function that handles API response structure
   const fetchDepartments = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Prepare filters for API
       const apiFilters = {
         page: pagination.currentPage,
         limit: pagination.limit,
@@ -95,7 +92,6 @@ const DepartmentManagementTab = () => {
         sortOrder: filters.sortOrder
       };
 
-      // Adjust sortBy if it's not supported by backend
       const validSortFields = ['name', 'departmentCategory', 'status'];
       if (!validSortFields.includes(apiFilters.sortBy)) {
         apiFilters.sortBy = 'name';
@@ -103,10 +99,8 @@ const DepartmentManagementTab = () => {
 
       console.log('Fetching with filters:', apiFilters);
 
-      // Call the context function and capture the response
       const response = await getDepartments(apiFilters);
 
-      // Update pagination from response if available
       if (response && response.data) {
         const { page, totalPages, total, limit } = response.data;
         setPagination({
@@ -134,7 +128,6 @@ const DepartmentManagementTab = () => {
     filters.sortOrder
   ]);
 
-  // Initial fetch
   useEffect(() => {
     if (viewMode === 'dashboard' && shouldFetch) {
       fetchDepartments();
@@ -142,7 +135,6 @@ const DepartmentManagementTab = () => {
     }
   }, [viewMode, shouldFetch, fetchDepartments]);
 
-  // Navigation handlers
   const navigateToDashboard = () => {
     setViewMode('dashboard');
     setSelectedDepartment(null);
@@ -168,26 +160,23 @@ const DepartmentManagementTab = () => {
     setViewMode('admins');
   };
 
-  // Apply filters handler
   const handleApplyFilters = () => {
     setPagination(prev => ({ ...prev, currentPage: 1 }));
     setShouldFetch(true);
   };
 
-  // Reset filters handler
   const handleResetFilters = () => {
     setSearchTerm('');
     setFilters({
       city: 'ALL',
       state: 'ALL',
-      sortBy: 'name', // Reset to API default
-      sortOrder: 'asc' // Reset to API default
+      sortBy: 'name',
+      sortOrder: 'asc'
     });
     setPagination(prev => ({ ...prev, currentPage: 1 }));
     setShouldFetch(true);
   };
 
-  // Toggle sort order
   const toggleSortOrder = () => {
     setFilters(prev => ({
       ...prev,
@@ -196,7 +185,6 @@ const DepartmentManagementTab = () => {
     setShouldFetch(true);
   };
 
-  // Change sort field - only allow backend-supported fields
   const changeSortField = (field) => {
     const validSortFields = ['name', 'departmentCategory', 'status'];
     const actualField = validSortFields.includes(field) ? field : 'name';
@@ -208,18 +196,15 @@ const DepartmentManagementTab = () => {
     setShouldFetch(true);
   };
 
-  // Manual refresh
   const handleManualRefresh = () => {
     setShouldFetch(true);
   };
 
-  // Handle pagination change
   const handlePaginationChange = (page) => {
     setPagination(prev => ({ ...prev, currentPage: page }));
     setShouldFetch(true);
   };
 
-  // Get unique cities and states for filters from departments array
   const uniqueCities = [...new Set(departments
     .map(dept => dept.location?.city || dept.address?.city)
     .filter(city => city && city !== 'ALL')
@@ -230,7 +215,6 @@ const DepartmentManagementTab = () => {
     .filter(state => state && state !== 'ALL')
   )].sort();
 
-  // Action handlers
   const handleCreateDepartment = async (departmentData) => {
     try {
       setActionLoading(true);
@@ -334,7 +318,6 @@ const DepartmentManagementTab = () => {
     }
   };
 
-  // Get department stats - fixed to use API response structure
   const getDepartmentStats = () => {
     const totalDepartments = pagination.totalDepartments || departments.length;
     const totalServices = departments.reduce((acc, dept) => acc + (dept.stats?.totalServices || 0), 0);
@@ -352,28 +335,28 @@ const DepartmentManagementTab = () => {
   const stats = getDepartmentStats();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 p-2 sm:p-4 lg:p-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen">
       {/* Header with navigation */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 bg-white rounded-xl shadow-sm p-4 sm:p-5 border border-gray-100">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           {viewMode !== 'dashboard' && (
             <button
               onClick={navigateToDashboard}
-              className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors flex-shrink-0"
               title="Back to dashboard"
             >
-              <MdArrowBack className="text-xl" />
+              <MdArrowBack className="text-lg sm:text-xl" />
             </button>
           )}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
               {viewMode === 'dashboard' && 'Department Management'}
               {viewMode === 'create' && 'Create New Department'}
               {viewMode === 'edit' && `Edit: ${selectedDepartment?.name || 'Department'}`}
               {viewMode === 'services' && `Services: ${selectedDepartment?.name || 'Department'}`}
               {viewMode === 'admins' && `Admins: ${selectedDepartment?.name || 'Department'}`}
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">
               {viewMode === 'dashboard' && `Total: ${stats.totalDepartments} departments`}
               {viewMode === 'create' && 'Create a new department with all configurations'}
               {viewMode === 'edit' && 'Edit department details and configuration'}
@@ -383,33 +366,34 @@ const DepartmentManagementTab = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap">
           {viewMode === 'dashboard' && (
             <>
               <button
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 flex items-center justify-center sm:justify-start text-xs sm:text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
                 onClick={handleManualRefresh}
                 disabled={loading}
               >
-                <MdRefresh className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-                {loading ? 'Loading...' : 'Refresh'}
+                <MdRefresh className={`mr-1 sm:mr-2 text-sm sm:text-base flex-shrink-0 ${loading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{loading ? 'Loading...' : 'Refresh'}</span>
               </button>
               <button
                 onClick={navigateToCreate}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center text-sm transition-colors"
+                className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center sm:justify-start text-xs sm:text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
               >
-                <MdAdd className="mr-2" />
-                Create Department
+                <MdAdd className="mr-1 sm:mr-2 text-sm sm:text-base flex-shrink-0" />
+                <span className="hidden sm:inline">Create Department</span>
+                <span className="sm:hidden">Add</span>
               </button>
             </>
           )}
           {viewMode !== 'dashboard' && (
             <button
               onClick={navigateToDashboard}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center text-sm transition-colors"
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center justify-center sm:justify-start text-xs sm:text-sm font-medium transition-colors duration-200"
             >
-              <MdClose className="mr-2" />
-              Cancel
+              <MdClose className="mr-1 sm:mr-2 text-sm sm:text-base flex-shrink-0" />
+              <span className="hidden sm:inline">Cancel</span>
             </button>
           )}
         </div>
@@ -423,85 +407,85 @@ const DepartmentManagementTab = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.2 }}
-          className="h-full"
+          className="w-full"
         >
           {viewMode === 'dashboard' ? (
             <>
               {/* Stats Summary */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-gray-600">Total Departments</p>
-                      <p className="text-xl font-bold text-gray-900 mt-1">{stats.totalDepartments}</p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+                <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border border-blue-100 hover:shadow-md transition-shadow duration-200">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-gray-600">Departments</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{stats.totalDepartments}</p>
                     </div>
-                    <div className="p-2 rounded-lg bg-blue-50">
-                      <Icon name="department" className="text-blue-500" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-gray-600">Total Services</p>
-                      <p className="text-xl font-bold text-gray-900 mt-1">{stats.totalServices}</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-purple-50">
-                      <GrServices className="text-purple-500 text-lg" />
+                    <div className="p-2 rounded-lg bg-blue-50 flex-shrink-0">
+                      <Icon name="department" className="text-blue-600 text-lg sm:text-xl" />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-gray-600">Total Admins</p>
-                      <p className="text-xl font-bold text-gray-900 mt-1">{stats.totalAdmins}</p>
+                <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border border-purple-100 hover:shadow-md transition-shadow duration-200">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-gray-600">Services</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{stats.totalServices}</p>
                     </div>
-                    <div className="p-2 rounded-lg bg-green-50">
-                      <MdAdminPanelSettings className="text-green-500 text-lg" />
+                    <div className="p-2 rounded-lg bg-purple-50 flex-shrink-0">
+                      <GrServices className="text-purple-600 text-lg sm:text-xl" />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-gray-600">Active Departments</p>
-                      <p className="text-xl font-bold text-gray-900 mt-1">{stats.activeDepartments}</p>
+                <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border border-green-100 hover:shadow-md transition-shadow duration-200">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-gray-600">Admin Users</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{stats.totalAdmins}</p>
                     </div>
-                    <div className="p-2 rounded-lg bg-red-50">
-                      <Icon name="active" className="text-red-500" />
+                    <div className="p-2 rounded-lg bg-green-50 flex-shrink-0">
+                      <MdAdminPanelSettings className="text-green-600 text-lg sm:text-xl" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border border-amber-100 hover:shadow-md transition-shadow duration-200">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-gray-600">Active</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{stats.activeDepartments}</p>
+                    </div>
+                    <div className="p-2 rounded-lg bg-amber-50 flex-shrink-0">
+                      <Icon name="active" className="text-amber-600 text-lg sm:text-xl" />
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Filters Section */}
-              <div className="bg-white rounded-xl shadow-sm p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 lg:p-5 border border-gray-100">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4">
                   {/* Search */}
                   <div className="lg:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Search Departments</label>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Search</label>
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="Search by name, services, or category..."
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 pl-10 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        placeholder="Search departments..."
+                        className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 pl-9 sm:pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleApplyFilters()}
                       />
-                      <Icon name="search" className="absolute left-3 top-2.5 text-gray-400" />
+                      <Icon name="search" className="absolute left-3 top-2.5 text-gray-400 text-sm" />
                     </div>
                   </div>
 
                   {/* City Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">City</label>
                     <select
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
                       value={filters.city}
                       onChange={(e) => {
                         setFilters(prev => ({ ...prev, city: e.target.value }));
@@ -517,9 +501,9 @@ const DepartmentManagementTab = () => {
 
                   {/* State Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">State</label>
                     <select
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
                       value={filters.state}
                       onChange={(e) => {
                         setFilters(prev => ({ ...prev, state: e.target.value }));
@@ -535,10 +519,10 @@ const DepartmentManagementTab = () => {
 
                   {/* Sort By */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Sort</label>
                     <div className="flex gap-2">
                       <select
-                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        className="flex-1 border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
                         value={filters.sortBy}
                         onChange={(e) => changeSortField(e.target.value)}
                       >
@@ -548,32 +532,32 @@ const DepartmentManagementTab = () => {
                       </select>
                       <button
                         onClick={toggleSortOrder}
-                        className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center transition-colors"
+                        className="px-2 sm:px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center transition-colors bg-gray-50"
                         title={`Sort ${filters.sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
                       >
-                        {filters.sortOrder === 'asc' ? <MdArrowUpward /> : <MdArrowDownward />}
+                        {filters.sortOrder === 'asc' ? <MdArrowUpward className="text-sm" /> : <MdArrowDownward className="text-sm" />}
                       </button>
                     </div>
                   </div>
                 </div>
 
                 {/* Filter Action Buttons */}
-                <div className="flex justify-end gap-3">
+                <div className="flex gap-2 sm:gap-3 justify-end flex-wrap sm:flex-nowrap">
                   <button
                     onClick={handleResetFilters}
-                    className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-1 sm:gap-2 transition-colors disabled:opacity-50 font-medium cursor-pointer"
                     disabled={loading}
                   >
-                    <MdRedo className="mr-1" />
-                    Reset Filters
+                    <MdRedo className="text-sm flex-shrink-0" />
+                    <span>Reset</span>
                   </button>
                   <button
                     onClick={handleApplyFilters}
-                    className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 flex items-center gap-1 sm:gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md font-medium cursor-pointer"
                     disabled={loading}
                   >
-                    <Icon name="filter" size={16} />
-                    Apply Filters
+                    <Icon name="filter" size={14} />
+                    <span>Apply</span>
                   </button>
                 </div>
               </div>

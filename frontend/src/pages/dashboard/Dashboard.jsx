@@ -13,7 +13,8 @@ import {
   FaArrowRight,
   FaPhone,
   FaCog,
-  FaPlus
+  FaPlus,
+  FaInfoCircle
 } from "react-icons/fa";
 import { AiFillDashboard } from "react-icons/ai";
 
@@ -108,11 +109,11 @@ const Dashboard = () => {
       badge: "Start here"
     },
     {
-      title: "Explore Departments",
-      icon: FaBuilding,
+      title: "How Our Service Works & FAQs",
+      icon: FaInfoCircle,
       color: "from-green-500 to-emerald-500",
-      link: "/departments",
-      badge: "Browse"
+      link: "/how-things-work",
+      badge: "Learn"
     }
   ];
 

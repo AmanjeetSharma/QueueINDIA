@@ -126,23 +126,19 @@ const Navbar = () => {
     hidden: {
       opacity: 0,
       y: -10,
-      scale: 0.95,
     },
     visible: {
       opacity: 1,
       y: 0,
-      scale: 1,
       transition: {
-        duration: 0.2,
-        ease: "easeOut",
+        duration: 0.15,
       },
     },
     exit: {
       opacity: 0,
       y: -10,
-      scale: 0.95,
       transition: {
-        duration: 0.15,
+        duration: 0.1,
       },
     },
   };
@@ -156,78 +152,50 @@ const Navbar = () => {
       opacity: 1,
       height: "auto",
       transition: {
-        duration: 0.3,
-        ease: "easeOut",
+        duration: 0.2,
       },
     },
     exit: {
       opacity: 0,
       height: 0,
       transition: {
-        duration: 0.2,
+        duration: 0.15,
       },
     },
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0 },
-  };
-
   return (
-    <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className="border-b bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-sm"
-    >
+    <header className="border-b bg-white/90 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
         {/* Logo - Extreme Left */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.2, type: "spring" }}
-          className="flex items-center"
-        >
-          <Link to="/" className="flex items-center gap-3 group">
-            <motion.div
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              className="w-10 h-10 bg-linear-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg"
-            >
+        <div className="flex items-center">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow">
               <span className="text-white font-bold text-lg">Q</span>
-            </motion.div>
-            <motion.span
-              className="font-bold text-2xl bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
-              whileHover={{ scale: 1.05 }}
-            >
+            </div>
+            <span className="font-bold text-xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               QueueINDIA
-            </motion.span>
+            </span>
           </Link>
-        </motion.div>
+        </div>
 
         {/* Everything Else - Right Side */}
         <div className="flex items-center gap-6">
           {/* Desktop Navigation Links */}
           <nav className="hidden lg:flex items-center gap-4">
-            {navLinks.map((link, index) => (
-              <motion.div
+            {navLinks.map((link) => (
+              <Link
                 key={link.to}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
+                to={link.to}
+                className="group flex items-center gap-2 text-gray-600 hover:text-indigo-600 font-normal text-sm transition-colors py-2 px-3 rounded-lg"
               >
-                <Link
-                  to={link.to}
-                  className="group flex items-center gap-2 text-gray-700 hover:text-indigo-600 font-normal text-sm transition-all duration-300 py-2 px-3 rounded-lg hover:bg-indigo-50"
-                >
-                  <link.icon className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
-                  <span className="relative">
-                    {link.label}
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
-                  </span>
-                </Link>
-              </motion.div>
+                <link.icon className="w-3.5 h-3.5" />
+                <span className="relative">
+                  {link.label}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+                </span>
+              </Link>
             ))}
           </nav>
 
@@ -235,25 +203,20 @@ const Navbar = () => {
           <div className="hidden lg:block relative" ref={dropdownRef}>
             {isAuthenticated ? (
               // Authenticated user dropdown trigger with enhanced design
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 onClick={toggleDropdown}
-                className="flex items-center gap-3 hover:bg-gray-50 rounded-2xl p-3 transition-all duration-300 border border-transparent hover:border-gray-200 group"
+                className="flex items-center gap-3 hover:bg-gray-50 rounded-xl p-2 transition-colors border border-transparent hover:border-gray-200 group"
               >
-                {/* User Avatar with enhanced styling */}
-                <motion.div
-                  className="relative"
-                  whileHover={{ scale: 1.1 }}
-                >
+                {/* User Avatar */}
+                <div className="relative">
                   {user?.avatar ? (
                     <img
                       src={user.avatar}
                       alt="Profile"
-                      className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 shadow-sm group-hover:border-indigo-300 transition-colors"
+                      className="w-9 h-9 rounded-full object-cover border border-gray-200 shadow-sm"
                     />
                   ) : (
-                    <div className="w-10 h-10 bg-linear-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border-2 border-indigo-200 shadow-sm group-hover:border-indigo-300 transition-colors">
+                    <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
                       <span className="text-white font-semibold text-sm">
                         {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                       </span>
@@ -261,51 +224,45 @@ const Navbar = () => {
                   )}
                   {/* Online indicator */}
                   <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                </motion.div>
+                </div>
 
-                {/* User Name with animation */}
+                {/* User Name */}
                 <div className="text-left">
-                  <motion.p
-                    className="text-sm font-semibold text-gray-900"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                  >
+                  <p className="text-sm font-medium text-gray-900">
                     Hi! {user?.name?.split(' ')[0] || 'User'}
-                  </motion.p>
-                  <p className={`text-xs font-medium`}>Welcome Back</p>
+                  </p>
+                  <p className="text-xs text-gray-500">Welcome Back</p>
                 </div>
 
-                {/* Animated Dropdown Arrow */}
+                {/* Dropdown Arrow */}
                 <motion.div
                   animate={{ rotate: isDropdownOpen ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
-                  className="text-gray-400 group-hover:text-gray-600"
-                >
-                  <FaChevronDown className="w-4 h-4" />
-                </motion.div>
-              </motion.button>
-            ) : (
-              // Non-authenticated user dropdown trigger - Only Sign In
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={toggleDropdown}
-                className="flex items-center gap-2 hover:bg-gray-50 rounded-xl p-2 transition-all duration-300 border border-transparent hover:border-gray-200 group"
-              >
-                <div className="w-8 h-8 bg-linear-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center border-2 border-gray-200 shadow-sm">
-                  <FaUser className="w-4 h-4 text-white" />
-                </div>
-                <motion.div
-                  animate={{ rotate: isDropdownOpen ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-gray-400 group-hover:text-gray-600"
+                  className="text-gray-400"
                 >
                   <FaChevronDown className="w-3 h-3" />
                 </motion.div>
-              </motion.button>
+              </button>
+            ) : (
+              // Non-authenticated user dropdown trigger - Only Sign In
+              <button
+                onClick={toggleDropdown}
+                className="flex items-center gap-2 hover:bg-gray-50 rounded-xl p-2 transition-colors border border-transparent hover:border-gray-200"
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
+                  <FaUser className="w-3.5 h-3.5 text-white" />
+                </div>
+                <motion.div
+                  animate={{ rotate: isDropdownOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-gray-400"
+                >
+                  <FaChevronDown className="w-3 h-3" />
+                </motion.div>
+              </button>
             )}
 
-            {/* Animated Dropdown Menu */}
+            {/* Animated Dropdown Menu - Elevated with shadow */}
             <AnimatePresence>
               {isDropdownOpen && (
                 <motion.div
@@ -313,13 +270,13 @@ const Navbar = () => {
                   initial="hidden"
                   animate="visible"
                   exit="exit"
-                  className="absolute right-0 mt-3 w-72 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200 py-3 z-50"
+                  className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border border-gray-200 py-3 z-50"
                 >
                   {isAuthenticated ? (
                     // Authenticated user menu
                     <>
                       <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="font-semibold text-gray-900 truncate">{user?.name}</p>
+                        <p className="font-medium text-gray-900 truncate">{user?.name}</p>
                         <p className="text-sm text-gray-500 truncate">{user?.email}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <FaShieldAlt className={`w-3 h-3 ${roleColors.shieldColor}`} />
@@ -331,157 +288,126 @@ const Navbar = () => {
 
                       {/* Role-Specific Panel Links */}
                       {user?.role === 'SUPER_ADMIN' && (
-                        <motion.div variants={itemVariants}>
-                          <Link
-                            to="/super-admin-panel"
-                            className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-red-50 transition-colors group"
-                            onClick={() => setIsDropdownOpen(false)}
-                          >
-                            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                              <FaUserShield className="w-4 h-4 text-red-600" />
-                            </div>
-                            <div>
-                              <span className="font-medium">Super Admin Panel</span>
-                              <p className="text-xs text-gray-500">Full system control</p>
-                            </div>
-                          </Link>
-                        </motion.div>
+                        <Link
+                          to="/super-admin-panel"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-red-50 transition-colors group"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                            <FaUserShield className="w-4 h-4 text-red-600" />
+                          </div>
+                          <div>
+                            <span className="font-medium">Super Admin Panel</span>
+                            <p className="text-xs text-gray-500">Full system control</p>
+                          </div>
+                        </Link>
                       )}
 
                       {user?.role === 'ADMIN' && (
-                        <motion.div variants={itemVariants}>
-                          <Link
-                            to="/admin-panel"
-                            className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-purple-50 transition-colors group"
-                            onClick={() => setIsDropdownOpen(false)}
-                          >
-                            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                              <FaUserCog className="w-4 h-4 text-purple-600" />
-                            </div>
-                            <div>
-                              <span className="font-medium">Admin Panel</span>
-                              <p className="text-xs text-gray-500">Administration tools</p>
-                            </div>
-                          </Link>
-                        </motion.div>
+                        <Link
+                          to="/admin-panel"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-purple-50 transition-colors group"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                            <FaUserCog className="w-4 h-4 text-purple-600" />
+                          </div>
+                          <div>
+                            <span className="font-medium">Admin Panel</span>
+                            <p className="text-xs text-gray-500">Administration tools</p>
+                          </div>
+                        </Link>
                       )}
 
                       {user?.role === 'DEPARTMENT_OFFICER' && (
-                        <motion.div variants={itemVariants}>
-                          <Link
-                            to="/officer-panel"
-                            className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors group"
-                            onClick={() => setIsDropdownOpen(false)}
-                          >
-                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                              <FaUserTie className="w-4 h-4 text-blue-600" />
-                            </div>
-                            <div>
-                              <span className="font-medium">Officer Panel</span>
-                              <p className="text-xs text-gray-500">Department management</p>
-                            </div>
-                          </Link>
-                        </motion.div>
-                      )}
-
-                      {/* Dashboard Link - Universal for all roles */}
-                      <motion.div variants={itemVariants}>
                         <Link
-                          to="/dashboard"
-                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                            <FaTachometerAlt className="w-4 h-4 text-indigo-600" />
-                          </div>
-                          <div>
-                            <span className="font-medium">Dashboard</span>
-                            <p className="text-xs text-gray-500">User dashboard</p>
-                          </div>
-                        </Link>
-                      </motion.div>
-
-                      {/* <motion.div variants={itemVariants}>
-                        <Link
-                          to="/profile"
-                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                            <FaIdCard className="w-4 h-4 text-indigo-600" />
-                          </div>
-                          <span>Profile</span>
-                        </Link>
-                      </motion.div> */}
-
-                      <motion.div variants={itemVariants}>
-                        <Link
-                          to="/contact"
-                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                          to="/officer-panel"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors group"
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                            <FaEnvelope className="w-4 h-4 text-blue-600" />
+                            <FaUserTie className="w-4 h-4 text-blue-600" />
                           </div>
-                          <span>Contact</span>
+                          <div>
+                            <span className="font-medium">Officer Panel</span>
+                            <p className="text-xs text-gray-500">Department management</p>
+                          </div>
                         </Link>
-                      </motion.div>
+                      )}
+
+                      {/* Dashboard Link - Universal for all roles */}
+                      <Link
+                        to="/dashboard"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                          <FaTachometerAlt className="w-4 h-4 text-indigo-600" />
+                        </div>
+                        <div>
+                          <span className="font-medium">Dashboard</span>
+                          <p className="text-xs text-gray-500">User dashboard</p>
+                        </div>
+                      </Link>
+
+                      <Link
+                        to="/contact"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors group"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                          <FaEnvelope className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <span>Contact</span>
+                      </Link>
 
                       <div className="border-t border-gray-100 my-2"></div>
 
-                      <motion.div variants={itemVariants}>
-                        <button
-                          onClick={handleLogout}
-                          className="flex items-center gap-3 w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors group"
-                        >
-                          <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                            <FaSignOutAlt className="w-4 h-4" />
-                          </div>
-                          <span>Logout</span>
-                        </button>
-                      </motion.div>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors group cursor-pointer"
+                      >
+                        <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                          <FaSignOutAlt className="w-4 h-4" />
+                        </div>
+                        <span>Logout</span>
+                      </button>
                     </>
                   ) : (
                     // Non-authenticated user menu
                     <>
-                      <motion.div variants={itemVariants}>
-                        <Link
-                          to="/login"
-                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                            <FaSignInAlt className="w-4 h-4 text-indigo-600" />
-                          </div>
-                          <span>Sign In</span>
-                        </Link>
-                      </motion.div>
+                      <Link
+                        to="/login"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                          <FaSignInAlt className="w-4 h-4 text-indigo-600" />
+                        </div>
+                        <span>Sign In</span>
+                      </Link>
 
-                      <motion.div variants={itemVariants}>
-                        <Link
-                          to="/register"
-                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                            <FaUser className="w-4 h-4 text-green-600" />
-                          </div>
-                          <span>Sign Up</span>
-                        </Link>
-                      </motion.div>
+                      <Link
+                        to="/register"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                          <FaUser className="w-4 h-4 text-green-600" />
+                        </div>
+                        <span>Sign Up</span>
+                      </Link>
 
-                      <motion.div variants={itemVariants}>
-                        <Link
-                          to="/contact"
-                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                            <FaEnvelope className="w-4 h-4 text-blue-600" />
-                          </div>
-                          <span>Contact</span>
-                        </Link>
-                      </motion.div>
+                      <Link
+                        to="/contact"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                          <FaEnvelope className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <span>Contact</span>
+                      </Link>
                     </>
                   )}
                 </motion.div>
@@ -490,40 +416,16 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="lg:hidden p-3 rounded-xl hover:bg-gray-100 transition-colors"
+          <button
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
             onClick={toggleMobileMenu}
           >
-            <AnimatePresence mode="wait">
-              {isMobileMenuOpen ? (
-                <motion.div
-                  key="close"
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent event bubbling
-                    closeMobileMenu();
-                  }}
-                >
-                  <FaTimes className="w-6 h-6 text-gray-600" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="menu"
-                  initial={{ rotate: 90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: -90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <FaBars className="w-6 h-6 text-gray-600" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.button>
+            {isMobileMenuOpen ? (
+              <FaTimes className="w-5 h-5 text-gray-600" />
+            ) : (
+              <FaBars className="w-5 h-5 text-gray-600" />
+            )}
+          </button>
         </div>
       </div>
 
@@ -536,75 +438,52 @@ const Navbar = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="lg:hidden absolute top-16 left-0 right-0 bg-white/95 backdrop-blur-md border-b shadow-lg z-40 overflow-hidden"
+            className="lg:hidden absolute top-16 left-0 right-0 bg-white border-b shadow-lg z-40 overflow-hidden"
           >
-            <div className="px-4 py-4 space-y-2">
+            <div className="px-4 py-3 space-y-1">
               {/* Mobile Navigation Links */}
-              {navLinks.map((link, index) => (
-                <motion.div
+              {navLinks.map((link) => (
+                <Link
                   key={link.to}
-                  variants={itemVariants}
-                  initial="hidden"
-                  animate="visible"
-                  transition={{ delay: index * 0.1 }}
+                  to={link.to}
+                  className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-lg transition-colors group"
+                  onClick={closeMobileMenu}
                 >
-                  <Link
-                    to={link.to}
-                    className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-xl transition-colors group"
-                    onClick={closeMobileMenu}
-                  >
-                    <link.icon className="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition-colors" />
-                    <span className="font-medium text-gray-700 group-hover:text-indigo-600 transition-colors">
-                      {link.label}
-                    </span>
-                  </Link>
-                </motion.div>
+                  <link.icon className="w-5 h-5 text-gray-600" />
+                  <span className="font-medium text-gray-700">{link.label}</span>
+                </Link>
               ))}
 
               {/* Contact in mobile menu */}
-              <motion.div
-                variants={itemVariants}
-                initial="hidden"
-                animate="visible"
-                transition={{ delay: 0.3 }}
+              <Link
+                to="/contact"
+                className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-lg transition-colors"
+                onClick={closeMobileMenu}
               >
-                <Link
-                  to="/contact"
-                  className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-xl transition-colors group"
-                  onClick={closeMobileMenu}
-                >
-                  <FaEnvelope className="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition-colors" />
-                  <span className="font-medium text-gray-700 group-hover:text-indigo-600 transition-colors">
-                    Contact
-                  </span>
-                </Link>
-              </motion.div>
+                <FaEnvelope className="w-5 h-5 text-gray-600" />
+                <span className="font-medium text-gray-700">Contact</span>
+              </Link>
 
-              <div className="border-t border-gray-200 pt-4 mt-2">
+              <div className="border-t border-gray-200 pt-3 mt-2">
                 {isAuthenticated ? (
                   // Mobile authenticated user menu
                   <>
-                    <motion.div
-                      variants={itemVariants}
-                      initial="hidden"
-                      animate="visible"
-                      className="flex items-center gap-3 px-4 py-3 mb-2 bg-gray-50 rounded-xl"
-                    >
+                    <div className="flex items-center gap-3 px-4 py-3 mb-2 bg-gray-50 rounded-lg">
                       {user?.avatar ? (
                         <img
                           src={user.avatar}
                           alt="Profile"
-                          className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200"
+                          className="w-10 h-10 rounded-full object-cover border border-gray-200"
                         />
                       ) : (
-                        <div className="w-10 h-10 bg-linear-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border-2 border-indigo-200">
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border border-gray-200">
                           <span className="text-white font-semibold text-sm">
                             {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                           </span>
                         </div>
                       )}
                       <div>
-                        <p className="font-semibold text-gray-900">Hi! {user?.name?.split(' ')[0] || 'User'}</p>
+                        <p className="font-medium text-gray-900">Hi! {user?.name?.split(' ')[0] || 'User'}</p>
                         <p className="text-sm text-gray-500">{user?.email}</p>
                         <div className="flex items-center gap-1 mt-1">
                           <FaShieldAlt className={`w-3 h-3 ${roleColors.shieldColor}`} />
@@ -613,117 +492,92 @@ const Navbar = () => {
                           </span>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
 
                     {/* Role-Specific Panels in Mobile */}
                     {user?.role === 'SUPER_ADMIN' && (
-                      <motion.div variants={itemVariants} initial="hidden" animate="visible">
-                        <Link
-                          to="/super-admin-panel"
-                          className="flex items-center gap-3 py-3 px-4 hover:bg-red-50 rounded-xl transition-colors"
-                          onClick={closeMobileMenu}
-                        >
-                          <FaUserShield className="w-5 h-5 text-red-600" />
-                          <div>
-                            <span className="font-medium">Super Admin Panel</span>
-                            <p className="text-xs text-gray-500">Full system control</p>
-                          </div>
-                        </Link>
-                      </motion.div>
+                      <Link
+                        to="/super-admin-panel"
+                        className="flex items-center gap-3 py-3 px-4 hover:bg-red-50 rounded-lg transition-colors mb-2"
+                        onClick={closeMobileMenu}
+                      >
+                        <FaUserShield className="w-5 h-5 text-red-600" />
+                        <div>
+                          <span className="font-medium">Super Admin Panel</span>
+                          <p className="text-xs text-gray-500">Full system control</p>
+                        </div>
+                      </Link>
                     )}
 
                     {user?.role === 'ADMIN' && (
-                      <motion.div variants={itemVariants} initial="hidden" animate="visible">
-                        <Link
-                          to="/admin-panel"
-                          className="flex items-center gap-3 py-3 px-4 hover:bg-purple-50 rounded-xl transition-colors"
-                          onClick={closeMobileMenu}
-                        >
-                          <FaUserCog className="w-5 h-5 text-purple-600" />
-                          <div>
-                            <span className="font-medium">Admin Panel</span>
-                            <p className="text-xs text-gray-500">Administration tools</p>
-                          </div>
-                        </Link>
-                      </motion.div>
+                      <Link
+                        to="/admin-panel"
+                        className="flex items-center gap-3 py-3 px-4 hover:bg-purple-50 rounded-lg transition-colors mb-2"
+                        onClick={closeMobileMenu}
+                      >
+                        <FaUserCog className="w-5 h-5 text-purple-600" />
+                        <div>
+                          <span className="font-medium">Admin Panel</span>
+                          <p className="text-xs text-gray-500">Administration tools</p>
+                        </div>
+                      </Link>
                     )}
 
                     {user?.role === 'DEPARTMENT_OFFICER' && (
-                      <motion.div variants={itemVariants} initial="hidden" animate="visible">
-                        <Link
-                          to="/officer-panel"
-                          className="flex items-center gap-3 py-3 px-4 hover:bg-blue-50 rounded-xl transition-colors"
-                          onClick={closeMobileMenu}
-                        >
-                          <FaUserTie className="w-5 h-5 text-blue-600" />
-                          <div>
-                            <span className="font-medium">Officer Panel</span>
-                            <p className="text-xs text-gray-500">Department management</p>
-                          </div>
-                        </Link>
-                      </motion.div>
+                      <Link
+                        to="/officer-panel"
+                        className="flex items-center gap-3 py-3 px-4 hover:bg-blue-50 rounded-lg transition-colors mb-2"
+                        onClick={closeMobileMenu}
+                      >
+                        <FaUserTie className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <span className="font-medium">Officer Panel</span>
+                          <p className="text-xs text-gray-500">Department management</p>
+                        </div>
+                      </Link>
                     )}
 
                     {/* Universal Dashboard in Mobile */}
-                    <motion.div variants={itemVariants} initial="hidden" animate="visible">
-                      <Link
-                        to="/dashboard"
-                        className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-xl transition-colors mb-2"
-                        onClick={closeMobileMenu}
-                      >
-                        <FaTachometerAlt className="w-5 h-5 text-gray-600" />
-                        <div>
-                          <span className="font-medium">Dashboard</span>
-                          <p className="text-xs text-gray-500">User dashboard</p>
-                        </div>
-                      </Link>
-                    </motion.div>
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-lg transition-colors mb-2"
+                      onClick={closeMobileMenu}
+                    >
+                      <FaTachometerAlt className="w-5 h-5 text-gray-600" />
+                      <div>
+                        <span className="font-medium">Dashboard</span>
+                        <p className="text-xs text-gray-500">User dashboard</p>
+                      </div>
+                    </Link>
 
-                    {/* <motion.div variants={itemVariants} initial="hidden" animate="visible">
-                      <Link
-                        to="/profile"
-                        className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-xl transition-colors"
-                        onClick={closeMobileMenu}
-                      >
-                        <FaIdCard className="w-5 h-5 text-gray-600" />
-                        <span>Profile</span>
-                      </Link>
-                    </motion.div> */}
-
-                    <motion.div variants={itemVariants} initial="hidden" animate="visible">
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-3 w-full text-left py-3 px-4 hover:bg-red-50 rounded-xl transition-colors text-red-600"
-                      >
-                        <FaSignOutAlt className="w-5 h-5" />
-                        <span>Logout</span>
-                      </button>
-                    </motion.div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 w-full text-left py-3 px-4 hover:bg-red-50 rounded-lg transition-colors text-red-600"
+                    >
+                      <FaSignOutAlt className="w-5 h-5" />
+                      <span>Logout</span>
+                    </button>
                   </>
                 ) : (
                   // Mobile non-authenticated user menu
                   <>
-                    <motion.div variants={itemVariants} initial="hidden" animate="visible">
-                      <Link
-                        to="/login"
-                        className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-xl transition-colors mb-2"
-                        onClick={closeMobileMenu}
-                      >
-                        <FaSignInAlt className="w-5 h-5 text-gray-600" />
-                        <span>Sign In</span>
-                      </Link>
-                    </motion.div>
+                    <Link
+                      to="/login"
+                      className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-lg transition-colors mb-2"
+                      onClick={closeMobileMenu}
+                    >
+                      <FaSignInAlt className="w-5 h-5 text-gray-600" />
+                      <span>Sign In</span>
+                    </Link>
 
-                    <motion.div variants={itemVariants} initial="hidden" animate="visible">
-                      <Link
-                        to="/register"
-                        className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-xl transition-colors mb-2"
-                        onClick={closeMobileMenu}
-                      >
-                        <FaUser className="w-5 h-5 text-gray-600" />
-                        <span>Sign Up</span>
-                      </Link>
-                    </motion.div>
+                    <Link
+                      to="/register"
+                      className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-lg transition-colors mb-2"
+                      onClick={closeMobileMenu}
+                    >
+                      <FaUser className="w-5 h-5 text-gray-600" />
+                      <span>Sign Up</span>
+                    </Link>
                   </>
                 )}
               </div>
@@ -731,8 +585,8 @@ const Navbar = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.header>
+    </header>
   );
 };
 
-export default Navbar
+export default Navbar;

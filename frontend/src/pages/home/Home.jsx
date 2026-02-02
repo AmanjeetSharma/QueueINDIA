@@ -123,7 +123,7 @@ const Home = () => {
                         >
                             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
                                 <FaStar className="text-yellow-300" />
-                                <span className="text-sm font-medium">Trusted by Thousands</span>
+                                <span className="text-sm font-medium">Trusted by (for now few)</span>
                             </div>
 
                             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">

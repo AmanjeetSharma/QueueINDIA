@@ -401,7 +401,7 @@ const Navbar = () => {
                         </Link>
                       </motion.div>
 
-                      <motion.div variants={itemVariants}>
+                      {/* <motion.div variants={itemVariants}>
                         <Link
                           to="/profile"
                           className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
@@ -412,7 +412,7 @@ const Navbar = () => {
                           </div>
                           <span>Profile</span>
                         </Link>
-                      </motion.div>
+                      </motion.div> */}
 
                       <motion.div variants={itemVariants}>
                         <Link
@@ -679,7 +679,7 @@ const Navbar = () => {
                       </Link>
                     </motion.div>
 
-                    <motion.div variants={itemVariants} initial="hidden" animate="visible">
+                    {/* <motion.div variants={itemVariants} initial="hidden" animate="visible">
                       <Link
                         to="/profile"
                         className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-xl transition-colors"
@@ -688,7 +688,7 @@ const Navbar = () => {
                         <FaIdCard className="w-5 h-5 text-gray-600" />
                         <span>Profile</span>
                       </Link>
-                    </motion.div>
+                    </motion.div> */}
 
                     <motion.div variants={itemVariants} initial="hidden" animate="visible">
                       <button

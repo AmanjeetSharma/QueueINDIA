@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
-import { useDepartment } from '../context/DepartmentContext';
+import { useAuth } from '../../context/AuthContext';
+import { useDepartment } from '../../context/DepartmentContext';
 import {
-    FaCalendarAlt,
+    FaCalendarAlt,  
     FaSearch,
     FaClock,
     FaUserCheck,
@@ -33,7 +33,7 @@ const Home = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            await getDepartments(); 
+            await getDepartments();
         };
 
         fetchData();

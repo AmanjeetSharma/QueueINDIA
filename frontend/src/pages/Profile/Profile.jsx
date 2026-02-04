@@ -1,7 +1,7 @@
 import { useAuth } from "../../context/AuthContext";
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaShieldAlt, FaUserSlash, FaCamera, FaEdit, FaCheck, FaGoogle, FaBars, FaTimes } from "react-icons/fa";
+import { motion } from "framer-motion";
+import { FaUser, FaShieldAlt, FaUserSlash, FaCamera, FaEdit, FaCheck, FaGoogle } from "react-icons/fa";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -41,7 +41,6 @@ const Profile = () => {
     const [textColor, setTextColor] = useState('#ffffff');
     const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
     const [lastProcessedAvatar, setLastProcessedAvatar] = useState(null);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Individual loading states
     const [isUpdatingName, setIsUpdatingName] = useState(false);
@@ -141,13 +140,6 @@ const Profile = () => {
             window.history.replaceState({}, '', '/profile');
         }
     }, [searchParams]);
-
-    // Close mobile menu when tab changes
-    useEffect(() => {
-        if (isMobileMenuOpen) {
-            setIsMobileMenuOpen(false);
-        }
-    }, [activeTab]);
 
     // Handlers (keeping all your existing handlers)
     const handleSendPrimaryEmailVerification = async () => {
@@ -390,7 +382,7 @@ const Profile = () => {
     const tabs = [
         { id: 'profile', label: 'Profile', icon: FaUser },
         { id: 'security', label: 'Security', icon: FaShieldAlt },
-        { id: 'google-password', label: 'Google Password', icon: FaGoogle },
+        { id: 'google-password', label: 'Set Password', icon: FaGoogle },
         { id: 'danger', label: 'Danger Zone', icon: FaUserSlash }
     ].filter(tab => {
         if (tab.id === 'google-password') {
@@ -408,19 +400,6 @@ const Profile = () => {
                         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                             Profile Settings
                         </h1>
-                        
-                        {/* Mobile Menu Button */}
-                        <button
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className="lg:hidden p-2 rounded-lg bg-white border border-gray-200 shadow-sm"
-                            aria-label="Toggle menu"
-                        >
-                            {isMobileMenuOpen ? (
-                                <FaTimes className="w-5 h-5 text-gray-600" />
-                            ) : (
-                                <FaBars className="w-5 h-5 text-gray-600" />
-                            )}
-                        </button>
                     </div>
                     <p className="text-sm sm:text-base text-gray-600 max-w-2xl">
                         Manage your account settings
@@ -522,7 +501,7 @@ const Profile = () => {
                         />
                     </div>
 
-                    {/* Compact Tabs - Desktop */}
+                    {/* Desktop Tabs */}
                     <div className="hidden lg:flex border-b border-gray-200 bg-white">
                         <nav className="flex w-full">
                             {tabs.map((tab) => (
@@ -541,47 +520,19 @@ const Profile = () => {
                         </nav>
                     </div>
 
-                    {/* Mobile Tabs Menu */}
-                    <AnimatePresence>
-                        {isMobileMenuOpen && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="lg:hidden border-b border-gray-200 bg-white overflow-hidden"
-                            >
-                                <nav className="flex flex-col p-2">
-                                    {tabs.map((tab) => (
-                                        <button
-                                            key={tab.id}
-                                            onClick={() => setActiveTab(tab.id)}
-                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${activeTab === tab.id
-                                                ? 'bg-indigo-50 text-indigo-600'
-                                                : 'text-gray-600 hover:bg-gray-50'
-                                                }`}
-                                        >
-                                            <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-indigo-600' : 'text-gray-400'}`} />
-                                            {tab.label}
-                                        </button>
-                                    ))}
-                                </nav>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    {/* Mobile Tabs Bar (Always visible on mobile) */}
-                    <div className="lg:hidden flex overflow-x-auto border-b border-gray-200 bg-white px-2 py-1">
+                    {/* Mobile Tabs (Horizontally scrollable) */}
+                    <div className="lg:hidden flex overflow-x-auto border-b border-gray-200 bg-white px-2 py-3 scrollbar-hide">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 mx-1 rounded-lg font-medium text-xs transition-all ${activeTab === tab.id
-                                    ? 'bg-indigo-50 text-indigo-600'
+                                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 mx-1 rounded-lg font-medium text-sm transition-all ${activeTab === tab.id
+                                    ? 'bg-indigo-50 text-indigo-600 border border-indigo-200'
                                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                     }`}
                             >
-                                <tab.icon className="w-3 h-3" />
-                                {tab.label}
+                                <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-indigo-600' : 'text-gray-400'}`} />
+                                <span>{tab.label}</span>
                             </button>
                         ))}
                     </div>

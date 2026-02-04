@@ -1,6 +1,6 @@
 export const getCookieOptions = () => {
     const isProduction = process.env.NODE_ENV === "production";
-    console.log("Cookie Options - isProduction:", isProduction);
+    // console.log("Cookie Options - isProduction:", isProduction);
 
     return {
         httpOnly: true,

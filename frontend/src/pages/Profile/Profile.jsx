@@ -1,7 +1,7 @@
 import { useAuth } from "../../context/AuthContext";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaShieldAlt, FaUserSlash, FaCamera, FaEdit, FaCheck } from "react-icons/fa";
+import { FaUser, FaShieldAlt, FaUserSlash, FaCamera, FaEdit, FaCheck, FaGoogle, FaBars, FaTimes } from "react-icons/fa";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import ProfileTab from "../Profile/ProfileSub/ProfileTab";
 import SecurityTab from "../Profile/ProfileSub/SecurityTab";
 import DangerZoneTab from "../Profile/ProfileSub/DangerZoneTab";
+import GooglePasswordTab from "./ProfileSub/GooglePasswordTab";
 import Popup from "../Profile/ProfileSub/Popup";
 import { getDominantColor, createGradientFromColor, createSimpleGradient, getTextColorForBackground } from "../../utils/colorExtractor";
 
@@ -26,11 +27,11 @@ const Profile = () => {
         addSecondaryEmail,
         verifySecondaryEmail,
         sendPrimaryEmailVerification,
-        updateDOB
+        updateDOB,
+        setGoogleUserPassword
     } = useAuth();
 
     const navigate = useNavigate();
-
     const [searchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState('profile');
     const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -40,14 +41,15 @@ const Profile = () => {
     const [textColor, setTextColor] = useState('#ffffff');
     const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
     const [lastProcessedAvatar, setLastProcessedAvatar] = useState(null);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // Replace the single isUpdating state with individual loading states
+    // Individual loading states
     const [isUpdatingName, setIsUpdatingName] = useState(false);
     const [isUpdatingAddress, setIsUpdatingAddress] = useState(false);
     const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
     const [isUpdatingSecondaryEmail, setIsUpdatingSecondaryEmail] = useState(false);
     const [isUpdatingDOB, setIsUpdatingDOB] = useState(false);
-
+    const [isSettingGooglePassword, setIsSettingGooglePassword] = useState(false);
 
     // Popup states
     const [showLogoutPopup, setShowLogoutPopup] = useState(false);
@@ -56,7 +58,7 @@ const Profile = () => {
 
     const fileInputRef = useRef(null);
 
-    // Individual editing states
+    // Form states
     const [editingField, setEditingField] = useState(null);
     const [profileData, setProfileData] = useState({
         name: user?.name || '',
@@ -69,6 +71,10 @@ const Profile = () => {
         }
     });
 
+    const [googlePasswordData, setGooglePasswordData] = useState({
+        newGooglePassword: '',
+        confirmGooglePassword: ''
+    });
 
     const [phoneData, setPhoneData] = useState({
         phone: '',
@@ -88,10 +94,9 @@ const Profile = () => {
         confirmPassword: ''
     });
 
-    // Extract color from avatar only when it actually changes
+    // Extract color from avatar
     useEffect(() => {
         const extractColorFromAvatar = async () => {
-            // Skip if no user, same avatar, or already processing
             if (!user?.avatar || user.avatar === lastProcessedAvatar || isExtractingColor) {
                 return;
             }
@@ -99,12 +104,10 @@ const Profile = () => {
             setIsExtractingColor(true);
             try {
                 const avatarUrl = user.avatar.startsWith('http')
-                    ? user.avatar + '?t=' + Date.now() // Cache busting for initial load
+                    ? user.avatar + '?t=' + Date.now()
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=6366f1&color=ffffff&size=128`;
 
                 const dominantColor = await getDominantColor(avatarUrl);
-
-                // Try creating gradient, fall back to simple gradient if needed
                 let gradient;
                 try {
                     gradient = createGradientFromColor(dominantColor);
@@ -113,110 +116,19 @@ const Profile = () => {
                 }
 
                 setBannerColor(gradient);
-
-                // Calculate optimal text color for contrast
                 const optimalTextColor = getTextColorForBackground(dominantColor);
                 setTextColor(optimalTextColor);
-
-                // Mark this avatar as processed
                 setLastProcessedAvatar(user.avatar);
 
             } catch (error) {
                 console.log('Error extracting color, using default:', error);
-                // Don't change colors if extraction fails
             } finally {
                 setIsExtractingColor(false);
             }
         };
 
         extractColorFromAvatar();
-    }, [user?.avatar, user?.name]); // Only depend on avatar and name changes
-
-    // Enhanced animations
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                duration: 0.6,
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.5,
-                ease: "easeOut"
-            }
-        }
-    };
-
-    const tabContentVariants = {
-        hidden: { opacity: 0, x: 20 },
-        visible: {
-            opacity: 1,
-            x: 0,
-            transition: {
-                duration: 0.4,
-                ease: "easeOut"
-            }
-        },
-        exit: {
-            opacity: 0,
-            x: -20,
-            transition: {
-                duration: 0.3,
-                ease: "easeIn"
-            }
-        }
-    };
-
-    const avatarVariants = {
-        normal: { scale: 1 },
-        hover: { scale: 1.05 },
-        tap: { scale: 0.95 }
-    };
-
-    const badgeVariants = {
-        hidden: { scale: 0, opacity: 0 },
-        visible: {
-            scale: 1,
-            opacity: 1,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 20
-            }
-        }
-    };
-
-    const bannerVariants = {
-        initial: { opacity: 0, scale: 1.05 },
-        animate: {
-            opacity: 1,
-            scale: 1,
-            transition: { duration: 0.8, ease: "easeOut" }
-        }
-    };
-
-    const colorExtractionVariants = {
-        initial: { scale: 0, opacity: 0 },
-        animate: {
-            scale: 1,
-            opacity: 1,
-            transition: { type: "spring", stiffness: 400, damping: 20 }
-        },
-        exit: {
-            scale: 0,
-            opacity: 0,
-            transition: { duration: 0.2 }
-        }
-    };
+    }, [user?.avatar, user?.name]);
 
     // Check for email verification success
     useEffect(() => {
@@ -230,36 +142,66 @@ const Profile = () => {
         }
     }, [searchParams]);
 
-    // Primary Email Verification Handler
+    // Close mobile menu when tab changes
+    useEffect(() => {
+        if (isMobileMenuOpen) {
+            setIsMobileMenuOpen(false);
+        }
+    }, [activeTab]);
+
+    // Handlers (keeping all your existing handlers)
     const handleSendPrimaryEmailVerification = async () => {
         try {
             await sendPrimaryEmailVerification();
+        } catch (error) {}
+    };
+
+    const handleSetGooglePassword = async (e) => {
+        e?.preventDefault();
+
+        if (googlePasswordData.newGooglePassword !== googlePasswordData.confirmGooglePassword) {
+            toast.error("Passwords do not match");
+            return;
+        }
+
+        if (googlePasswordData.newGooglePassword.length < 8) {
+            toast.error("Password must be at least 8 characters");
+            return;
+        }
+
+        setIsSettingGooglePassword(true);
+        try {
+            await setGoogleUserPassword(
+                googlePasswordData.newGooglePassword,
+                googlePasswordData.confirmGooglePassword
+            );
+
+            setGooglePasswordData({
+                newGooglePassword: '',
+                confirmGooglePassword: ''
+            });
+            setActiveTab('security');
         } catch (error) {
-            // Error handled in AuthContext
+        } finally {
+            setIsSettingGooglePassword(false);
         }
     };
 
-    // DOB Update Handler
     const handleUpdateDOB = async () => {
         setIsUpdatingDOB(true);
         try {
             await updateDOB(profileData.dob);
             setEditingField(null);
-
-            // Refresh the profileData state with the updated user data
             setProfileData(prev => ({
                 ...prev,
-                dob: user?.dob ? new Date(user.dob) : null // Use the updated user data from context
+                dob: user?.dob ? new Date(user.dob) : null
             }));
-
         } catch (error) {
-            // Error handled in AuthContext
         } finally {
             setIsUpdatingDOB(false);
         }
     };
 
-    // Send OTP Handler
     const handleAddPhone = async () => {
         if (!phoneData.phone || phoneData.phone.length !== 10) {
             return;
@@ -270,7 +212,6 @@ const Profile = () => {
             await addPhone(phoneData.phone);
             setPhoneData(prev => ({ ...prev, otpSent: true }));
         } catch (error) {
-            // Error handled in AuthContext
         } finally {
             setIsUpdatingPhone(false);
         }
@@ -287,13 +228,11 @@ const Profile = () => {
             setPhoneData({ phone: '', otp: '', otpSent: false });
             setEditingField(null);
         } catch (error) {
-            // Error handled in AuthContext
         } finally {
             setIsUpdatingPhone(false);
         }
     };
 
-    // Secondary Email Handlers
     const handleUpdateSecondaryEmail = async () => {
         if (!emailData.secondaryEmail) {
             return;
@@ -302,9 +241,7 @@ const Profile = () => {
         try {
             await updateProfile({ secondaryEmail: emailData.secondaryEmail });
             setEmailData(prev => ({ ...prev, otpSent: false }));
-        } catch (error) {
-            // Error handled in AuthContext
-        }
+        } catch (error) {}
     };
 
     const handleAddSecondaryEmail = async () => {
@@ -313,7 +250,6 @@ const Profile = () => {
             await addSecondaryEmail(emailData.secondaryEmail);
             setEmailData(prev => ({ ...prev, otpSent: true }));
         } catch (error) {
-            // Error handled in AuthContext
         } finally {
             setIsUpdatingSecondaryEmail(false);
         }
@@ -329,20 +265,17 @@ const Profile = () => {
             setEmailData({ secondaryEmail: '', otp: '', otpSent: false });
             setEditingField(null);
         } catch (error) {
-            // Error handled in AuthContext
         } finally {
             setIsUpdatingSecondaryEmail(false);
         }
     };
 
-    // Profile Update Handlers
     const handleUpdateName = async () => {
         setIsUpdatingName(true);
         try {
             await updateProfile({ name: profileData.name });
             setEditingField(null);
         } catch (error) {
-            // Error handled in AuthContext
         } finally {
             setIsUpdatingName(false);
         }
@@ -354,13 +287,11 @@ const Profile = () => {
             await updateProfile({ address: profileData.address });
             setEditingField(null);
         } catch (error) {
-            // Error handled in AuthContext
         } finally {
             setIsUpdatingAddress(false);
         }
     };
 
-    // Avatar Handlers with Fixed Color Sync
     const handleAvatarClick = () => {
         fileInputRef.current?.click();
     };
@@ -368,24 +299,19 @@ const Profile = () => {
     const handleAvatarChange = async (e) => {
         const file = e.target.files?.[0];
         if (file) {
-            // Validate file type and size
             if (!file.type.startsWith('image/')) {
                 toast.error("Please select a valid image file");
                 return;
             }
 
-            // Reset file input
             e.target.value = '';
-
             setIsUpdatingAvatar(true);
             setIsExtractingColor(true);
 
             try {
-                // First, update the avatar with backend
                 const formData = new FormData();
                 formData.append("avatar", file);
                 await updateProfile(formData);
-
             } catch (error) {
                 console.log('Error updating avatar:', error);
             } finally {
@@ -407,7 +333,6 @@ const Profile = () => {
                 confirmPassword: passwordData.confirmPassword
             });
 
-            // Keep UI state clean
             setIsChangingPassword(false);
             setPasswordData({
                 oldPassword: "",
@@ -415,11 +340,9 @@ const Profile = () => {
                 confirmPassword: ""
             });
 
-            // ✅ Delay navigation so toast stays visible
             setTimeout(() => {
                 navigate("/login");
             }, 1500);
-
         } catch (error) { }
     };
 
@@ -431,9 +354,7 @@ const Profile = () => {
         setShowLogoutPopup(false);
         try {
             await logout();
-        } catch (error) {
-            // Error handled in AuthContext
-        }
+        } catch (error) {}
     };
 
     const handleLogoutAll = () => {
@@ -444,9 +365,7 @@ const Profile = () => {
         setShowLogoutAllPopup(false);
         try {
             await logoutAll();
-        } catch (error) {
-            // Error handled in AuthContext
-        }
+        } catch (error) {}
     };
 
     const handleDeleteAccount = () => {
@@ -457,131 +376,87 @@ const Profile = () => {
         setShowDeletePopup(false);
         try {
             await deleteAccount();
-        } catch (error) {
-            // Error handled in AuthContext
-        }
+        } catch (error) {}
     };
 
     if (!user) {
         return (
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-white"
-            >
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="rounded-full h-12 w-12 border-b-2 border-indigo-600"
-                ></motion.div>
-            </motion.div>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="rounded-full h-8 w-8 border-b-2 border-indigo-600 animate-spin"></div>
+            </div>
         );
     }
 
     const tabs = [
         { id: 'profile', label: 'Profile', icon: FaUser },
         { id: 'security', label: 'Security', icon: FaShieldAlt },
+        { id: 'google-password', label: 'Google Password', icon: FaGoogle },
         { id: 'danger', label: 'Danger Zone', icon: FaUserSlash }
-    ];
+    ].filter(tab => {
+        if (tab.id === 'google-password') {
+            return user?.hasPassword === false;
+        }
+        return true;
+    });
 
     return (
-        <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-            className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 py-8"
-        >
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Clean Header */}
-                <motion.div
-                    variants={itemVariants}
-                    className="text-center mb-12"
-                >
-                    <motion.h1
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, delay: 0.2 }}
-                        className="text-4xl font-bold bg-linear-to-r from-gray-900 to-indigo-600 bg-clip-text text-transparent mb-4"
-                    >
-                        Profile Settings
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, delay: 0.4 }}
-                        className="text-gray-600 text-lg max-w-2xl mx-auto"
-                    >
-                        Manage your account settings and personalize your experience
-                    </motion.p>
-                </motion.div>
+        <div className="min-h-screen bg-gray-50 py-4 sm:py-6">
+            <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
+                {/* Compact Header */}
+                <div className="mb-6 sm:mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                            Profile Settings
+                        </h1>
+                        
+                        {/* Mobile Menu Button */}
+                        <button
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            className="lg:hidden p-2 rounded-lg bg-white border border-gray-200 shadow-sm"
+                            aria-label="Toggle menu"
+                        >
+                            {isMobileMenuOpen ? (
+                                <FaTimes className="w-5 h-5 text-gray-600" />
+                            ) : (
+                                <FaBars className="w-5 h-5 text-gray-600" />
+                            )}
+                        </button>
+                    </div>
+                    <p className="text-sm sm:text-base text-gray-600 max-w-2xl">
+                        Manage your account settings
+                    </p>
+                </div>
 
-                <motion.div
-                    variants={itemVariants}
-                    className="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden"
-                >
-                    {/* Dynamic Banner with Fixed Color Extraction */}
-                    <motion.div
-                        className="relative p-8 transition-all duration-1000 ease-in-out overflow-hidden"
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    {/* Compact Banner */}
+                    <div
+                        className="relative p-4 sm:p-6 transition-all duration-500"
                         style={{
                             background: bannerColor,
                             color: textColor
                         }}
-                        variants={bannerVariants}
-                        initial="initial"
-                        animate="animate"
                     >
-                        {/* Animated background pattern */}
-                        <div className="absolute inset-0 opacity-10">
-                            <div className="absolute inset-0 bg-linear-to-br from-white/20 to-transparent"></div>
-                            <div className="absolute bottom-0 right-0 w-64 h-64 bg-white/10 rounded-full -mb-32 -mr-32"></div>
-                            <div className="absolute top-0 left-0 w-48 h-48 bg-white/10 rounded-full -mt-24 -ml-24"></div>
-                        </div>
+                        {/* Avatar Update Loader */}
+                        {(isExtractingColor || isUpdatingAvatar) && (
+                            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-black/20 text-white px-2 py-1.5 rounded-full flex items-center gap-1 backdrop-blur-sm border border-white/20 text-xs">
+                                <div className="w-3 h-3 border border-white/50 border-t-white rounded-full animate-spin"></div>
+                                <span>Updating...</span>
+                            </div>
+                        )}
 
-                        {/* Avatar Update Loader - Shows during entire update process */}
-                        <AnimatePresence>
-                            {(isExtractingColor || isUpdatingAvatar) && (
-                                <motion.div
-                                    variants={colorExtractionVariants}
-                                    initial="initial"
-                                    animate="animate"
-                                    exit="exit"
-                                    className="absolute top-4 right-4 bg-black/20 text-white px-3 py-2 rounded-full flex items-center gap-2 backdrop-blur-sm border border-white/20"
-                                >
-                                    <motion.div
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                        className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full"
-                                    />
-                                    <span className="text-sm font-medium">
-                                        Updating Image...
-                                    </span>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        <div className="relative flex flex-col md:flex-row items-center gap-8">
-                            {/* Enhanced Rounded Avatar with Centered Image */}
-                            <motion.div
-                                className="relative group"
-                                variants={avatarVariants}
-                                whileHover="hover"
-                                whileTap="tap"
-                            >
-                                <motion.div
-                                    className="relative w-32 h-32 rounded-full border-4 border-white/30 shadow-2xl overflow-hidden cursor-pointer"
+                        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                            {/* Compact Avatar */}
+                            <div className="relative">
+                                <div
+                                    className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full border-3 border-white/40 shadow-lg overflow-hidden cursor-pointer"
+                                    onClick={handleAvatarClick}
                                     onMouseEnter={() => setIsAvatarHovered(true)}
                                     onMouseLeave={() => setIsAvatarHovered(false)}
-                                    onClick={handleAvatarClick}
-                                    whileHover={{
-                                        scale: 1.05,
-                                        borderColor: "rgba(255,255,255,0.6)"
-                                    }}
-                                    transition={{ type: "spring", stiffness: 300 }}
                                 >
                                     <img
                                         src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=6366f1&color=ffffff&size=128`}
                                         alt={user.name}
-                                        className="w-full h-full object-cover object-center"
+                                        className="w-full h-full object-cover"
                                         referrerPolicy="no-referrer"
                                         onError={(e) => {
                                             e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -590,93 +465,49 @@ const Profile = () => {
                                         }}
                                     />
 
-                                    {/* Enhanced Edit Overlay */}
-                                    <AnimatePresence>
-                                        {isAvatarHovered && (
-                                            <motion.div
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full cursor-pointer"
-                                                transition={{ duration: 0.2 }}
-                                            >
-                                                <motion.div
-                                                    initial={{ y: 10 }}
-                                                    animate={{ y: 0 }}
-                                                    className="text-white text-center"
-                                                >
-                                                    <FaCamera className="w-6 h-6 mx-auto mb-1" />
-                                                    <span className="text-xs font-medium">Change Photo</span>
-                                                </motion.div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </motion.div>
+                                    {isAvatarHovered && (
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
+                                            <div className="text-white text-center">
+                                                <FaCamera className="w-4 h-4 mx-auto mb-0.5" />
+                                                <span className="text-xs">Edit</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
 
-                                {/* Floating Edit Button */}
-                                <motion.button
-                                    whileHover={{ scale: 1.1, rotate: 15 }}
-                                    whileTap={{ scale: 0.9 }}
+                                {/* Small Edit Button */}
+                                <button
                                     onClick={handleAvatarClick}
                                     disabled={isUpdatingAvatar}
-                                    className="absolute -bottom-2 -right-2 bg-white text-gray-700 p-2 rounded-full shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="absolute -bottom-1 -right-1 bg-white text-gray-700 p-1.5 rounded-full shadow-md border border-gray-200 hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
                                 >
-                                    <FaEdit className="w-4 h-4" />
-                                </motion.button>
-                            </motion.div>
+                                    <FaEdit className="w-3 h-3" />
+                                </button>
+                            </div>
 
-                            {/* User Info */}
-                            <div className="flex-1 text-center md:text-left">
-                                <motion.h2
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.3 }}
-                                    className="text-3xl font-bold mb-2"
-                                    style={{ color: textColor }}
-                                >
+                            {/* Compact User Info */}
+                            <div className="flex-1 text-center sm:text-left">
+                                <h2 className="text-xl sm:text-2xl font-bold mb-1 line-clamp-1">
                                     {user.name}
-                                </motion.h2>
-                                <motion.p
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.4 }}
-                                    className="text-lg mb-4 opacity-90"
-                                    style={{ color: textColor }}
-                                >
+                                </h2>
+                                <p className="text-sm sm:text-base opacity-90 mb-3 line-clamp-1">
                                     {user.email}
-                                </motion.p>
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.5 }}
-                                    className="flex flex-wrap gap-2 justify-center md:justify-start"
-                                >
+                                </p>
+                                <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start">
                                     {user.isEmailVerified && (
-                                        <motion.span
-                                            variants={badgeVariants}
-                                            className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-white/30"
-                                            style={{ color: textColor }}
-                                        >
-                                            ✅ Email Verified
-                                        </motion.span>
+                                        <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-sm border border-white/30">
+                                            ✅ Verified
+                                        </span>
                                     )}
                                     {user.isPhoneVerified && (
-                                        <motion.span
-                                            variants={badgeVariants}
-                                            className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-white/30"
-                                            style={{ color: textColor }}
-                                        >
-                                            📱 Phone Verified
-                                        </motion.span>
+                                        <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-sm border border-white/30">
+                                            📱 Phone
+                                        </span>
                                     )}
-                                    <motion.span
-                                        variants={badgeVariants}
-                                        className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-white/30"
-                                        style={{ color: textColor }}
-                                    >
-                                        👤 Member since {new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                    </motion.span>
-                                </motion.div>
+                                    <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-sm border border-white/30">
+                                        Since {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -689,114 +520,136 @@ const Profile = () => {
                             className="hidden"
                             disabled={isUpdatingAvatar}
                         />
-                    </motion.div>
+                    </div>
 
-                    {/* Enhanced Tabs */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6 }}
-                        className="border-b border-gray-200 bg-white"
-                    >
-                        <nav className="flex overflow-x-auto">
-                            {tabs.map((tab, index) => (
-                                <motion.button
+                    {/* Compact Tabs - Desktop */}
+                    <div className="hidden lg:flex border-b border-gray-200 bg-white">
+                        <nav className="flex w-full">
+                            {tabs.map((tab) => (
+                                <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.7 + index * 0.1 }}
-                                    className={`relative flex items-center gap-3 px-8 py-5 border-b-2 font-semibold text-sm transition-all duration-300 whitespace-nowrap ${activeTab === tab.id
-                                        ? 'border-indigo-600 text-indigo-600 bg-gray-50'
+                                    className={`relative flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 px-4 py-3 border-b-2 font-medium text-sm transition-all ${activeTab === tab.id
+                                        ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                         }`}
                                 >
-                                    <tab.icon className={`w-5 h-5 transition-colors duration-300 ${activeTab === tab.id ? 'text-indigo-600' : 'text-gray-400'
-                                        }`} />
-                                    {tab.label}
-                                </motion.button>
+                                    <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-indigo-600' : 'text-gray-400'}`} />
+                                    <span className="text-xs sm:text-sm">{tab.label}</span>
+                                </button>
                             ))}
                         </nav>
-                    </motion.div>
+                    </div>
+
+                    {/* Mobile Tabs Menu */}
+                    <AnimatePresence>
+                        {isMobileMenuOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="lg:hidden border-b border-gray-200 bg-white overflow-hidden"
+                            >
+                                <nav className="flex flex-col p-2">
+                                    {tabs.map((tab) => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveTab(tab.id)}
+                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${activeTab === tab.id
+                                                ? 'bg-indigo-50 text-indigo-600'
+                                                : 'text-gray-600 hover:bg-gray-50'
+                                                }`}
+                                        >
+                                            <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-indigo-600' : 'text-gray-400'}`} />
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </nav>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Mobile Tabs Bar (Always visible on mobile) */}
+                    <div className="lg:hidden flex overflow-x-auto border-b border-gray-200 bg-white px-2 py-1">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 mx-1 rounded-lg font-medium text-xs transition-all ${activeTab === tab.id
+                                    ? 'bg-indigo-50 text-indigo-600'
+                                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                                    }`}
+                            >
+                                <tab.icon className="w-3 h-3" />
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
 
                     {/* Tab Content */}
-                    <div className="p-8 bg-gray-50/50">
-                        <AnimatePresence mode="wait">
+                    <div className="p-4 sm:p-6 bg-gray-50/50">
+                        <div className="max-w-3xl mx-auto">
                             {/* Profile Tab */}
                             {activeTab === 'profile' && (
-                                <motion.div
-                                    key="profile"
-                                    variants={tabContentVariants}
-                                    initial="hidden"
-                                    animate="visible"
-                                    exit="exit"
-                                >
-                                    <ProfileTab
-                                        user={user}
-                                        editingField={editingField}
-                                        setEditingField={setEditingField}
-                                        profileData={profileData}
-                                        setProfileData={setProfileData}
-                                        onUpdateName={handleUpdateName}
-                                        onUpdateAddress={handleUpdateAddress}
-                                        phoneData={phoneData}
-                                        setPhoneData={setPhoneData}
-                                        onAddPhone={handleAddPhone}
-                                        onVerifyPhone={handleVerifyPhone}
-                                        emailData={emailData}
-                                        setEmailData={setEmailData}
-                                        onUpdateSecondaryEmail={handleUpdateSecondaryEmail}
-                                        onAddSecondaryEmail={handleAddSecondaryEmail}
-                                        onVerifySecondaryEmail={handleVerifySecondaryEmail}
-                                        onSendPrimaryEmailVerification={handleSendPrimaryEmailVerification}
-                                        onUpdateDOB={handleUpdateDOB}
-                                        isUpdatingName={isUpdatingName}
-                                        isUpdatingAddress={isUpdatingAddress}
-                                        isUpdatingPhone={isUpdatingPhone}
-                                        isUpdatingSecondaryEmail={isUpdatingSecondaryEmail}
-                                        isUpdatingDOB={isUpdatingDOB}
-                                    />
-                                </motion.div>
+                                <ProfileTab
+                                    user={user}
+                                    editingField={editingField}
+                                    setEditingField={setEditingField}
+                                    profileData={profileData}
+                                    setProfileData={setProfileData}
+                                    onUpdateName={handleUpdateName}
+                                    onUpdateAddress={handleUpdateAddress}
+                                    phoneData={phoneData}
+                                    setPhoneData={setPhoneData}
+                                    onAddPhone={handleAddPhone}
+                                    onVerifyPhone={handleVerifyPhone}
+                                    emailData={emailData}
+                                    setEmailData={setEmailData}
+                                    onUpdateSecondaryEmail={handleUpdateSecondaryEmail}
+                                    onAddSecondaryEmail={handleAddSecondaryEmail}
+                                    onVerifySecondaryEmail={handleVerifySecondaryEmail}
+                                    onSendPrimaryEmailVerification={handleSendPrimaryEmailVerification}
+                                    onUpdateDOB={handleUpdateDOB}
+                                    isUpdatingName={isUpdatingName}
+                                    isUpdatingAddress={isUpdatingAddress}
+                                    isUpdatingPhone={isUpdatingPhone}
+                                    isUpdatingSecondaryEmail={isUpdatingSecondaryEmail}
+                                    isUpdatingDOB={isUpdatingDOB}
+                                />
                             )}
 
                             {/* Security Tab */}
                             {activeTab === 'security' && (
-                                <motion.div
-                                    key="security"
-                                    variants={tabContentVariants}
-                                    initial="hidden"
-                                    animate="visible"
-                                    exit="exit"
-                                >
-                                    <SecurityTab
-                                        isChangingPassword={isChangingPassword}
-                                        setIsChangingPassword={setIsChangingPassword}
-                                        passwordData={passwordData}
-                                        setPasswordData={setPasswordData}
-                                        onPasswordChange={handlePasswordChange}
-                                    />
-                                </motion.div>
+                                <SecurityTab
+                                    isChangingPassword={isChangingPassword}
+                                    setIsChangingPassword={setIsChangingPassword}
+                                    passwordData={passwordData}
+                                    setPasswordData={setPasswordData}
+                                    onPasswordChange={handlePasswordChange}
+                                />
+                            )}
+
+                            {/* Google Password Tab */}
+                            {activeTab === 'google-password' && user?.hasPassword === false && (
+                                <GooglePasswordTab
+                                    googlePasswordData={googlePasswordData}
+                                    setGooglePasswordData={setGooglePasswordData}
+                                    onSetGooglePassword={handleSetGooglePassword}
+                                    isSettingGooglePassword={isSettingGooglePassword}
+                                />
                             )}
 
                             {/* Danger Zone Tab */}
                             {activeTab === 'danger' && (
-                                <motion.div
-                                    key="danger"
-                                    variants={tabContentVariants}
-                                    initial="hidden"
-                                    animate="visible"
-                                    exit="exit"
-                                >
-                                    <DangerZoneTab
-                                        onLogout={handleLogout}
-                                        onLogoutAll={handleLogoutAll}
-                                        onDeleteAccount={handleDeleteAccount}
-                                    />
-                                </motion.div>
+                                <DangerZoneTab
+                                    onLogout={handleLogout}
+                                    onLogoutAll={handleLogoutAll}
+                                    onDeleteAccount={handleDeleteAccount}
+                                />
                             )}
-                        </AnimatePresence>
+                        </div>
                     </div>
-                </motion.div>
+                </div>
             </div>
 
             {/* Popups */}
@@ -829,7 +682,7 @@ const Profile = () => {
                 type="danger"
                 confirmText="Delete Account"
             />
-        </motion.div>
+        </div>
     );
 };
 

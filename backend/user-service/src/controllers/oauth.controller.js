@@ -42,6 +42,7 @@ export const googleLogin = asyncHandler(async (req, res) => {
                 email: email.toLowerCase(),
                 name: generatedName,
                 password: null,
+                hasPassword: false,
                 isEmailVerified: true,
                 avatar: picture || "",
                 googleId,

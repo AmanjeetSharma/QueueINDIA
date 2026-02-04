@@ -23,6 +23,8 @@ import {
     deleteUserByAdmin
 } from "../controllers/user.admin.controller.js";
 
+import { setPassword } from "../controllers/password.controller.js";
+
 const router = express.Router();
 
 router.get("/profile", verifyToken, getProfile);
@@ -50,5 +52,8 @@ router.route("/admin/:userId/force-logout").post(verifyToken, authorizeRoles("SU
 router.route("/admin/:userId/reset-password").post(verifyToken, authorizeRoles("SUPER_ADMIN"), resetUserPasswordAdmin);
 router.route("/admin/:userId/change-role").patch(verifyToken, authorizeRoles("SUPER_ADMIN"), changeUserRole);
 router.route("/admin/:userId/delete-user").delete(verifyToken, authorizeRoles("SUPER_ADMIN"), deleteUserByAdmin);
+
+router.post("/google-user/set-password", verifyToken, setPassword);
+
 
 export default router;

@@ -99,7 +99,9 @@ const register = asyncHandler(async (req, res) => {
         name: name.trim(),
         email: email.toLowerCase(),
         password: hashedPassword,
+        hasPassword: true,
         avatar: avatarUrl || "",
+        
     });
 
     const isUserCreated = await User.findById(newUser._id).select("-password -sessions");

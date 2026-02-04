@@ -66,7 +66,7 @@ const extractPublicId = (url) => {
 const updateProfile = asyncHandler(async (req, res) => {
     // console.log(process.env.SMTP_FROM);
     const user = await User.findById(req.user._id);
-    console.log("Update Profile Request Body:", req.body);
+    // console.log("Update Profile Request Body:", req.body);
     if (!user) {
         throw new ApiError(404, "User not found");
     }
@@ -386,7 +386,7 @@ const verifyPhone = asyncHandler(async (req, res) => {
 
 
 const addSecondaryEmail = asyncHandler(async (req, res) => {
-    console.log("Request to add secondary email:", req.body);
+    // console.log("Request to add secondary email:", req.body);
     const { secondaryEmail } = req.body;
     const user = await User.findById(req.user._id);
 

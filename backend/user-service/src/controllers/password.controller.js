@@ -271,9 +271,58 @@ const resetPasswordWithPhone = asyncHandler(async (req, res) => {
 
 
 
+
+
+
+
+
+
+const setPassword = asyncHandler(async (req, res) => {
+    const { newPassword, confirmPassword } = req.body;
+    const userId = req.user.id;
+
+    if (!newPassword || !confirmPassword) {
+        throw new ApiError(400, "New password and confirm password are required");
+    }
+    if (newPassword !== confirmPassword) {
+        throw new ApiError(400, "Passwords do not match");
+    }
+    const passwordCheck = passwordValidator(newPassword);
+
+    if (!passwordCheck.valid) {
+        throw new ApiError(
+            400,
+            `Password is missing: ${passwordCheck.errors.join(", ")}.`
+        );
+    }
+    const user = await User.findById(userId).select("+password");
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+    if (user.password) {
+        throw new ApiError(400, "Password is already set for this account");
+    }
+    user.hasPassword = true;
+    user.password = await bcrypt.hash(newPassword, 10);
+
+    await user.save();
+    console.log(`🔐 Password set successfully for → ${user.email}`);
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Your password has been set successfully."));
+});
+
+
+
+
+
+
+
 export {
     forgotPassword,
     resetPassword,
     requestPhonePasswordReset,
-    resetPasswordWithPhone
+    resetPasswordWithPhone,
+    setPassword
 };

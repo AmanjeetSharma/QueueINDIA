@@ -5,7 +5,7 @@ import { FaFileContract, FaChevronDown, FaUser, FaGavel, FaCoins, FaHandshake, F
 import { IoIosWarning } from "react-icons/io";
 
 
-const TermsOfService = () => {
+const Terms = () => {
   const [expandedSection, setExpandedSection] = useState(0);
 
   const sections = [
@@ -323,4 +323,4 @@ Legal Jurisdiction:
   );
 };
 
-export default TermsOfService;
+export default Terms;

@@ -384,7 +384,7 @@ const Navbar = () => {
                         <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
                           <FaSignInAlt className="w-4 h-4 text-indigo-600" />
                         </div>
-                        <span>Sign In</span>
+                        <span>Login</span>
                       </Link>
 
                       <Link
@@ -395,7 +395,7 @@ const Navbar = () => {
                         <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
                           <FaUser className="w-4 h-4 text-green-600" />
                         </div>
-                        <span>Sign Up</span>
+                        <span>Register</span>
                       </Link>
 
                       <Link
@@ -567,7 +567,7 @@ const Navbar = () => {
                       onClick={closeMobileMenu}
                     >
                       <FaSignInAlt className="w-5 h-5 text-gray-600" />
-                      <span>Sign In</span>
+                      <span>Login</span>
                     </Link>
 
                     <Link
@@ -576,7 +576,7 @@ const Navbar = () => {
                       onClick={closeMobileMenu}
                     >
                       <FaUser className="w-5 h-5 text-gray-600" />
-                      <span>Sign Up</span>
+                      <span>Register</span>
                     </Link>
                   </>
                 )}

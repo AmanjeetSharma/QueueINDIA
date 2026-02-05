@@ -495,7 +495,7 @@ const Register = () => {
                                     Creating account...
                                 </>
                             ) : (
-                                "Sign Up"
+                                "Register"
                             )}
                         </motion.button>
                     </form>
@@ -547,7 +547,7 @@ const Register = () => {
                                     to="/login"
                                     className="text-blue-600 hover:text-blue-500 font-medium transition-colors"
                                 >
-                                    Sign in
+                                    Login
                                 </Link>
                             </p>
                         </div>
@@ -563,8 +563,8 @@ const Register = () => {
                 >
                     <p className="text-gray-500 text-sm">
                         By creating an account, you agree to our{" "}
-                        <Link to="/terms" className="text-blue-600 hover:text-blue-500">Terms</Link> and{" "}
-                        <Link to="/privacy" className="text-blue-600 hover:text-blue-500">Privacy Policy</Link>
+                        <Link to="/terms-of-service" className="text-blue-600 hover:text-blue-500">Terms</Link> and{" "}
+                        <Link to="/privacy-policy" className="text-blue-600 hover:text-blue-500">Privacy Policy</Link>
                     </p>
                     <p className="text-gray-500 text-sm mt-2">
                         © 2024 QueueINDIA. Secure public service portal.

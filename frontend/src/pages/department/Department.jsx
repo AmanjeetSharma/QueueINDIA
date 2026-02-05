@@ -585,6 +585,7 @@ const DepartmentCard = ({ department, index, getCategoryIcon, getStatusBadge }) 
         </Link>
       </div>
     </motion.div>
+    
   );
 };
 

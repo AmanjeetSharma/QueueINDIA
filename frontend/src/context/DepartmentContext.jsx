@@ -75,10 +75,10 @@ export const DepartmentProvider = ({ children }) => {
 
             return response.data;
         } catch (err) {
-            const errorMsg = err?.response?.data?.message || 'Failed to fetch departments';
+            const errorMsg = err?.response?.data?.message || 'Failed to fetch departments or Backend is starting up as it can take up to 60 seconds';
             setError(errorMsg);
             toast.error(errorMsg, {
-                duration: 4000,
+                duration: 10000,
                 position: "bottom-left"
             });
             throw err;

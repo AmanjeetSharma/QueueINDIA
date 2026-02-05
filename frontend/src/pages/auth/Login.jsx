@@ -103,7 +103,7 @@ const Login = () => {
                             transition={{ delay: 0.4 }}
                             className="text-gray-600"
                         >
-                            Sign in to access public services
+                            Login to access public services
                         </motion.p>
                     </div>
 
@@ -210,10 +210,10 @@ const Login = () => {
                                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                                         className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3"
                                     />
-                                    Signing in...
+                                    Logging in...
                                 </>
                             ) : (
-                                "Sign In"
+                                "Login"
                             )}
                         </motion.button>
                     </form>
@@ -273,14 +273,14 @@ const Login = () => {
                                 className="group inline-flex items-center justify-center gap-3 px-6 py-3 w-full max-w-xs bg-white hover:bg-blue-600 text-blue-600 hover:text-white border-2 border-blue-200 hover:border-blue-600 rounded-xl font-medium transition-all duration-300 ease-out hover:shadow-lg hover:scale-105 active:scale-95"
                             >
                                 <FaUserPlus className="w-5 h-5 transition-transform group-hover:scale-110" />
-                                <span>Create Your Account</span>
+                                <span>Create New Account</span>
                             </Link>
 
                             <div className="pt-2">
                                 <p className="text-gray-400 text-xs">
                                     <span className="inline-flex items-center gap-1">
                                         <FaLock className="w-3 h-3" />
-                                        Google users can set a password later for email sign-in
+                                        Google users can set a password later for email login
                                     </span>
                                 </p>
                             </div>
@@ -296,6 +296,11 @@ const Login = () => {
                     className="text-center mt-6"
                 >
                     <p className="text-gray-500 text-sm">
+                        By creating an account, you agree to our{" "}
+                        <Link to="/terms-of-service" className="text-blue-600 hover:text-blue-500">Terms</Link> and{" "}
+                        <Link to="/privacy-policy" className="text-blue-600 hover:text-blue-500">Privacy Policy</Link>
+                    </p>
+                    <p className="text-gray-500 text-sm mt-2">
                         © 2024 QueueINDIA. Secure public service portal.
                     </p>
                 </motion.div>

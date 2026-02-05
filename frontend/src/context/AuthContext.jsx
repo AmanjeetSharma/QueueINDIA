@@ -13,6 +13,7 @@ export const AuthProvider = ({ children }) => {
         try {
             const { data } = await axiosInstance.get("/users/profile");
             setUser(data?.data || data?.user || null);
+            localStorage.setItem("backendReady", "true");
             // console.log("✅ Profile fetched successfully:", data?.data || data?.user);
         } catch (err) {
             console.error("❌ Fetch profile error:", err);
@@ -93,6 +94,7 @@ export const AuthProvider = ({ children }) => {
             fetchProfile(); // refresh profile
             setUser(user);
             localStorage.setItem("user", JSON.stringify(user));
+            localStorage.setItem("backendReady", "true");
             toast.success(res.data.message || "Successfully logged in with Google!", {
                 duration: 3000,
                 position: "bottom-left"
@@ -109,6 +111,8 @@ export const AuthProvider = ({ children }) => {
         try {
             await axiosInstance.post("/auth/logout");
             setUser(null);
+            localStorage.removeItem("user");
+            localStorage.removeItem("backendReady");
             toast.success("Logged out successfully", {
                 duration: 3000,
                 position: "bottom-left"
@@ -131,6 +135,8 @@ export const AuthProvider = ({ children }) => {
         try {
             await axiosInstance.post("/auth/logout-all");
             setUser(null);
+            localStorage.removeItem("user");
+            localStorage.removeItem("backendReady");
             toast.success("Logged out from all devices", {
                 duration: 3000,
                 position: "bottom-left"

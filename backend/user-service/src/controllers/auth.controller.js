@@ -160,7 +160,7 @@ const login = asyncHandler(async (req, res) => {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-        throw new ApiError(401, "Invalid password");
+        throw new ApiError(401, "Wrong password, please try again");
     }
 
     // Session generation

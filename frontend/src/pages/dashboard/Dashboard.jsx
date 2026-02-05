@@ -441,6 +441,23 @@ const Dashboard = () => {
             </div>
           </motion.div>
         )}
+
+        {/* Footer Links */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2 }}
+          className="text-center mt-6"
+        >
+          <p className="text-gray-500 text-sm">
+            By creating an account, you agree to our{" "}
+            <Link to="/terms-of-service" className="text-blue-600 hover:text-blue-500">Terms</Link> and{" "}
+            <Link to="/privacy-policy" className="text-blue-600 hover:text-blue-500">Privacy Policy</Link>
+          </p>
+          <p className="text-gray-500 text-sm mt-2">
+            © 2024 QueueINDIA. Secure public service portal.
+          </p>
+        </motion.div>
       </div>
     </div>
   );

@@ -33,7 +33,7 @@ const Pricing = () => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -262,7 +262,7 @@ const Pricing = () => {
             <p className="text-sm sm:text-base md:text-lg text-blue-100 max-w-3xl mx-auto mb-6 sm:mb-8 px-4">
               Transparent, scalable pricing for government departments of all sizes.
             </p>
-            
+
             {/* Mobile-Optimized Currency & Billing Toggles */}
             <div className="mb-4 sm:mb-6">
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
@@ -272,64 +272,60 @@ const Pricing = () => {
                   <div className="flex bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl p-0.5">
                     <button
                       onClick={() => setCurrency('INR')}
-                      className={`flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 sm:px-4 py-2 rounded-md font-medium transition-all text-sm ${
-                        currency === 'INR' 
-                          ? 'bg-white text-blue-600' 
-                          : 'text-white hover:bg-white/10'
-                      }`}
+                      className={`flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 sm:px-4 py-2 rounded-md font-medium transition-all text-sm ${currency === 'INR'
+                        ? 'bg-white text-blue-600'
+                        : 'text-white hover:bg-white/10'
+                        }`}
                     >
                       <FaRupeeSign className="w-3 h-3 sm:w-4 sm:h-4" />
                       INR
                     </button>
                     <button
                       onClick={() => setCurrency('USD')}
-                      className={`flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 sm:px-4 py-2 rounded-md font-medium transition-all text-sm ${
-                        currency === 'USD' 
-                          ? 'bg-white text-blue-600' 
-                          : 'text-white hover:bg-white/10'
-                      }`}
+                      className={`flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 sm:px-4 py-2 rounded-md font-medium transition-all text-sm ${currency === 'USD'
+                        ? 'bg-white text-blue-600'
+                        : 'text-white hover:bg-white/10'
+                        }`}
                     >
                       <FaDollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
                       USD
                     </button>
                   </div>
                 </div>
-                
+
                 {/* Billing Toggle - Stacked on Mobile */}
                 <div className="w-full sm:w-auto">
                   <div className="text-xs text-blue-200 mb-1 sm:mb-2 font-medium">Billing</div>
                   <div className="flex bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl p-0.5">
                     <button
                       onClick={() => setBillingCycle('monthly')}
-                      className={`flex-1 px-3 sm:px-4 py-2 rounded-md font-medium transition-all text-sm ${
-                        billingCycle === 'monthly' 
-                          ? 'bg-white text-blue-600' 
-                          : 'text-white hover:bg-white/10'
-                      }`}
+                      className={`flex-1 px-3 sm:px-4 py-2 rounded-md font-medium transition-all text-sm ${billingCycle === 'monthly'
+                        ? 'bg-white text-blue-600'
+                        : 'text-white hover:bg-white/10'
+                        }`}
                     >
                       Monthly
                     </button>
                     <button
                       onClick={() => setBillingCycle('annual')}
-                      className={`flex-1 px-3 sm:px-4 py-2 rounded-md font-medium transition-all text-sm ${
-                        billingCycle === 'annual' 
-                          ? 'bg-white text-blue-600' 
-                          : 'text-white hover:bg-white/10'
-                      }`}
+                      className={`flex-1 px-3 sm:px-4 py-2 rounded-md font-medium transition-all text-sm ${billingCycle === 'annual'
+                        ? 'bg-white text-blue-600'
+                        : 'text-white hover:bg-white/10'
+                        }`}
                     >
                       Annual
                     </button>
                   </div>
                 </div>
               </div>
-              
+
               {billingCycle === 'annual' && (
                 <div className="mt-3 text-xs sm:text-sm text-green-300 font-medium">
                   🎉 Save up to 20% with annual billing
                 </div>
               )}
             </div>
-            
+
             <div className="text-xs sm:text-sm text-blue-200 flex items-center justify-center gap-1">
               <FaStar className="w-3 h-3" />
               All prices exclude GST/TAX
@@ -348,14 +344,13 @@ const Pricing = () => {
               {pricingTiers.map((tier, index) => {
                 const price = calculatePrice(tier.price[currency]);
                 const savings = calculateSavings(tier.price[currency].monthly, tier.price[currency].annual);
-                
+
                 return (
                   <div key={tier.id} className="w-[85vw] flex-shrink-0 snap-center">
-                    <div className={`rounded-xl border ${
-                      tier.popular 
-                        ? 'border-purple-300 shadow-lg' 
-                        : 'border-gray-200 shadow'
-                    } ${tier.mobileColor} overflow-hidden h-full`}>
+                    <div className={`rounded-xl border ${tier.popular
+                      ? 'border-purple-300 shadow-lg'
+                      : 'border-gray-200 shadow'
+                      } ${tier.mobileColor} overflow-hidden h-full`}>
                       {tier.popular && (
                         <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1.5 text-xs font-bold text-center">
                           MOST POPULAR
@@ -366,10 +361,10 @@ const Pricing = () => {
                         <div className={`inline-block px-3 py-1 rounded-lg bg-gradient-to-r ${tier.color} text-white text-xs font-semibold mb-3`}>
                           {tier.name}
                         </div>
-                        
+
                         <h3 className="text-lg font-bold text-gray-900 mb-1">{tier.name} Plan</h3>
                         <p className="text-gray-600 text-xs mb-4">{tier.description}</p>
-                        
+
                         <div className="mb-4">
                           <div className="flex items-baseline">
                             <span className="text-2xl font-bold text-gray-900">
@@ -379,22 +374,21 @@ const Pricing = () => {
                               /{billingCycle === 'annual' ? 'year' : 'month'}
                             </span>
                           </div>
-                          
+
                           {billingCycle === 'annual' && (
                             <div className="mt-1 text-xs text-green-600 font-medium">
                               Save {savings.percentage}%
                             </div>
                           )}
                         </div>
-                        
-                        <button className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all ${
-                          tier.popular
-                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                            : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
-                        }`}>
+
+                        <button className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all ${tier.popular
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                          : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
+                          }`}>
                           {tier.cta}
                         </button>
-                        
+
                         <div className="mt-6 space-y-3">
                           <div className="text-xs font-semibold text-gray-700">Key Features:</div>
                           {tier.features.included.slice(0, 3).map((feature, idx) => (
@@ -424,18 +418,17 @@ const Pricing = () => {
             {pricingTiers.map((tier, index) => {
               const price = calculatePrice(tier.price[currency]);
               const savings = calculateSavings(tier.price[currency].monthly, tier.price[currency].annual);
-              
+
               return (
                 <motion.div
                   key={tier.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`relative rounded-xl sm:rounded-2xl border ${
-                    tier.popular 
-                      ? 'border-purple-300 shadow-xl' 
-                      : 'border-gray-200 shadow-lg'
-                  } bg-white overflow-hidden`}
+                  className={`relative rounded-xl sm:rounded-2xl border ${tier.popular
+                    ? 'border-purple-300 shadow-xl'
+                    : 'border-gray-200 shadow-lg'
+                    } bg-white overflow-hidden`}
                 >
                   {tier.popular && (
                     <div className="absolute top-0 right-0">
@@ -449,10 +442,10 @@ const Pricing = () => {
                     <div className={`inline-block px-3 py-1 rounded-lg bg-gradient-to-r ${tier.color} text-white text-xs font-semibold mb-3 sm:mb-4`}>
                       {tier.name}
                     </div>
-                    
+
                     <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">{tier.name}</h3>
                     <p className="text-gray-600 text-xs sm:text-sm mb-4 sm:mb-6">{tier.description}</p>
-                    
+
                     <div className="mb-4 sm:mb-6">
                       <div className="flex items-baseline">
                         <span className="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -462,22 +455,21 @@ const Pricing = () => {
                           /{billingCycle === 'annual' ? 'year' : 'month'}
                         </span>
                       </div>
-                      
+
                       {billingCycle === 'annual' && (
                         <div className="mt-1 text-xs sm:text-sm text-green-600 font-medium">
                           Save {savings.percentage}% ({savings.savings})
                         </div>
                       )}
                     </div>
-                    
-                    <button className={`w-full py-3 px-4 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all ${
-                      tier.popular
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg'
-                        : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:shadow-lg'
-                    }`}>
+
+                    <button className={`w-full py-3 px-4 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all ${tier.popular
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg'
+                      : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:shadow-lg'
+                      }`}>
                       {tier.cta}
                     </button>
-                    
+
                     <div className="mt-6 sm:mt-8 space-y-3 sm:space-y-4">
                       <div className="text-xs sm:text-sm font-semibold text-gray-700">What's included:</div>
                       {tier.features.included.map((feature, idx) => (
@@ -506,7 +498,7 @@ const Pricing = () => {
               Pricing scales with your department's monthly citizen traffic
             </p>
           </div>
-          
+
           <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-4">
             {scalabilityFeatures.map((feature, index) => (
               <motion.div
@@ -550,7 +542,7 @@ const Pricing = () => {
               Enhance your experience with premium add-ons
             </p>
           </div>
-          
+
           <div className="flex sm:hidden overflow-x-auto pb-4 -mx-3 px-3">
             <div className="flex gap-3">
               {additionalServices.map((service, index) => (
@@ -627,7 +619,7 @@ const Pricing = () => {
               Get answers to frequently asked questions
             </p>
           </div>
-          
+
           <div className="space-y-3 sm:space-y-4">
             {faqs.map((faq, index) => (
               <motion.div
@@ -724,6 +716,23 @@ const Pricing = () => {
               Call us: 1800-123-4567
             </div>
           </div>
+        </motion.div>
+
+        {/* Footer Links */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2 }}
+          className="text-center mt-6"
+        >
+          <p className="text-gray-500 text-sm">
+            By creating an account, you agree to our{" "}
+            <Link to="/terms-of-service" className="text-blue-600 hover:text-blue-500">Terms</Link> and{" "}
+            <Link to="/privacy-policy" className="text-blue-600 hover:text-blue-500">Privacy Policy</Link>
+          </p>
+          <p className="text-gray-500 text-sm mt-2">
+            © 2024 QueueINDIA. Secure public service portal.
+          </p>
         </motion.div>
       </div>
     </div>

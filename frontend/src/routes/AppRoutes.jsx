@@ -47,6 +47,9 @@ import DashboardTab from "../pages/admin/superAdminPanel/components/DashboardTab
 import AdminPanel from "../pages/admin/adminPanel/AdminPanel.jsx";
 import OfficerPanel from "../pages/admin/officerPanel/OfficerPanel.jsx";
 
+import TermsOfService from "../pages/info/Termsofservice .jsx";
+import PrivacyPolicy from "../pages/info/PrivacyPolicy.jsx";
+
 import NotFound from "../pages/NotFound.jsx";
 
 import ScrollToTop from "../components/ScrollToTop.jsx";
@@ -257,6 +260,8 @@ const AppRoutes = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<AboutUs />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
         {/* 404 route */}
         <Route path="*" element={<NotFound />} />

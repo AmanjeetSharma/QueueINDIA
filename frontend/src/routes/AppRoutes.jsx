@@ -260,7 +260,7 @@ const AppRoutes = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<AboutUs />} />
-        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/terms-of-service" element={<Terms />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
         {/* 404 route */}

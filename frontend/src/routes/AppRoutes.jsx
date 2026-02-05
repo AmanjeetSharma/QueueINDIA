@@ -47,7 +47,7 @@ import DashboardTab from "../pages/admin/superAdminPanel/components/DashboardTab
 import AdminPanel from "../pages/admin/adminPanel/AdminPanel.jsx";
 import OfficerPanel from "../pages/admin/officerPanel/OfficerPanel.jsx";
 
-import TermsOfService from "../pages/info/Termsofservice.jsx";
+import TermsOfService from "../pages/info/TermsOfservice.jsx";
 import PrivacyPolicy from "../pages/info/PrivacyPolicy.jsx";
 
 import NotFound from "../pages/NotFound.jsx";

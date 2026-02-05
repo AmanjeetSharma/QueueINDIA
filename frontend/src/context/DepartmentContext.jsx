@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { useAuth } from './AuthContext';
 import { axiosInstance } from '../lib/http';
 import toast from 'react-hot-toast';
+import { showBackendStartupToast } from './components/BackendStartupToast';
 
 const DepartmentContext = createContext();
 
@@ -75,12 +76,9 @@ export const DepartmentProvider = ({ children }) => {
 
             return response.data;
         } catch (err) {
-            const errorMsg = err?.response?.data?.message || 'Failed to fetch departments or Backend is starting up as it can take up to 60 seconds';
+            const errorMsg = err?.response?.data?.message || 'Failed to fetch departments or Backend is starting up as it can take up to 60-90 seconds';
             setError(errorMsg);
-            toast.error(errorMsg, {
-                duration: 10000,
-                position: "bottom-left"
-            });
+            showBackendStartupToast(errorMsg);
             throw err;
         } finally {
             setLoading(false);
@@ -263,7 +261,7 @@ export const DepartmentProvider = ({ children }) => {
 
 
 
-    
+
 
 
     // Transform department data to match frontend expectations
@@ -294,7 +292,7 @@ export const DepartmentProvider = ({ children }) => {
         const sum = ratings.reduce((acc, rating) => acc + (rating.rating || 0), 0);
         return parseFloat((sum / ratings.length).toFixed(1));
     };
- 
+
 
     // Clear error
     const clearError = () => setError(null);

@@ -41,7 +41,7 @@ const SuperAdminPanel = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header - Compact */}
       <div className="bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex-1">
               <motion.h1

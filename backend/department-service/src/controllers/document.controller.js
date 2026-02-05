@@ -29,7 +29,7 @@ export const extractPublicId = (url) => {
 
 const uploadDocument = asyncHandler(async (req, res) => {
     const { bookingId } = req.params;
-    const { docId } = req.body;  
+    const { docId } = req.body;
     // console.log("📥 uploadDocument called");
     // console.log("bookingId:", bookingId);
     // console.log("docId (requiredDocId):", docId);
@@ -56,14 +56,14 @@ const uploadDocument = asyncHandler(async (req, res) => {
     }
 
     // ❌ Block invalid states
-    if (!["PENDING_DOCS", "DOCS_SUBMITTED"].includes(booking.status)) {
+    if (!["PENDING_DOCS", "DOCS_SUBMITTED","UNDER_REVIEW"].includes(booking.status)) {
         throw new ApiError(
             400,
             `Cannot upload documents in ${booking.status} state`
         );
     }
 
-    /* ───────────── FIND DOCUMENT BY requiredDocId ───────────── */
+    // find document by requiredDocId
 
     const doc = booking.submittedDocs.find(
         d => d.requiredDocId.toString() === docId
@@ -73,8 +73,7 @@ const uploadDocument = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid document reference");
     }
 
-    /* ───────────── DELETE OLD FILE (IF EXISTS) ───────────── */
-
+    // update existing document
     if (doc.documentUrl) {
         try {
             const publicId = extractPublicId(doc.documentUrl);
@@ -86,22 +85,20 @@ const uploadDocument = asyncHandler(async (req, res) => {
         }
     }
 
-    /* ───────────── UPLOAD NEW FILE ───────────── */
+    // upload new file
 
     const uploadedDoc = await uploadToCloudinary(
         req.file.path,
         `queueindia/bookings/${bookingId}`
     );
 
-    /* ───────────── UPDATE DOCUMENT ENTRY ───────────── */
 
     doc.documentUrl = uploadedDoc.url;
     doc.uploadedAt = new Date();
     doc.status = "PENDING";
     doc.rejectionReason = "";
 
-    /* ───────────── UPDATE BOOKING STATUS ───────────── */
-
+    // update booking status based on all documents
     const allUploaded = booking.submittedDocs.every(
         d => Boolean(d.documentUrl)
     );
@@ -112,14 +109,12 @@ const uploadDocument = asyncHandler(async (req, res) => {
 
     await booking.save();
 
-    /* ───────────── CLEAN TEMP FILE ───────────── */
 
     if (req.file?.path && fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
         console.log("🧹 Temp file deleted:", req.file.path);
     }
 
-    /* ───────────── RESPONSE (FRONTEND-ALIGNED) ───────────── */
 
     const responseBooking = {
         ...booking.toObject(),

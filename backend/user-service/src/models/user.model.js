@@ -131,13 +131,13 @@ const userSchema = new Schema(
             default: null,
         },
         // Address
-        address: {
-            type: addressSchema,
-            default: {},
-        },
         sessions: {
             type: [sessionSchema],
             default: [],
+        },
+        address: {
+            type: addressSchema,
+            default: {},
         },
     }, { timestamps: true }
 )

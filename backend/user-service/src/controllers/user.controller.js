@@ -259,13 +259,13 @@ const deleteAccount = asyncHandler(async (req, res) => {
 
 
 const listUserSessions = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id)
     if (!user) {
         throw new ApiError(404, "User not found");
     }
 
     const sessions = user.sessions.map((session) => ({
-        sessionId: session.sessionId,
+        // sessionId: session.sessionId,
         device: session.device,
         firstLogin: session.firstLogin,
         latestLogin: session.latestLogin,

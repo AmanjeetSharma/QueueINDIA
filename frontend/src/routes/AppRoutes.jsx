@@ -45,14 +45,21 @@ import DepartmentManagementTab from "../pages/admin/superAdminPanel/components/D
 import DashboardTab from "../pages/admin/superAdminPanel/components/DashboardTab.jsx";
 
 import AdminPanel from "../pages/admin/adminPanel/AdminPanel.jsx";
-import OfficerPanel from "../pages/admin/officerPanel/OfficerPanel.jsx";
 
-import Terms from "../pages/info/Terms.jsx";
-import PrivacyPolicy from "../pages/info/PrivacyPolicy.jsx";
+import OfficerPanel from "../pages/admin/officerPanel/OfficerPanel.jsx";
+import BookingsList from "../pages/admin/officerPanel/components/BookingsList.jsx";
+import BookingDetailsPage from "../pages/admin/officerPanel/components/BookingDetailsPage.jsx";
 
 import NotFound from "../pages/NotFound.jsx";
 
 import ScrollToTop from "../components/ScrollToTop.jsx";
+
+
+
+const LiveQueuePage = () => <div className="p-6">Live Queue Page - Coming Soon</div>;
+const AnalyticsPage = () => <div className="p-6">Analytics Page - Coming Soon</div>;
+const ProfilePage = () => <div className="p-6">Profile Page - Coming Soon</div>;
+
 
 
 const AppRoutes = () => {
@@ -183,11 +190,57 @@ const AppRoutes = () => {
           }
         />
 
+
+        {/* Officer Panel Routes */}
         <Route
           path="/officer-panel"
           element={
             <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER']}>
               <OfficerPanel />
+            </AuthorizedRoles>
+          }
+        />
+        <Route
+          path="/officer-panel/bookings"
+          element={
+            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
+              <BookingsList />
+            </AuthorizedRoles>
+          }
+        />
+        <Route
+          path="/officer-panel/bookings/:bookingId"
+          element={
+            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
+              <BookingDetailsPage />
+            </AuthorizedRoles>
+          }
+        />
+
+
+        <Route
+          path="/officer-panel/queue"
+          element={
+            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
+              <LiveQueuePage />
+            </AuthorizedRoles>
+          }
+        />
+
+        <Route
+          path="/officer-panel/analytics"
+          element={
+            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
+              <AnalyticsPage />
+            </AuthorizedRoles>
+          }
+        />
+
+        <Route
+          path="/officer-panel/profile"
+          element={
+            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
+              <ProfilePage />
             </AuthorizedRoles>
           }
         />
@@ -260,8 +313,6 @@ const AppRoutes = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<AboutUs />} />
-        <Route path="/terms-of-service" element={<Terms />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
         {/* 404 route */}
         <Route path="*" element={<NotFound />} />

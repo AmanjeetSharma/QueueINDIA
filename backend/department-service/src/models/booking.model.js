@@ -104,6 +104,10 @@ const bookingSchema = new mongoose.Schema({
         ],
         default: "PENDING_DOCS"
     },
+    bookingRejectionReason: {
+        type: String,
+        default: ""
+    },
 
     priorityType: {
         type: String,
@@ -180,7 +184,7 @@ bookingSchema.pre('save', function (next) {
 bookingSchema.index({ department: 1, date: 1, slotTime: 1 });
 bookingSchema.index({ user: 1, status: 1 });
 bookingSchema.index({ department: 1, service: 1, date: 1 });
-bookingSchema.index({ tokenNumber: 1, department: 1, date: 1 }, { unique: true, sparse: true });
+// bookingSchema.index({ tokenNumber: 1, department: 1, date: 1 }, { unique: true, sparse: true });
 
 // Virtual for formatted date
 bookingSchema.virtual('formattedDate').get(function () {

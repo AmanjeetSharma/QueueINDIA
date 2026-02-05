@@ -61,7 +61,8 @@ app.use(
 // -------- Department Service --------
 app.use(
   [
-    "/api/v1/departments"
+    "/api/v1/departments",
+    "/api/v1/officer",
   ],
   proxy(DEPARTMENT_SERVICE_URL, {
     proxyReqPathResolver: (req) => req.originalUrl,

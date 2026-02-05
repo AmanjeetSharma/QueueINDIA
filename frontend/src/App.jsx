@@ -5,42 +5,48 @@ import { ServiceProvider } from "./context/ServiceContext";
 import { Toaster } from "react-hot-toast";
 import { BookingProvider } from "./context/BookingContext";
 import { AdminProvider } from "./context/AdminContext";
+import { DepartmentOfficerProvider } from "./context/DepartmentOfficerContext";
 
 const App = () => {
   return (
     <AuthProvider>
+      {/* Core providers first */}
       <DepartmentProvider>
         <ServiceProvider>
-          <AdminProvider>
-            <BookingProvider>
-              <AppRoutes />
-              <Toaster
-                position="top-right"
-                reverseOrder={false}
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                  },
-                  success: {
-                    duration: 3000,
-                    theme: {
-                      primary: 'green',
-                      secondary: 'black',
-                    },
-                  },
-                  error: {
-                    duration: 5000,
+          <BookingProvider>
+            {/* Role-specific providers (depend on AuthContext) */}
+            <AdminProvider>
+              <DepartmentOfficerProvider>
+                {/* Routes */}
+                <AppRoutes />
+                <Toaster
+                  position="top-right"
+                  reverseOrder={false}
+                  toastOptions={{
+                    duration: 4000,
                     style: {
-                      background: '#ef4444',
+                      background: '#363636',
                       color: '#fff',
                     },
-                  },
-                }}
-              />
-            </BookingProvider>
-          </AdminProvider>
+                    success: {
+                      duration: 3000,
+                      theme: {
+                        primary: 'green',
+                        secondary: 'black',
+                      },
+                    },
+                    error: {
+                      duration: 5000,
+                      style: {
+                        background: '#ef4444',
+                        color: '#fff',
+                      },
+                    },
+                  }}
+                />
+              </DepartmentOfficerProvider>
+            </AdminProvider>
+          </BookingProvider>
         </ServiceProvider>
       </DepartmentProvider>
     </AuthProvider>

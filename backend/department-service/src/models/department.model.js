@@ -120,6 +120,8 @@ const departmentSchema = new Schema(
 
         ratings: [{ type: ratingSchema, default: [] }],
 
+
+        // all associated admins and officers (for easy querying) - can be used for notifications, access control, etc.
         admins: [
             {
                 type: mongoose.Schema.Types.ObjectId,
@@ -128,11 +130,21 @@ const departmentSchema = new Schema(
                 default: []
             },
         ],
+        departmentOfficers: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                required: true, // Department Officer,
+                default: []
+            }
+        ],
+
+
         departmentSlug: {
             type: String,
             unique: true,
             required: true,
-            index: true,    
+            index: true,
         },
     },
     { timestamps: true }

@@ -7,7 +7,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import resetPasswordHtml from "../utils/emailTemplates/resetPasswordHtml.js";
 import { phoneValidator, passwordValidator } from "../utils/validators.js";
-
+import { isPasswordBreached } from "../utils/passwordBreachCheck.js";
 
 
 
@@ -101,6 +101,17 @@ const resetPassword = asyncHandler(async (req, res) => {
             `Password is missing: ${passwordCheck.errors.join(", ")}.`
         );
     }
+
+    const passwordBreachCheck = await isPasswordBreached(newPassword);
+    console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck);
+    if (passwordBreachCheck.breached) {
+        throw new ApiError(
+            400,
+            `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
+        );
+    }
+
+
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
@@ -229,6 +240,14 @@ const resetPasswordWithPhone = asyncHandler(async (req, res) => {
             `Password is missing: ${passwordCheck.errors.join(", ")}.`
         );
     }
+    const passwordBreachCheck = await isPasswordBreached(newPassword);
+    console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck);
+    if (passwordBreachCheck.breached) {
+        throw new ApiError(
+            400,
+            `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
+        );
+    }
 
     if (!phoneValidator(phone)) {
         throw new ApiError(400, "Invalid phone number");
@@ -295,6 +314,16 @@ const setPassword = asyncHandler(async (req, res) => {
             `Password is missing: ${passwordCheck.errors.join(", ")}.`
         );
     }
+
+    const passwordBreachCheck = await isPasswordBreached(newPassword);
+    console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck);
+    if (passwordBreachCheck.breached) {
+        throw new ApiError(
+            400,
+            `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
+        );
+    }
+
     const user = await User.findById(userId).select("+password");
 
     if (!user) {

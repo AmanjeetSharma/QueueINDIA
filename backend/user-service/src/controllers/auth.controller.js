@@ -9,6 +9,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { emailValidator, passwordValidator, avatarValidator } from "../utils/validators.js";
 import { generateAccessToken, generateRefreshToken, generateSessionId } from '../utils/token.js';
 import { getCookieOptions } from "../config/getCookieOptions.js";
+import { isPasswordBreached } from "../utils/passwordBreachCheck.js";
 
 
 
@@ -41,12 +42,23 @@ const register = asyncHandler(async (req, res) => {
 
     const passwordCheck = passwordValidator(password);
 
+
     if (!passwordCheck.valid) {
         throw new ApiError(
             400,
             `Password is missing: ${passwordCheck.errors.join(", ")}.`
         );
     }
+
+    const passwordBreachCheck = await isPasswordBreached(password);
+    console.log(`🔒 Password breach check for "${password}":`, passwordBreachCheck);
+    if (passwordBreachCheck.breached) {
+        throw new ApiError(
+            400,
+            `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
+        );
+    }
+
 
 
     let existingUser = await User.findOne({
@@ -101,7 +113,7 @@ const register = asyncHandler(async (req, res) => {
         password: hashedPassword,
         hasPassword: true,
         avatar: avatarUrl || "",
-        
+
     });
 
     const isUserCreated = await User.findById(newUser._id).select("-password -sessions");
@@ -195,7 +207,7 @@ const login = asyncHandler(async (req, res) => {
         "-password -sessions"
     );
 
-    
+
     console.log(
         `✅ ${user.name} logged in successfully. Device: ${deviceName}`
     );

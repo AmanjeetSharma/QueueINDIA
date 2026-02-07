@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
             console.error("❌ Register error:", err);
             const msg = err?.response?.data?.message || "Registration failed. Please try again.";
             toast.error(msg, {
-                duration: 4000,
+                duration: 6000,
                 position: "bottom-left"
             });
             throw err;

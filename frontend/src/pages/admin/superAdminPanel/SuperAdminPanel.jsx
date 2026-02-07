@@ -145,32 +145,6 @@ const SuperAdminPanel = () => {
             ))}
           </div>
         </div>
-
-        {/* Quick Stats - Compact */}
-        {/* <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-xl sm:rounded-xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6"
-        >
-          <h3 className="text-base sm:text-lg font-bold mb-3">System Overview</h3>
-          <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 sm:gap-3">
-            <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-              <p className="text-xs text-white/70 mb-1">Total Users</p>
-              <p className="text-xl sm:text-2xl font-bold">1,234</p>
-            </div>
-            <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-              <p className="text-xs text-white/70 mb-1">Departments</p>
-              <p className="text-xl sm:text-2xl font-bold">24</p>
-            </div>
-            <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-              <p className="text-xs text-white/70 mb-1">Today's Bookings</p>
-              <p className="text-xl sm:text-2xl font-bold">156</p>
-            </div>
-          </div>
-        </motion.div> */}
-
-        {/* Security Notice - Compact */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

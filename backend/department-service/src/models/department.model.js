@@ -151,16 +151,33 @@ const departmentSchema = new Schema(
 );
 
 
-departmentSchema.pre("validate", function (next) {
+departmentSchema.pre("validate", async function (next) {
     if (!this.departmentSlug && this.name) {
-        this.departmentSlug = slugify(this.name, {
+        const baseSlug = slugify(this.name, {
             lower: true,
             strict: true,
             trim: true
         });
+
+        let slug = baseSlug;
+        let counter = 1;
+
+        // Check for existing slug
+        while (
+            await mongoose.models.Department.exists({
+                departmentSlug: slug,
+                _id: { $ne: this._id } // important for updates
+            })
+        ) {
+            slug = `${baseSlug}-${counter}`;
+            counter++;
+        }
+
+        this.departmentSlug = slug;
     }
     next();
 });
+
 
 
 export const Department = mongoose.model("Department", departmentSchema);

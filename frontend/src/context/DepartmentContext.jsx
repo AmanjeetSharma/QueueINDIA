@@ -229,7 +229,7 @@ export const DepartmentProvider = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-            await axiosInstance.delete(`/departments/${deptId}`);
+            await axiosInstance.delete(`/departments/delete/${deptId}`);
             setDepartments(prev => prev.filter(dept => dept._id !== deptId));
             if (currentDepartment?._id === deptId) {
                 setCurrentDepartment(null);
@@ -237,7 +237,7 @@ export const DepartmentProvider = ({ children }) => {
 
             toast.success('Department deleted successfully!', {
                 duration: 3000,
-                position: "bottom-left"
+                position: "center-top"
             });
 
         } catch (err) {

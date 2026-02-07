@@ -65,7 +65,7 @@ const serviceSchema = new Schema(
 
         tokenManagement: tokenManagementSchema,
         requiredDocs: [documentRequirementSchema],
-        serviceSlug: { type: String, required: true, unique: true, lowercase: true, trim: true },
+        serviceSlug: { type: String, required: true, lowercase: true, trim: true },
 
     },
     { _id: true }

@@ -15,9 +15,9 @@ import {
     FiMail,
     FiPhone,
     FiInfo,
-    FiExternalLink,
     FiPrinter,
-    FiEye
+    FiDownload,
+    FiCopy
 } from 'react-icons/fi';
 import {
     FaRegFilePdf,
@@ -52,7 +52,8 @@ const BookingDetailsPage = () => {
     const [activeTab, setActiveTab] = useState('documents');
     const [rejectionReason, setRejectionReason] = useState('');
     const [showRejectConfirm, setShowRejectConfirm] = useState(false);
-    const [showDocumentReject, setShowDocumentReject] = useState(null); // Stores which doc is being rejected
+    const [showDocumentReject, setShowDocumentReject] = useState(null);
+    const [copiedId, setCopiedId] = useState(false);
 
     useEffect(() => {
         if (bookingId) {
@@ -71,7 +72,6 @@ const BookingDetailsPage = () => {
     const handleApproveDocument = async (docId) => {
         try {
             await approveBooking(bookingId, docId);
-            // Success toast handled in context
         } catch (err) {
             // Error handled in context
         }
@@ -85,7 +85,7 @@ const BookingDetailsPage = () => {
 
         try {
             await rejectDocument(bookingId, docId, reason);
-            setShowDocumentReject(null); // Close reject form
+            setShowDocumentReject(null);
         } catch (err) {
             // Error handled in context
         }
@@ -94,10 +94,6 @@ const BookingDetailsPage = () => {
     const handleCompleteBooking = async () => {
         try {
             await completeBooking(bookingId);
-            toast.success('Booking marked as completed', {
-                duration: 2000,
-                position: 'bottom-center'
-            });
             setTimeout(() => navigate('/officer-panel/bookings'), 1000);
         } catch (err) {
             // Error handled in context
@@ -107,10 +103,6 @@ const BookingDetailsPage = () => {
     const handleCancelBooking = async () => {
         try {
             await cancelBooking(bookingId);
-            toast.success('Booking cancelled successfully', {
-                duration: 2000,
-                position: 'bottom-center'
-            });
             setTimeout(() => navigate('/officer-panel/bookings'), 1000);
         } catch (err) {
             // Error handled in context
@@ -126,14 +118,38 @@ const BookingDetailsPage = () => {
         try {
             await rejectBooking(bookingId, rejectionReason);
             setShowRejectConfirm(false);
-            toast.success('Booking rejected successfully', {
-                duration: 2000,
-                position: 'bottom-center'
-            });
             setTimeout(() => navigate('/officer-panel/bookings'), 1000);
         } catch (err) {
             setShowRejectConfirm(false);
             // Error handled in context
+        }
+    };
+
+    const copyBookingId = () => {
+        if (currentBooking?._id) {
+            navigator.clipboard.writeText(currentBooking._id);
+            setCopiedId(true);
+            toast.success('Booking ID copied to clipboard', {
+                duration: 1500,
+                position: 'bottom-center'
+            });
+            setTimeout(() => setCopiedId(false), 2000);
+        }
+    };
+
+    const downloadDocument = (doc) => {
+        if (doc.documentUrl) {
+            const link = document.createElement('a');
+            link.href = doc.documentUrl;
+            link.download = doc.name || 'document';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            toast.error('Document URL not available for download', {
+                duration: 2000,
+                position: 'bottom-center'
+            });
         }
     };
 
@@ -194,9 +210,11 @@ const BookingDetailsPage = () => {
     };
 
     const getDocumentIcon = (fileName) => {
-        const ext = fileName?.split('.').pop()?.toLowerCase();
+        if (!fileName) return <FaRegFileAlt className="w-5 h-5 text-gray-500" />;
+
+        const ext = fileName.split('.').pop()?.toLowerCase();
         if (ext === 'pdf') return <FaRegFilePdf className="w-5 h-5 text-red-500" />;
-        if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) return <FaRegFileImage className="w-5 h-5 text-blue-500" />;
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return <FaRegFileImage className="w-5 h-5 text-blue-500" />;
         if (['doc', 'docx'].includes(ext)) return <FaRegFileWord className="w-5 h-5 text-blue-600" />;
         return <FaRegFileAlt className="w-5 h-5 text-gray-500" />;
     };
@@ -234,6 +252,7 @@ const BookingDetailsPage = () => {
 
     const canApproveBooking = currentBooking?.submittedDocs?.every(doc => doc.status === 'APPROVED');
     const hasDocuments = currentBooking?.submittedDocs?.length > 0;
+    const hasValidDocumentUrl = (doc) => doc && doc.documentUrl && doc.documentUrl.trim() !== '';
 
     if (loading && !currentBooking) {
         return (
@@ -290,7 +309,18 @@ const BookingDetailsPage = () => {
                             <div className="h-4 w-px bg-white/30 hidden sm:block"></div>
                             <div>
                                 <h1 className="text-base sm:text-lg font-semibold">Booking Details</h1>
-                                <p className="text-xs text-blue-100">ID: {bookingId?.substring(0, 8)}...</p>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                    <p className="text-xs text-blue-100">
+                                        ID: {currentBooking?._id || bookingId}
+                                    </p>
+                                    <button
+                                        onClick={copyBookingId}
+                                        className="text-blue-200 hover:text-white p-0.5"
+                                        title="Copy Booking ID"
+                                    >
+                                        <FiCopy className="w-3 h-3" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -400,7 +430,7 @@ const BookingDetailsPage = () => {
                                     ) : (
                                         <div className="space-y-3">
                                             {currentBooking?.submittedDocs?.map((doc) => (
-                                                <div key={doc._id} className="border border-gray-200 rounded-lg p-3">
+                                                <div key={doc._id} className="border border-gray-200 rounded-lg p-3 hover:border-blue-300 transition-colors">
                                                     <div className="flex items-start justify-between">
                                                         <div className="flex items-start gap-2 flex-1 min-w-0">
                                                             {getDocumentIcon(doc.name)}
@@ -410,29 +440,34 @@ const BookingDetailsPage = () => {
                                                                     {getDocumentStatusBadge(doc.status)}
                                                                 </div>
                                                                 {doc.rejectionReason && (
-                                                                    <p className="text-xs text-red-600 bg-red-50 p-1.5 rounded">
+                                                                    <p className="text-xs text-red-600 bg-red-50 p-1.5 rounded mb-2">
                                                                         <span className="font-medium">Reason: </span>
                                                                         {doc.rejectionReason}
                                                                     </p>
                                                                 )}
-                                                                {doc.url && (
-                                                                    <a
-                                                                        href={doc.url}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferrer"
-                                                                        className="inline-flex items-center mt-1 text-xs text-blue-600 hover:text-blue-800"
+                                                                {/* Download Button */}
+                                                                {hasValidDocumentUrl(doc) ? (
+                                                                    <button
+                                                                        onClick={() => downloadDocument(doc)}
+                                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white bg-blue-600 border border-blue-600 rounded hover:bg-blue-700 transition-colors mt-2"
                                                                     >
-                                                                        <FiEye className="w-3 h-3 mr-1" />
-                                                                        View Document
-                                                                    </a>
+                                                                        <FiDownload className="w-3 h-3" />
+                                                                        Download Document
+                                                                    </button>
+                                                                ) : (
+                                                                    <p className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2">
+                                                                        <FiAlertCircle className="inline w-3 h-3 mr-1" />
+                                                                        Document URL not available
+                                                                    </p>
                                                                 )}
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    {/* Document Actions - Only show for pending documents */}
-                                                    {doc.status === 'PENDING' && (
+                                                    {/* Document Approval/Rejection - Show for pending documents with URL */}
+                                                    {doc.status === 'PENDING' && hasValidDocumentUrl(doc) && (
                                                         <div className="mt-3 pt-3 border-t border-gray-100">
+                                                            <p className="text-xs text-gray-600 mb-2">Review document before taking action:</p>
                                                             {showDocumentReject === doc._id ? (
                                                                 <div className="space-y-2">
                                                                     <div className="flex items-center justify-between">
@@ -471,14 +506,14 @@ const BookingDetailsPage = () => {
                                                                         className="flex-1 inline-flex justify-center items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none disabled:opacity-50"
                                                                     >
                                                                         <FiCheck className="w-3 h-3 mr-1" />
-                                                                        Approve
+                                                                        Approve Document
                                                                     </button>
                                                                     <button
                                                                         onClick={() => setShowDocumentReject(doc._id)}
                                                                         className="flex-1 inline-flex justify-center items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none"
                                                                     >
                                                                         <FiXCircle className="w-3 h-3 mr-1" />
-                                                                        Reject
+                                                                        Reject Document
                                                                     </button>
                                                                 </div>
                                                             )}
@@ -537,9 +572,20 @@ const BookingDetailsPage = () => {
                                         <div>
                                             <h4 className="text-sm font-medium text-gray-900 mb-2">Booking Information</h4>
                                             <div className="space-y-1.5">
-                                                <div className="flex justify-between">
+                                                <div className="flex justify-between items-center">
                                                     <span className="text-xs text-gray-600">Booking ID:</span>
-                                                    <span className="text-xs font-medium truncate ml-2">{currentBooking?._id?.substring(0, 10)}...</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <code className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">
+                                                            {currentBooking?._id}
+                                                        </code>
+                                                        <button
+                                                            onClick={copyBookingId}
+                                                            className="text-gray-500 hover:text-gray-700 p-0.5"
+                                                            title="Copy ID"
+                                                        >
+                                                            <FiCopy className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-xs text-gray-600">Created:</span>
@@ -576,7 +622,7 @@ const BookingDetailsPage = () => {
                                         className="flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <FaClipboardCheck className="w-4 h-4 mr-1.5" />
-                                        Complete
+                                        Complete Booking
                                     </button>
                                     <button
                                         onClick={handleCancelBooking}
@@ -584,7 +630,7 @@ const BookingDetailsPage = () => {
                                         className="flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <FaBan className="w-4 h-4 mr-1.5" />
-                                        Cancel
+                                        Cancel Booking
                                     </button>
                                 </div>
 
@@ -606,7 +652,7 @@ const BookingDetailsPage = () => {
                                             className="inline-flex justify-center items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <FaTimesCircle className="w-4 h-4 mr-1.5" />
-                                            Reject Booking
+                                            Reject Entire Booking
                                         </button>
                                     </div>
                                 </div>
@@ -632,14 +678,14 @@ const BookingDetailsPage = () => {
                                     className="w-full inline-flex justify-center items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
                                 >
                                     <FiPrinter className="w-4 h-4 mr-1.5" />
-                                    Print
+                                    Print Details
                                 </button>
                             </div>
                         </div>
 
                         {/* Status Timeline */}
                         <div className="bg-white rounded-lg shadow-sm p-4">
-                            <h3 className="text-sm font-medium text-gray-900 mb-3">Status</h3>
+                            <h3 className="text-sm font-medium text-gray-900 mb-3">Status Overview</h3>
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs text-gray-600">Current Status:</span>
@@ -655,6 +701,14 @@ const BookingDetailsPage = () => {
                                         {currentBooking?.submittedDocs?.filter(d => d.status === 'APPROVED').length || 0} / {currentBooking?.submittedDocs?.length || 0} approved
                                     </span>
                                 </div>
+                                <div className="pt-2 border-t border-gray-100">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-gray-600">Last Updated:</span>
+                                        <span className="text-xs text-gray-500">
+                                            {currentBooking?.updatedAt ? formatDate(currentBooking.updatedAt) : 'N/A'}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -666,6 +720,9 @@ const BookingDetailsPage = () => {
                             </p>
                             <p className="text-xs text-blue-700 mt-2">
                                 Officer: {user?.name?.split(' ')[0] || 'Officer'}
+                            </p>
+                            <p className="text-xs text-blue-600 mt-1">
+                                Reviewing: {currentBooking?.service?.name || 'Service'}
                             </p>
                         </div>
                     </div>
@@ -685,11 +742,11 @@ const BookingDetailsPage = () => {
                                     </div>
                                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                                         <h3 className="text-base leading-6 font-medium text-gray-900">
-                                            Reject Booking?
+                                            Reject Entire Booking?
                                         </h3>
                                         <div className="mt-2">
                                             <p className="text-sm text-gray-500">
-                                                This action cannot be undone.
+                                                This will reject the entire booking and cannot be undone.
                                             </p>
                                             <div className="mt-2 p-2 bg-yellow-50 rounded text-xs">
                                                 <p className="font-medium text-yellow-800">Reason:</p>
@@ -705,7 +762,7 @@ const BookingDetailsPage = () => {
                                     onClick={handleRejectBooking}
                                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto"
                                 >
-                                    Yes, Reject
+                                    Yes, Reject Entire Booking
                                 </button>
                                 <button
                                     type="button"

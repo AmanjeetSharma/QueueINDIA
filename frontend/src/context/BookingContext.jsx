@@ -100,7 +100,6 @@ export const BookingProvider = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-
             const preparedData = prepareBookingData(bookingData);
             const response = await axiosInstance.post(`/departments/${deptId}/booking/${serviceId}/book`, preparedData);
 

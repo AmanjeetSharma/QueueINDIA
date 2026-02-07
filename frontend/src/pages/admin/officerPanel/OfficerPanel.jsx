@@ -56,7 +56,7 @@ const OfficerPanel = () => {
             title: "My Profile",
             description: "Update profile and settings",
             icon: <FaUser className="w-6 h-6 sm:w-7 sm:h-7" />,
-            path: "/officer-panel/profile",  // ✅ Fixed path
+            path: "/profile",  // ✅ Fixed path
             color: "from-orange-500 to-red-500",
             stats: "Personal",
             count: null

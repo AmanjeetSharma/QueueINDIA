@@ -38,13 +38,26 @@ import BookingDetails from "../pages/booking/BookingDetails.jsx";
 //Dashboard import
 import Dashboard from "../pages/dashboard/Dashboard.jsx";
 
+
+
 //Panel imports
 import SuperAdminPanel from "../pages/admin/superAdminPanel/SuperAdminPanel.jsx";
 import UserManagementTab from "../pages/admin/superAdminPanel/components/UserManagement/UserManagementTab.jsx";
+
 import DepartmentManagementTab from "../pages/admin/superAdminPanel/components/DepartmentManagement/DepartmentManagementTab.jsx";
+import DepartmentEdit from "../pages/admin/superAdminPanel/components/DepartmentManagement/DepartmentEdit.jsx";
+import DepartmentCreate from "../pages/admin/superAdminPanel/components/DepartmentManagement/DepartmentCreate.jsx";
+
 import DashboardTab from "../pages/admin/superAdminPanel/components/DashboardTab.jsx";
 
+
+
+
 import AdminPanel from "../pages/admin/adminPanel/AdminPanel.jsx";
+
+
+
+
 
 import OfficerPanel from "../pages/admin/officerPanel/OfficerPanel.jsx";
 import BookingsList from "../pages/admin/officerPanel/components/BookingsList.jsx";
@@ -173,6 +186,23 @@ const AppRoutes = () => {
             </AuthorizedRoles>
           }
         />
+        <Route
+          path="/super-admin-panel/departments/create"
+          element={
+            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
+              <DepartmentCreate />
+            </AuthorizedRoles>
+          }
+        />
+        <Route
+          path="/super-admin-panel/departments/:deptId/edit"
+          element={
+            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
+              <DepartmentEdit />
+            </AuthorizedRoles>
+          }
+        />
+
 
 
 

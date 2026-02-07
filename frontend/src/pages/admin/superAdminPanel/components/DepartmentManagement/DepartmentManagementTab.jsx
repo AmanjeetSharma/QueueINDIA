@@ -237,7 +237,7 @@ const DepartmentManagementTab = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={handleCreateDepartment}
-              className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+              className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors cursor-pointer"
             >
               <FiPlus className="w-4 h-4 mr-1.5" />
               <span className="hidden sm:inline">New Department</span>
@@ -275,7 +275,7 @@ const DepartmentManagementTab = () => {
               
               <button
                 onClick={applySearch}
-                className="inline-flex items-center px-3 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-3 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
               >
                 <FiSearch className="w-4 h-4 mr-1.5" />
                 <span className="hidden sm:inline">Search</span>
@@ -498,7 +498,7 @@ const DepartmentManagementTab = () => {
                     <div className="hidden md:flex gap-2">
                       <button
                         onClick={() => handleEditDepartment(dept._id)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors cursor-pointer"
                         title="Edit Department"
                       >
                         <FiEdit className="w-3.5 h-3.5" />
@@ -507,7 +507,7 @@ const DepartmentManagementTab = () => {
                       
                       <button
                         onClick={() => setDeleteConfirm(dept._id)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"
                         title="Delete Department"
                       >
                         <FiTrash2 className="w-3.5 h-3.5" />
@@ -519,7 +519,7 @@ const DepartmentManagementTab = () => {
                     <div className="flex md:hidden gap-1">
                       <button
                         onClick={() => handleEditDepartment(dept._id)}
-                        className="p-1.5 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition-colors"
+                        className="p-1.5 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition-colors cursor-pointer"
                         title="Edit Department"
                       >
                         <FiEdit className="w-4 h-4" />
@@ -527,7 +527,7 @@ const DepartmentManagementTab = () => {
                       
                       <button
                         onClick={() => setDeleteConfirm(dept._id)}
-                        className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                         title="Delete Department"
                       >
                         <FiTrash2 className="w-4 h-4" />

@@ -245,7 +245,6 @@ const UserManagementTab = () => {
       await authDeleteUserByAdmin(selectedUser._id);
       closeAllPopups();
       fetchUsers();
-      toast.success('User deleted successfully');
     } catch (error) {
       toast.error(error.message || 'Failed to delete user');
     } finally {
@@ -259,7 +258,6 @@ const UserManagementTab = () => {
       await authForceLogout(selectedUser._id);
       closeAllPopups();
       fetchUsers();
-      toast.success('User logged out from all sessions');
     } catch (error) {
       toast.error(error.message || 'Failed to logout user');
     } finally {
@@ -272,7 +270,6 @@ const UserManagementTab = () => {
       setActionLoading(true);
       const response = await authResetPassword(selectedUser._id);
       setTemporaryPassword(response.data?.temporaryPassword || response.temporaryPassword);
-      toast.success('Password reset successful');
     } catch (error) {
       toast.error(error.message || 'Failed to reset password');
     } finally {
@@ -286,7 +283,6 @@ const UserManagementTab = () => {
       await authChangeRole(selectedUser._id, newRole);
       closeAllPopups();
       fetchUsers();
-      toast.success('User role updated successfully');
     } catch (error) {
       toast.error(error.message || 'Failed to change role');
     } finally {

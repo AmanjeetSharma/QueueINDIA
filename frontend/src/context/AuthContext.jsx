@@ -554,7 +554,7 @@ export const AuthProvider = ({ children }) => {
             const res = await axiosInstance.post(`/users/admin/${userId}/force-logout`);
             toast.success(res.data.message || "User has been logged out from all devices.", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "center-top"
             });
             return res.data;
         } catch (err) {
@@ -562,7 +562,7 @@ export const AuthProvider = ({ children }) => {
             const msg = err?.response?.data?.message || "Failed to force logout user";
             toast.error(msg, {
                 duration: 3000,
-                position: "bottom-left"
+                position: "center-top"
             });
             throw err;
         }
@@ -577,7 +577,7 @@ export const AuthProvider = ({ children }) => {
             const res = await axiosInstance.post(`/users/admin/${userId}/reset-password`);
             toast.success(res.data.message || "User's password has been reset.", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "center-top"
             });
             return res.data;
         } catch (err) {
@@ -585,7 +585,7 @@ export const AuthProvider = ({ children }) => {
             const msg = err?.response?.data?.message || "Failed to reset user's password";
             toast.error(msg, {
                 duration: 3000,
-                position: "bottom-left"
+                position: "center-top"
             });
             throw err;
         }
@@ -601,7 +601,7 @@ export const AuthProvider = ({ children }) => {
             const res = await axiosInstance.patch(`/users/admin/${userId}/change-role`, { role: newRole });
             toast.success(res.data.message || "User role updated successfully.", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "center-top"
             });
             return res.data;
         } catch (err) {
@@ -609,7 +609,7 @@ export const AuthProvider = ({ children }) => {
             const msg = err?.response?.data?.message || "Failed to change user role";
             toast.error(msg, {
                 duration: 3000,
-                position: "bottom-left"
+                position: "center-top"
             });
             throw err;
         }
@@ -621,7 +621,7 @@ export const AuthProvider = ({ children }) => {
             const res = await axiosInstance.delete(`/users/admin/${userId}/delete-user`);
             toast.success(res.data.message || "User deleted successfully.", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "center-top"
             });
             return res.data;
         } catch (err) {
@@ -629,7 +629,7 @@ export const AuthProvider = ({ children }) => {
             const msg = err?.response?.data?.message || "Failed to delete user";
             toast.error(msg, {
                 duration: 3000,
-                position: "bottom-left"
+                position: "center-top"
             });
             throw err;
         }

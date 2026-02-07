@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import Icon from '../Icon';
 import { useAuth } from '../../../../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { 
@@ -17,7 +16,6 @@ import {
   MdShield,
   MdVerified,
   MdWarning,
-  MdMoreVert,
   MdEdit,
   MdLockReset,
   MdLogout,
@@ -348,6 +346,100 @@ const UserManagementTab = () => {
 
   const stats = getStats();
 
+  // Action buttons component
+  const ActionButtons = ({ user }) => {
+    return (
+      <div className="flex gap-1.5">
+        {/* Desktop Actions with Text */}
+        <div className="hidden md:flex flex-wrap gap-1.5">
+          <button
+            onClick={() => openViewUserPopup(user)}
+            className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="View user details"
+          >
+            <MdPerson className="text-sm" />
+            View
+          </button>
+          
+          <button
+            onClick={() => openChangeRolePopup(user)}
+            className="px-3 py-1.5 text-xs bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Change user role"
+          >
+            <MdEdit className="text-sm" />
+            Role
+          </button>
+          
+          <button
+            onClick={() => openResetPasswordPopup(user)}
+            className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Reset user password"
+          >
+            <MdLockReset className="text-sm" />
+            Reset
+          </button>
+          
+          <button
+            onClick={() => openLogoutPopup(user)}
+            className="px-3 py-1.5 text-xs bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Force logout from all sessions"
+          >
+            <MdLogout className="text-sm" />
+            Logout All
+          </button>
+          
+          <button
+            onClick={() => openDeletePopup(user)}
+            className="px-3 py-1.5 text-xs bg-red-50 text-red-700 rounded-lg hover:bg-red-100 flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Delete user permanently"
+          >
+            <MdDelete className="text-sm" />
+            Delete
+          </button>
+        </div>
+        
+        {/* Mobile Actions - Icons Only */}
+        <div className="flex md:hidden gap-1">
+          <button
+            onClick={() => openViewUserPopup(user)}
+            className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+            title="View details"
+          >
+            <MdPerson className="text-base" />
+          </button>
+          <button
+            onClick={() => openChangeRolePopup(user)}
+            className="p-1.5 text-purple-500 hover:text-purple-700 hover:bg-purple-100 rounded-lg transition-colors cursor-pointer"
+            title="Change role"
+          >
+            <MdEdit className="text-base" />
+          </button>
+          <button
+            onClick={() => openResetPasswordPopup(user)}
+            className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer"
+            title="Reset password"
+          >
+            <MdLockReset className="text-base" />
+          </button>
+          <button
+            onClick={() => openLogoutPopup(user)}
+            className="p-1.5 text-yellow-500 hover:text-yellow-700 hover:bg-yellow-100 rounded-lg transition-colors cursor-pointer"
+            title="Force logout"
+          >
+            <MdLogout className="text-base" />
+          </button>
+          <button
+            onClick={() => openDeletePopup(user)}
+            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors cursor-pointer"
+            title="Delete user"
+          >
+            <MdDelete className="text-base" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   if (loading && !actionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -400,7 +492,7 @@ const UserManagementTab = () => {
         </div>
       </div>
 
-      {/* Stats Cards - Updated with 6 cards */}
+      {/* Stats Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <motion.div 
@@ -510,7 +602,7 @@ const UserManagementTab = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
           <div className="flex flex-col md:flex-row md:items-center gap-3">
-            {/* Search Bar - Compact */}
+            {/* Search Bar */}
             <div className="flex-1">
               <div className="relative">
                 <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
@@ -618,10 +710,10 @@ const UserManagementTab = () => {
         </div>
       </div>
 
-      {/* Users List - Slightly More Compact */}
+      {/* Users List */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          {/* List Header - Compact */}
+          {/* List Header */}
           <div className="px-5 py-3 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center justify-between">
               <div>
@@ -633,7 +725,7 @@ const UserManagementTab = () => {
             </div>
           </div>
 
-          {/* Users List - Slightly More Compact */}
+          {/* Users List */}
           <div className="divide-y divide-gray-200">
             {users.length > 0 ? (
               users.map((user, index) => (
@@ -644,8 +736,8 @@ const UserManagementTab = () => {
                   transition={{ delay: index * 0.05 }}
                   className="p-5 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    {/* User Info - Exactly as you wanted */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    {/* User Info */}
                     <div className="flex items-start gap-3 flex-1">
                       {/* Avatar */}
                       <div 
@@ -713,126 +805,8 @@ const UserManagementTab = () => {
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-wrap gap-2">
-                      {/* Desktop Actions */}
-                      <div className="hidden md:flex flex-wrap gap-2">
-                        <button
-                          onClick={() => openViewUserPopup(user)}
-                          className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1.5 transition-colors cursor-pointer"
-                          title="View details"
-                        >
-                          <MdPerson className="text-sm" />
-                          View
-                        </button>
-                        
-                        <button
-                          onClick={() => openChangeRolePopup(user)}
-                          className="px-3 py-1.5 text-xs bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 flex items-center gap-1.5 transition-colors cursor-pointer"
-                          title="Change role"
-                        >
-                          <MdEdit className="text-sm" />
-                          Role
-                        </button>
-                        
-                        <button
-                          onClick={() => openResetPasswordPopup(user)}
-                          className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 flex items-center gap-1.5 transition-colors cursor-pointer"
-                          title="Reset password"
-                        >
-                          <MdLockReset className="text-sm" />
-                          Reset
-                        </button>
-                        
-                        <button
-                          onClick={() => openLogoutPopup(user)}
-                          className="px-3 py-1.5 text-xs bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 flex items-center gap-1.5 transition-colors cursor-pointer"
-                          title="Force logout"
-                        >
-                          <MdLogout className="text-sm" />
-                          Logout
-                        </button>
-                        
-                        <button
-                          onClick={() => openDeletePopup(user)}
-                          className="px-3 py-1.5 text-xs bg-red-50 text-red-700 rounded-lg hover:bg-red-100 flex items-center gap-1.5 transition-colors cursor-pointer"
-                          title="Delete user"
-                        >
-                          <MdDelete className="text-sm" />
-                          Delete
-                        </button>
-                      </div>
-                      
-                      {/* Mobile Actions Dropdown */}
-                      <div className="md:hidden relative">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedUser(selectedUser?._id === user._id ? null : user);
-                          }}
-                          className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer"
-                        >
-                          <MdMoreVert className="text-lg" />
-                        </button>
-                        
-                        {selectedUser?._id === user._id && (
-                          <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                            <div className="py-1">
-                              <button
-                                onClick={() => {
-                                  openViewUserPopup(user);
-                                  setSelectedUser(null);
-                                }}
-                                className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer"
-                              >
-                                <MdPerson className="text-sm" />
-                                View Details
-                              </button>
-                              <button
-                                onClick={() => {
-                                  openChangeRolePopup(user);
-                                  setSelectedUser(null);
-                                }}
-                                className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer"
-                              >
-                                <MdEdit className="text-sm" />
-                                Change Role
-                              </button>
-                              <button
-                                onClick={() => {
-                                  openResetPasswordPopup(user);
-                                  setSelectedUser(null);
-                                }}
-                                className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer"
-                              >
-                                <MdLockReset className="text-sm" />
-                                Reset Password
-                              </button>
-                              <button
-                                onClick={() => {
-                                  openLogoutPopup(user);
-                                  setSelectedUser(null);
-                                }}
-                                className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-2 cursor-pointer"
-                              >
-                                <MdLogout className="text-sm" />
-                                Force Logout
-                              </button>
-                              <button
-                                onClick={() => {
-                                  openDeletePopup(user);
-                                  setSelectedUser(null);
-                                }}
-                                className="w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer"
-                              >
-                                <MdDelete className="text-sm" />
-                                Delete User
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    {/* Action Buttons */}
+                    <ActionButtons user={user} />
                   </div>
                 </motion.div>
               ))
@@ -965,14 +939,6 @@ const UserManagementTab = () => {
           onConfirm={handleChangeRole}
           onCancel={closeAllPopups}
           loading={actionLoading}
-        />
-      )}
-
-      {/* Click outside to close mobile dropdown */}
-      {selectedUser && (
-        <div 
-          className="fixed inset-0 z-0"
-          onClick={() => setSelectedUser(null)}
         />
       )}
     </div>

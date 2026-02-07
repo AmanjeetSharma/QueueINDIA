@@ -465,7 +465,7 @@ const BookingDetailsPage = () => {
                                                     </div>
 
                                                     {/* Document Approval/Rejection - Show for pending documents with URL */}
-                                                    {doc.status === 'PENDING' && hasValidDocumentUrl(doc) && (
+                                                    {doc.status === 'PENDING'  && (
                                                         <div className="mt-3 pt-3 border-t border-gray-100">
                                                             <p className="text-xs text-gray-600 mb-2">Review document before taking action:</p>
                                                             {showDocumentReject === doc._id ? (

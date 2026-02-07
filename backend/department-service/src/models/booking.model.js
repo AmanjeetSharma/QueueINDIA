@@ -115,11 +115,6 @@ const bookingSchema = new mongoose.Schema({
         default: "NONE"
     },
 
-    tokenNumber: {
-        type: Number,
-        default: null
-    },
-
     estimatedServiceTime: {
         type: Number, // in minutes
         default: null
@@ -131,6 +126,11 @@ const bookingSchema = new mongoose.Schema({
         minlength: 10
     },
 
+    additionalNotes: {
+        type: String,
+        trim: true,
+        maxlength: 500
+    },
 
     metadata: {
         queueType: {
@@ -181,10 +181,15 @@ bookingSchema.pre('save', function (next) {
 
 
 // Indexes for faster queries
-bookingSchema.index({ department: 1, date: 1, slotTime: 1 });
-bookingSchema.index({ user: 1, status: 1 });
-bookingSchema.index({ department: 1, service: 1, date: 1 });
-// bookingSchema.index({ tokenNumber: 1, department: 1, date: 1 }, { unique: true, sparse: true });
+// 1️⃣ Slot availability + booking creation (MOST IMPORTANT)
+bookingSchema.index({ department: 1, "service.serviceId": 1, date: 1, slotTime: 1, status: 1 });
+// 2️⃣ Officer / admin dashboards (user-wise + status filters)
+bookingSchema.index({ user: 1, status: 1, createdAt: -1 });
+// 3️⃣ Department-level listing (pagination + filters)
+bookingSchema.index({ department: 1, status: 1, createdAt: -1 });
+// 4️⃣ Prevent duplicate bookings by same user for same slot
+bookingSchema.index({ user: 1, department: 1, date: 1, slotTime: 1 });
+
 
 // Virtual for formatted date
 bookingSchema.virtual('formattedDate').get(function () {

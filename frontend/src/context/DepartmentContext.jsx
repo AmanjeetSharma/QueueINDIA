@@ -146,7 +146,7 @@ export const DepartmentProvider = ({ children }) => {
             const newDept = transformDepartmentData(response.data.data);
             setDepartments(prev => [...prev, newDept]);
 
-            toast.success('Department created successfully!', {
+            toast.success('Department created!', {
                 duration: 3000,
                 position: "bottom-left"
             });
@@ -191,7 +191,7 @@ export const DepartmentProvider = ({ children }) => {
                 setCurrentDepartment(updatedDept);
             }
 
-            toast.success('Department updated successfully!', {
+            toast.success('Department updated!', {
                 duration: 3000,
                 position: "bottom-left"
             });
@@ -235,7 +235,7 @@ export const DepartmentProvider = ({ children }) => {
                 setCurrentDepartment(null);
             }
 
-            toast.success('Department deleted successfully!', {
+            toast.success('Department deleted!', {
                 duration: 3000,
                 position: "center-top"
             });

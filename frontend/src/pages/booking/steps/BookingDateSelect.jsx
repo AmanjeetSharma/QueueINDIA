@@ -56,7 +56,7 @@ const BookingDateSelect = () => {
       onStepComplete({ date: selectedDate });
       navigate('../time');
       setIsNavigating(false);
-    }, 1000);
+    }, 750);
   };
 
   const navigateMonth = (direction) => {

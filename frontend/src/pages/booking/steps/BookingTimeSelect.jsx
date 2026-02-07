@@ -46,7 +46,7 @@ const BookingTimeSelect = () => {
       onStepComplete({ slotTime: selectedSlot });
       navigate('../details');
       setIsNavigating(false);
-    }, 1000);
+    }, 750);
   }
 
   const handleBack = () => {

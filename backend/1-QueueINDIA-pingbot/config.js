@@ -13,11 +13,11 @@ export const SERVICES = [
     }
 ];
 
-// Ping interval → every 5 minutes
-export const PING_INTERVAL = 5 * 60 * 1000; // 5 minutes
+// Ping interval → every 10 minutes
+export const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes
 
-// Auto stop after → 1 hour
-export const MAX_RUNTIME = 60 * 60 * 1000;
+// Auto stop after → 3 hours
+export const MAX_RUNTIME = 3 * 60 * 60 * 1000; // 3 hours
 
 // Timeout per request (security)
 export const REQUEST_TIMEOUT = 60000; // 60 seconds

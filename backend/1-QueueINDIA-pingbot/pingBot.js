@@ -50,7 +50,7 @@ const pingAllServices = async () => {
 // Start bot
 log("🚀 QueueINDIA Interview Ping Bot Started");
 log(`⏰ Interval: ${PING_INTERVAL / 60000} minutes`);
-log(`🛑 Auto-stop after: ${MAX_RUNTIME / 60000} minutes`);
+log(`🛑 Auto-stop after: ${MAX_RUNTIME / 60000} minutes (${MAX_RUNTIME / 3600000} hrs)`);
 console.log("────────────────────────────────────────");
 
 // Immediate ping once
@@ -59,9 +59,10 @@ pingAllServices();
 // Repeat every 10 min
 const intervalId = setInterval(pingAllServices, PING_INTERVAL);
 
-// Auto stop after 1 hour
+// Auto stop after 3 hours
 setTimeout(() => {
-    log("🛑 1 hour completed. Stopping bot automatically...");
+    log("🛑 3 hours completed. Stopping bot automatically...");
+    log("👋 Thank you for your service!");
     clearInterval(intervalId);
     process.exit(0);
 }, MAX_RUNTIME);

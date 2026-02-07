@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -6,7 +7,6 @@ import { Booking } from "../models/booking.model.js";
 import dayjs from "dayjs";
 import {
     convertToMinutes,
-    convertToTimeString,
     generateDynamicSlots,
     getCurrentIST,
     isSlotWithinWorkingHours,
@@ -95,29 +95,22 @@ const getAvailableSlots = asyncHandler(async (req, res) => {
     const service = department.services.id(serviceId);
     if (!service) throw new ApiError(404, "Service not found in this department");
 
-    // Check if service is active
-    if (!service.priorityAllowed && service.priorityRequired) {
-        throw new ApiError(400, "This service requires priority access");
-    }
-
-    // FIX: Properly parse the date string to get day of week
     const selectedDate = dayjs(date).tz(TZ);
     const dayOfWeek = selectedDate.format("ddd");
-    const workingDay = department.workingHours.find((d) => d.day === dayOfWeek);
 
+    const workingDay = department.workingHours.find(d => d.day === dayOfWeek);
     if (!workingDay || workingDay.isClosed) {
         throw new ApiError(400, "Department is closed on the selected date");
     }
 
-    // Rest of the function remains the same...
-    // Use service-specific token management or fallback to department
-    const tokenManagement = service.tokenManagement || department.tokenManagement || {};
+    /* ───────── TOKEN MANAGEMENT ───────── */
+
+    const tokenManagement =
+        service.tokenManagement || department.tokenManagement || {};
 
     let slots = [];
 
-    // Check if slot windows are configured
     if (!tokenManagement.slotWindows || tokenManagement.slotWindows.length === 0) {
-        // Generate slots based on start/end time and interval
         slots = generateDynamicSlots(
             tokenManagement.slotStartTime || "10:00",
             tokenManagement.slotEndTime || "17:00",
@@ -125,47 +118,66 @@ const getAvailableSlots = asyncHandler(async (req, res) => {
             tokenManagement.maxTokensPerSlot || 10
         );
     } else {
-        tokenManagement.slotWindows.forEach((window) => {
+        tokenManagement.slotWindows.forEach(window => {
             const generatedSlots = generateDynamicSlots(
                 window.start,
                 window.end,
                 tokenManagement.timeBtwEverySlot || 15,
                 window.maxTokens || tokenManagement.maxTokensPerSlot || 10
             );
-
             slots.push(...generatedSlots);
         });
     }
 
+    /* ───────── FILTER BY WORKING HOURS ───────── */
 
-    // Filter slots within working hours
     const filteredSlots = slots.filter(slot =>
         isSlotWithinWorkingHours(slot, workingDay)
     );
 
-    // Check bookings for each slot
-    const results = await Promise.all(
-        filteredSlots.map(async (slot) => {
-            const totalBooked = await Booking.countDocuments({
-                department: deptId,
-                "service.serviceId": serviceId,
+    /* ───────── OPTIMIZED BOOKING COUNT (NEW) ───────── */
+
+    const bookingCounts = await Booking.aggregate([
+        {
+            $match: {
+                department: new mongoose.Types.ObjectId(deptId),
+                "service.serviceId": new mongoose.Types.ObjectId(serviceId),
                 date,
-                slotTime: slot.time
-            });
+                status: { $nin: ["CANCELLED", "REJECTED"] }
+            }
+        },
+        {
+            $group: {
+                _id: "$slotTime",
+                count: { $sum: 1 }
+            }
+        }
+    ]);
 
-            const remaining = Math.max(0, slot.maxTokens - totalBooked);
+    // Convert aggregation result into lookup map
+    const bookingMap = {};
+    bookingCounts.forEach(b => {
+        bookingMap[b._id] = b.count;
+    });
 
-            return {
-                ...slot,
-                remaining,
-                isFullyBooked: remaining === 0,
-                available: remaining > 0,
-                bookedCount: totalBooked
-            };
-        })
+    /* ───────── FINAL SLOT CALCULATION ───────── */
+
+    const results = filteredSlots.map(slot => {
+        const bookedCount = bookingMap[slot.time] || 0;
+        const remaining = Math.max(0, slot.maxTokens - bookedCount);
+
+        return {
+            ...slot,
+            bookedCount,
+            remaining,
+            isFullyBooked: remaining === 0,
+            available: remaining > 0
+        };
+    });
+
+    console.log(
+        `Available slots fetched | Dept: ${deptId} | Service: ${serviceId} | Date: ${date}`
     );
-
-    console.log(`Available slots fetched! Dept: ${deptId} | Service: ${serviceId} | For Date: ${date}`);
 
     return res.status(200).json(
         new ApiResponse(200, results, "Available slots fetched successfully")
@@ -187,14 +199,16 @@ const getAvailableSlots = asyncHandler(async (req, res) => {
 
 
 
+
 // Create a new booking
 const createBooking = asyncHandler(async (req, res) => {
+    console.log("createBooking called with body:", req.body);
     const { deptId, serviceId } = req.params;
     const {
         date,
         slotTime,
         priorityType = "NONE",
-        bookingDescription
+        notes
     } = req.body;
 
     /* ─────────────────── VALIDATIONS ─────────────────── */
@@ -238,8 +252,6 @@ const createBooking = asyncHandler(async (req, res) => {
     /* ───────────── SLOT VALIDATION ───────────── */
 
     const [slotStart, slotEnd] = slotTime.split("-");
-    const slotStartMinutes = convertToMinutes(slotStart);
-    const slotEndMinutes = convertToMinutes(slotEnd);
 
     if (!isSlotWithinWorkingHours({ start: slotStart, end: slotEnd }, workingDay)) {
         throw new ApiError(400, "Selected slot is outside working hours");
@@ -265,8 +277,10 @@ const createBooking = asyncHandler(async (req, res) => {
         department: deptId,
         "service.serviceId": serviceId,
         date,
-        slotTime
+        slotTime,
+        status: { $nin: ["CANCELLED", "REJECTED"] }
     });
+
 
     if (totalBooked >= maxTokens) {
         throw new ApiError(400, "Selected slot is fully booked");
@@ -304,16 +318,6 @@ const createBooking = asyncHandler(async (req, res) => {
                 throw new ApiError(400, "Invalid priority type");
         }
     }
-
-    /* ───────────── TOKEN NUMBER ───────────── */
-
-    const lastToken = await Booking.findOne(
-        { department: deptId, date },
-        { tokenNumber: 1 },
-        { sort: { tokenNumber: -1 } }
-    );
-
-    const tokenNumber = (lastToken?.tokenNumber || 0) + 1;
 
     /* ───────────── PREFILL SUBMITTED DOCS ───────────── */
 
@@ -362,9 +366,8 @@ const createBooking = asyncHandler(async (req, res) => {
         submittedDocs,
         status: initialStatus,
         priorityType,
-        tokenNumber,
         estimatedServiceTime: tokenManagement.timeBtwEverySlot || 15,
-        bookingDescription,
+        additionalNotes: notes || "",
 
         metadata: {
             queueType: tokenManagement.queueType || "Hybrid",
@@ -375,7 +378,7 @@ const createBooking = asyncHandler(async (req, res) => {
     });
 
     console.log(
-        `✅ Booking created | ID: ${booking._id} | User: ${req.user._id} | Token: ${tokenNumber}`
+        `✅ Booking created | ID: ${booking._id} | User: ${req.user._id}`
     );
 
     return res.status(201).json(
@@ -415,7 +418,6 @@ const getUserBookings = asyncHandler(async (req, res) => {
             date
             slotTime
             status
-            tokenNumber
             service
             metadata.departmentName
             metadata.serviceRequiresDocs
@@ -508,9 +510,8 @@ const getBookingById = asyncHandler(async (req, res) => {
         slotTime: booking.slotTime,
         status: booking.status,
         priorityType: booking.priorityType,
-        tokenNumber: booking.tokenNumber,
         estimatedServiceTime: booking.estimatedServiceTime,
-        bookingDescription: booking.bookingDescription || "",
+        notes: booking.additionalNotes || "",
 
         department: {
             name: booking.department.name,

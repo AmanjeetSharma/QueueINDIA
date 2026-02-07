@@ -109,9 +109,9 @@ export const BookingProvider = ({ children }) => {
             setBookings(prev => [newBooking, ...prev]);
             setCurrentBooking(newBooking);
 
-            toast.success('Booking done successfully!', {
+            toast.success('Your booking has been created successfully!', {
                 duration: 3000,
-                position: "bottom-left"
+                position: "center-top"
             });
 
             return response.data;

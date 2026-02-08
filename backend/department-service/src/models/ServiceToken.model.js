@@ -33,12 +33,23 @@ const serviceTokenSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-
+    priorityType: {
+        type: String,
+        enum: ["NONE", "SENIOR_CITIZEN", "PREGNANT_WOMEN", "DIFFERENTLY_ABLED"],
+        default: "NONE"
+    },
+    priorityRank: {
+        type: Number,
+        required: true,
+        default: 0
+    },
     status: {
         type: String,
         enum: ["WAITING", "SERVING", "COMPLETED", "SKIPPED"],
         default: "WAITING"
-    }
+    },
+
+    completedAt: Date,
 
 }, { timestamps: true });
 

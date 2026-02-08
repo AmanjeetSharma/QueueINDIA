@@ -62,6 +62,8 @@ import AdminPanel from "../pages/admin/adminPanel/AdminPanel.jsx";
 import OfficerPanel from "../pages/admin/officerPanel/OfficerPanel.jsx";
 import BookingsList from "../pages/admin/officerPanel/components/BookingsList.jsx";
 import BookingDetailsPage from "../pages/admin/officerPanel/components/BookingDetailsPage.jsx";
+import QueueListServices from "../pages/queue/QueueListServices.jsx";
+import QueueManagement from "../pages/queue/QueueManagement.jsx";
 
 import NotFound from "../pages/NotFound.jsx";
 
@@ -69,7 +71,6 @@ import ScrollToTop from "../components/ScrollToTop.jsx";
 
 
 
-const LiveQueuePage = () => <div className="p-6">Live Queue Page - Coming Soon</div>;
 const AnalyticsPage = () => <div className="p-6">Analytics Page - Coming Soon</div>;
 const ProfilePage = () => <div className="p-6">Profile Page - Coming Soon</div>;
 
@@ -249,10 +250,18 @@ const AppRoutes = () => {
 
 
         <Route
-          path="/officer-panel/queue"
+          path="/officer-panel/queue-services"
           element={
             <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
-              <LiveQueuePage />
+              <QueueListServices />
+            </AuthorizedRoles>
+          }
+        />
+        <Route
+          path="/officer-panel/queue-management/:departmentId/:serviceId"
+          element={
+            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
+              <QueueManagement />
             </AuthorizedRoles>
           }
         />

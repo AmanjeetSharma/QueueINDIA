@@ -21,6 +21,7 @@ import deptAdminRoutes from "./routes/dept.admin.routes.js";
 import deptServiceRoutes from "./routes/dept.service.routes.js";
 import deptBookingRoutes from "./routes/dept.booking.routes.js";
 import deptOfficerRoutes from "./routes/dept.officer.routes.js";
+import queueRoutes from "./routes/dept.queue.routes.js";
 // import deptRatingRoutes from "./routes/dept.rating.routes.js";
 
 // Using Routes
@@ -29,6 +30,7 @@ app.use("/api/v1/departments", deptAdminRoutes);
 app.use("/api/v1/departments", deptServiceRoutes);
 app.use("/api/v1/departments", deptBookingRoutes);
 app.use("/api/v1/officer/", deptOfficerRoutes);
+app.use("/api/v1/departments", queueRoutes);
 // app.use("/api/v1/departments", deptRatingRoutes);
 
 

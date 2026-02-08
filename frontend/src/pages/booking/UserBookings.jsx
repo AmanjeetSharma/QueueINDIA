@@ -35,6 +35,20 @@ const UserBookings = () => {
 
   const hasFetchedInitial = useRef(false);
 
+  const ACTIVE_STATUSES = [
+    'PENDING_DOCS',
+    'DOCS_SUBMITTED',
+    'UNDER_REVIEW',
+    'APPROVED',
+  ];
+
+  const TERMINAL_STATUSES = [
+    'REJECTED',
+    'CANCELLED',
+    'COMPLETED',
+  ];
+
+
   // Auto-fetch on mount
   useEffect(() => {
     const fetchInitialBookings = async () => {
@@ -181,99 +195,99 @@ const UserBookings = () => {
 
           {/* Compact Search and Filter */}
           {/* Compact Search and Filter - Redesigned */}
-<div className="mb-5">
-  <div className="flex flex-col sm:flex-row gap-3">
-    {/* Search Bar with Clear Icon */}
-    <div className="flex-1 relative group">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-        <FaSearch className="text-sm" />
-      </div>
-      <input
-        type="text"
-        placeholder="Search bookings..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        onFocus={() => setIsSearchFocused(true)}
-        onBlur={() => setIsSearchFocused(false)}
-        className="w-full pl-9 pr-10 py-2.5 text-sm bg-white border border-slate-300 rounded-lg 
+          <div className="mb-5">
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Search Bar with Clear Icon */}
+              <div className="flex-1 relative group">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  <FaSearch className="text-sm" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search bookings..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  className="w-full pl-9 pr-10 py-2.5 text-sm bg-white border border-slate-300 rounded-lg 
                    hover:border-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 
                    transition-all duration-200 outline-none placeholder:text-slate-400"
-      />
-      {search && (
-        <button
-          onClick={() => setSearch('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 
+                />
+                {search && (
+                  <button
+                    onClick={() => setSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 
                      transition-colors p-0.5 rounded"
-          aria-label="Clear search"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      )}
-    </div>
+                    aria-label="Clear search"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
 
-    {/* Filter with Icon Inside */}
-    <div className="relative w-full sm:w-auto">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 z-10">
-        <FaFilter className="text-xs" />
-      </div>
-      <select
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        className="w-full sm:w-48 pl-9 pr-4 py-2.5 text-sm bg-white border border-slate-300 
+              {/* Filter with Icon Inside */}
+              <div className="relative w-full sm:w-auto">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 z-10">
+                  <FaFilter className="text-xs" />
+                </div>
+                <select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="w-full sm:w-48 pl-9 pr-4 py-2.5 text-sm bg-white border border-slate-300 
                    rounded-lg hover:border-slate-400 focus:border-blue-500 focus:ring-2 
                    focus:ring-blue-500/20 transition-all duration-200 appearance-none outline-none"
-      >
-        <option value="all">All Bookings</option>
-        <option value="PENDING_DOCS">Pending Documents</option>
-        <option value="DOCS_SUBMITTED">Docs Submitted</option>
-        <option value="UNDER_REVIEW">Under Review</option>
-        <option value="APPROVED">Approved</option>
-        <option value="COMPLETED">Completed</option>
-        <option value="CANCELLED">Cancelled</option>
-        <option value="REJECTED">Rejected</option>
-      </select>
-      {/* Custom dropdown arrow */}
-      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </div>
-    </div>
-  </div>
+                >
+                  <option value="all">All Bookings</option>
+                  <option value="PENDING_DOCS">Pending Documents</option>
+                  <option value="DOCS_SUBMITTED">Docs Submitted</option>
+                  <option value="UNDER_REVIEW">Under Review</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="CANCELLED">Cancelled</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+                {/* Custom dropdown arrow */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
 
-  {/* Active filters indicator */}
-  {(search || filter !== 'all') && (
-    <div className="mt-3 flex items-center gap-2 text-xs">
-      <span className="text-slate-500">Active filters:</span>
-      {search && (
-        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
-          Search: "{search}"
-          <button 
-            onClick={() => setSearch('')}
-            className="text-blue-500 hover:text-blue-700"
-            aria-label="Remove search filter"
-          >
-            ×
-          </button>
-        </span>
-      )}
-      {filter !== 'all' && (
-        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
-          Status: {filter.replace('_', ' ')}
-          <button 
-            onClick={() => setFilter('all')}
-            className="text-blue-500 hover:text-blue-700"
-            aria-label="Remove status filter"
-          >
-            ×
-          </button>
-        </span>
-      )}
-    </div>
-  )}
-</div>
+            {/* Active filters indicator */}
+            {(search || filter !== 'all') && (
+              <div className="mt-3 flex items-center gap-2 text-xs">
+                <span className="text-slate-500">Active filters:</span>
+                {search && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
+                    Search: "{search}"
+                    <button
+                      onClick={() => setSearch('')}
+                      className="text-blue-500 hover:text-blue-700"
+                      aria-label="Remove search filter"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {filter !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
+                    Status: {filter.replace('_', ' ')}
+                    <button
+                      onClick={() => setFilter('all')}
+                      className="text-blue-500 hover:text-blue-700"
+                      aria-label="Remove status filter"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Loading indicator for refresh */}
@@ -342,7 +356,7 @@ const UserBookings = () => {
                       <h3 className="text-base font-bold text-slate-900 mb-1.5 line-clamp-1">
                         {booking.service?.name || 'Unknown Service'}
                       </h3>
-                      
+
                       {/* Department and service code */}
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm font-medium text-slate-700">
@@ -370,47 +384,51 @@ const UserBookings = () => {
 
                     {/* Action Buttons - Single Row */}
                     <div className="flex gap-2 pt-3 border-t border-slate-100">
-                      <Link
-                        to={`/bookings/${booking._id}`}
-                        className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
-                          booking.status === 'PENDING_DOCS' && booking.metadata?.serviceRequiresDocs
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
-                            : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
-                        }`}
-                      >
-                        {booking.status === 'PENDING_DOCS' && booking.metadata?.serviceRequiresDocs ? (
-                          <>
+                      {TERMINAL_STATUSES.includes(booking.status) ? (
+                        <Link
+                          to={`/bookings/${booking._id}`}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm rounded-lg font-medium transition-colors"
+                        >
+                          <FaInfoCircle className="text-xs" />
+                          View Details
+                        </Link>
+                      ) : ACTIVE_STATUSES.includes(booking.status) ? (
+                        // 🟢 Active → Upload + Cancel
+                        <>
+                          {/* Upload / Details button */}
+                          <Link
+                            to={`/bookings/${booking._id}`}
+                            className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${booking.status === 'PENDING_DOCS' || booking.status === 'UNDER_REVIEW'
+                              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
+                              : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                              }`}
+                          >
                             <FaFileUpload className="text-xs" />
                             Upload Docs
-                          </>
-                        ) : (
-                          <>
-                            <FaInfoCircle className="text-xs" />
-                            Details
-                          </>
-                        )}
-                      </Link>
+                          </Link>
 
-                      {['PENDING_DOCS', 'DOCS_SUBMITTED', 'UNDER_REVIEW', 'APPROVED'].includes(booking.status) && (
-                        <button
-                          onClick={() => handleCancelClick(booking)}
-                          disabled={cancellingId === booking._id}
-                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 border-2 border-red-600 text-red-600 text-sm rounded-lg hover:bg-red-50 transition-colors font-medium disabled:opacity-50"
-                        >
-                          {cancellingId === booking._id ? (
-                            <>
-                              <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                              Cancelling
-                            </>
-                          ) : (
-                            <>
-                              <FaTimes className="text-xs" />
-                              Cancel
-                            </>
-                          )}
-                        </button>
-                      )}
+                          {/* Cancel button */}
+                          <button
+                            onClick={() => handleCancelClick(booking)}
+                            disabled={cancellingId === booking._id}
+                            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 border-2 border-red-600 text-red-600 text-sm rounded-lg hover:bg-red-50 transition-colors font-medium disabled:opacity-50"
+                          >
+                            {cancellingId === booking._id ? (
+                              <>
+                                <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                                Cancelling
+                              </>
+                            ) : (
+                              <>
+                                <FaTimes className="text-xs" />
+                                Cancel
+                              </>
+                            )}
+                          </button>
+                        </>
+                      ) : null}
                     </div>
+
                   </div>
                 </motion.div>
               );

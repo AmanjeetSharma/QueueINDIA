@@ -36,7 +36,7 @@ const OfficerPanel = () => {
             title: "Live Queue",
             description: "View real-time service queue status",
             icon: <FaUsers className="w-6 h-6 sm:w-7 sm:h-7" />,
-            path: "/officer-panel/queue",  // ✅ Fixed path
+            path: "/officer-panel/queue-services",  // ✅ Fixed path
             color: "from-purple-500 to-pink-500",
             stats: "Real-time",
             count: null

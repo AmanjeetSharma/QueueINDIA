@@ -181,7 +181,7 @@ export const DepartmentOfficerProvider = ({ children }) => {
             const message = response.data.message || 'Document approved successfully';
             toast.success(message, {
                 duration: 3000,
-                position: "bottom-left"
+                position: "center-top"
             });
 
             return response.data;

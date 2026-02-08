@@ -146,6 +146,12 @@ const getBookingDetailsForOfficer = asyncHandler(async (req, res) => {
 
 
 
+const PRIORITY_RANK_MAP = {
+    NONE: 0,
+    SENIOR_CITIZEN: 1,
+    PREGNANT_WOMEN: 2,
+    DIFFERENTLY_ABLED: 3
+};
 
 
 const approveBooking = asyncHandler(async (req, res) => {
@@ -161,7 +167,7 @@ const approveBooking = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Booking not found");
     }
 
-    // SUPER_ADMIN bypass
+    // ───── Role-based department security ─────
     if (req.user.role !== "SUPER_ADMIN") {
         const departmentId = req.user.departmentId;
 
@@ -174,6 +180,7 @@ const approveBooking = asyncHandler(async (req, res) => {
         }
     }
 
+    // ───── Approve single document ─────
     const doc = booking.submittedDocs.id(docId);
 
     if (!doc) {
@@ -187,28 +194,70 @@ const approveBooking = asyncHandler(async (req, res) => {
     doc.status = "APPROVED";
     doc.rejectionReason = "";
 
-    const result = await evaluateBookingAfterDocChange(booking);
+    // ───── Check if all docs are approved ─────
+    const allDocsApproved = booking.submittedDocs.every(
+        d => d.status === "APPROVED"
+    );
 
-    if (result.approved) {
+    // If not all approved → just save & return
+    if (!allDocsApproved) {
+        booking.status = "UNDER_REVIEW";
+        await booking.save();
+
         return res.status(200).json(
-            new ApiResponse(
-                200,
-                {
-                    bookingId: booking._id,
-                    tokenNumber: result.tokenNumber,
-                    serviceTokenId: result.serviceTokenId
-                },
-                "All documents approved. Token assigned."
-            )
+            new ApiResponse(200, null, "Document approved")
         );
     }
 
-    console.log(`[DEPT] Document approved for booking ID: ${bookingId} | By user: ${req.user._id} | Role: ${req.user.role}`);
+    // ───── All docs approved → assign token ─────
+    if (booking.status === "APPROVED") {
+        throw new ApiError(400, "Booking already approved");
+    }
+
+    // Find last token for same department + date + slot
+    const lastToken = await ServiceToken.findOne({
+        department: booking.department,
+        date: booking.date,
+        slotTime: booking.slotTime
+    }).sort({ tokenNumber: -1 });
+
+    const nextTokenNumber = lastToken ? lastToken.tokenNumber + 1 : 1;
+
+    const priorityType = booking.priorityType || "NONE";
+    const priorityRank = PRIORITY_RANK_MAP[priorityType] ?? 0;
+
+    const serviceToken = await ServiceToken.create({
+        booking: booking._id,
+        department: booking.department,
+        service: booking.service.serviceId,
+        date: booking.date,
+        slotTime: booking.slotTime,
+        tokenNumber: nextTokenNumber,
+        priorityType,
+        priorityRank
+    });
+
+    booking.status = "APPROVED";
+    await booking.save();
+
+    console.log(
+        `[DEPT] Booking approved | BookingId: ${bookingId} | Token: ${nextTokenNumber} | Priority: ${priorityType}`
+    );
 
     return res.status(200).json(
-        new ApiResponse(200, null, "Document approved")
+        new ApiResponse(
+            200,
+            {
+                bookingId: booking._id,
+                tokenNumber: nextTokenNumber,
+                priorityRank,
+                serviceTokenId: serviceToken._id
+            },
+            "Booking approved and token has been assigned"
+        )
     );
 });
+
 
 
 

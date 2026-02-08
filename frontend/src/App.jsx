@@ -6,6 +6,7 @@ import { Toaster } from "react-hot-toast";
 import { BookingProvider } from "./context/BookingContext";
 import { AdminProvider } from "./context/AdminContext";
 import { DepartmentOfficerProvider } from "./context/DepartmentOfficerContext";
+import { QueueProvider } from "./context/QueueContext";
 
 const App = () => {
   return (
@@ -17,33 +18,35 @@ const App = () => {
             {/* Role-specific providers (depend on AuthContext) */}
             <AdminProvider>
               <DepartmentOfficerProvider>
-                {/* Routes */}
-                <AppRoutes />
-                <Toaster
-                  position="top-right"
-                  reverseOrder={false}
-                  toastOptions={{
-                    duration: 4000,
-                    style: {
-                      background: '#363636',
-                      color: '#fff',
-                    },
-                    success: {
-                      duration: 3000,
-                      theme: {
-                        primary: 'green',
-                        secondary: 'black',
-                      },
-                    },
-                    error: {
-                      duration: 5000,
+                <QueueProvider>
+                  {/* Routes */}
+                  <AppRoutes />
+                  <Toaster
+                    position="top-right"
+                    reverseOrder={false}
+                    toastOptions={{
+                      duration: 4000,
                       style: {
-                        background: '#ef4444',
+                        background: '#363636',
                         color: '#fff',
                       },
-                    },
-                  }}
-                />
+                      success: {
+                        duration: 3000,
+                        theme: {
+                          primary: 'green',
+                          secondary: 'black',
+                        },
+                      },
+                      error: {
+                        duration: 5000,
+                        style: {
+                          background: '#ef4444',
+                          color: '#fff',
+                        },
+                      },
+                    }}
+                  />
+                </QueueProvider>
               </DepartmentOfficerProvider>
             </AdminProvider>
           </BookingProvider>

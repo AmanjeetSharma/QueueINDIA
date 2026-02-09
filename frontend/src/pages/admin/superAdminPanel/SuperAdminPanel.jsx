@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
-import { FaUsers, FaBuilding, FaShieldAlt, FaArrowRight } from "react-icons/fa";
+import { FaUsers, FaBuilding, FaShieldAlt, FaArrowRight, FaCog, FaChartLine } from "react-icons/fa";
 import { RiDashboard3Fill } from "react-icons/ri";
 
 const SuperAdminPanel = () => {
@@ -12,158 +12,221 @@ const SuperAdminPanel = () => {
       id: "dashboard",
       title: "Dashboard",
       description: "System metrics and analytics",
-      icon: <RiDashboard3Fill className="w-6 h-6 sm:w-7 sm:h-7" />,
+      icon: <RiDashboard3Fill className="w-5 h-5" />,
       path: "/super-admin-panel/dashboard",
-      color: "from-blue-500 to-cyan-500",
-      stats: "Real-time data"
+      emoji: "📊",
+      hoverColor: "red" // Added hover color
     },
     {
       id: "users",
       title: "User Management",
       description: "Manage users and permissions",
-      icon: <FaUsers className="w-6 h-6 sm:w-7 sm:h-7" />,
+      icon: <FaUsers className="w-5 h-5" />,
       path: "/super-admin-panel/users",
-      color: "from-purple-500 to-pink-500",
-      stats: "User accounts"
+      emoji: "👥",
+      hoverColor: "orange"
     },
     {
       id: "departments",
       title: "Departments",
       description: "Department and services control",
-      icon: <FaBuilding className="w-6 h-6 sm:w-7 sm:h-7" />,
+      icon: <FaBuilding className="w-5 h-5" />,
       path: "/super-admin-panel/departments",
-      color: "from-green-500 to-emerald-500",
-      stats: "Configure"
+      emoji: "🏢",
+      hoverColor: "amber"
+    },
+    {
+      id: "analytics",
+      title: "Analytics",
+      description: "Advanced system insights",
+      icon: <FaChartLine className="w-5 h-5" />,
+      path: "/super-admin-panel/analytics",
+      emoji: "📈",
+      hoverColor: "rose"
     }
   ];
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header - Compact */}
-      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex-1">
-              <motion.h1
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2"
-              >
-                SUPER ADMIN PANEL
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                className="text-sm sm:text-base text-red-100"
-              >
-                Full system control interface
-              </motion.p>
-            </div>
+  // Function to get hover color classes
+  const getHoverColorClasses = (color) => {
+    const colors = {
+      red: { 
+        bg: 'group-hover:bg-blue-600/50', 
+        border: 'group-hover:border-blue-500/50',
+        icon: 'group-hover:bg-blue-600 group-hover:scale-110',
+        text: 'group-hover:text-blue-300'
+      },
+      orange: { 
+        bg: 'group-hover:bg-orange-600/50', 
+        border: 'group-hover:border-orange-500/50',
+        icon: 'group-hover:bg-orange-600 group-hover:scale-110',
+        text: 'group-hover:text-orange-300'
+      },
+      amber: { 
+        bg: 'group-hover:bg-purple-600/50', 
+        border: 'group-hover:border-purple-500/50',
+        icon: 'group-hover:bg-purple-600 group-hover:scale-110',
+        text: 'group-hover:text-purple-300'
+      },
+      rose: { 
+        bg: 'group-hover:bg-green-600/50', 
+        border: 'group-hover:border-green-500/50',
+        icon: 'group-hover:bg-green-600 group-hover:scale-110',
+        text: 'group-hover:text-green-300'
+      }
+    };
+    return colors[color] || colors.red;
+  };
 
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring" }}
-              className="flex items-center gap-2 sm:gap-3 bg-white/20 backdrop-blur-sm rounded-xl p-3 border border-white/30"
-            >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white text-red-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <FaShieldAlt className="w-4 h-4 sm:w-5 sm:h-5" />
+  return (
+    <div className="min-h-screen bg-slate-900 text-white">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-slate-700 bg-slate-800/90 backdrop-blur-lg">
+        <div className="px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center">
+                <FaShieldAlt className="w-5 h-5 text-white" />
               </div>
-              <div className="min-w-0">
-                <p className="font-semibold text-xs sm:text-sm">SUPER ADMIN</p>
-                <p className="text-xs text-white/90 truncate max-w-[120px] sm:max-w-none">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-white">
+                  Super Admin
+                </h1>
+                <p className="text-xs text-slate-400 mt-1">Full system control</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2">
+              <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+                <FaShieldAlt className="w-4 h-4 text-white" />
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-semibold">SUPER ADMIN</p>
+                <p className="text-xs text-slate-400 truncate max-w-[100px] sm:max-w-none">
                   {user?.name?.split(' ')[0] || "Admin"}
                 </p>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Main Content - Compact */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-        {/* Welcome Section - Compact */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-6 sm:mb-8 bg-white rounded-xl sm:rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200"
-        >
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div className="flex-1">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
-                Welcome👋 dev @{user?.name?.split(' ')[0].toLowerCase() || 'admin'}! ready to manage? 🚀✨</h2>
-              <p className="text-sm text-gray-600">
-                Full system access. Select management area below. All actions are logged.
-              </p>
-            </div>
-            <div className="bg-red-50 text-red-800 px-3 py-2 rounded-lg border border-red-200 whitespace-nowrap">
-              <p className="font-semibold text-sm">Full Access</p>
-              <p className="text-xs">All permissions granted</p>
+      {/* Main Content */}
+      <main className="p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Welcome Section */}
+          <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 sm:p-6">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                  Welcome, <span className="text-red-400">Master Control</span>
+                </h2>
+                <p className="text-sm text-slate-300 mb-1">
+                  Full system access granted to <span className="font-semibold text-red-400">{user?.name?.split(' ')[0] || 'Administrator'}</span>
+                </p>
+                <p className="text-xs text-slate-400">
+                  Manage users, departments, analytics, and system configurations
+                </p>
+              </div>
+
+              <div className="bg-red-900/20 border border-red-700/30 rounded-lg p-3 sm:p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <FaShieldAlt className="w-5 h-5 text-red-400" />
+                  <div>
+                    <p className="font-bold text-white text-sm">Full System Access</p>
+                    <p className="text-xs text-red-300">All permissions enabled</p>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                    <span className="text-slate-300">Complete system control</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                    <span className="text-slate-300">Audit log access</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </motion.div>
 
-        {/* Management Cards Grid - Compact */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Management Areas</h2>
-          <p className="text-sm text-gray-600 mb-4 sm:mb-6">Select section to manage</p>
+          {/* Management Cards */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-white">Management Areas</h2>
+              <span className="text-xs text-slate-500">{adminCards.length} sections</span>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {adminCards.map((card, index) => (
-              <motion.div
-                key={card.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0, type: "spring" }}
-                whileHover={{ y: -4, scale: 1.03 }}
-                className="h-full"
-              >
-                <Link
-                  to={card.path}
-                  className={`block bg-gradient-to-br ${card.color} rounded-xl sm:rounded-xl p-4 sm:p-6 text-white shadow-lg hover:shadow-xl transition-all duration-200 group h-full`}
-                >
-                  <div className="flex items-start justify-between mb-3 sm:mb-4">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center">
-                      {card.icon}
-                    </div>
-                    <span className="text-xs font-bold bg-white/30 px-2 py-1 rounded-full">
-                      {card.stats}
-                    </span>
-                  </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {adminCards.map((card, index) => {
+                const hoverClasses = getHoverColorClasses(card.hoverColor);
+                
+                return (
+                  <motion.div
+                    key={card.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ y: -2 }}
+                    className="group"
+                  >
+                    <Link to={card.path}>
+                      <div className={`bg-slate-800 border border-slate-700 rounded-xl overflow-hidden p-4 h-full flex flex-col cursor-pointer transition-all duration-300 ${hoverClasses.bg} ${hoverClasses.border}`}>
+                        <div className="relative">
+                          {/* Header */}
+                          <div className="flex items-start justify-between mb-3">
+                            <div className={`w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center transition-all duration-300 ${hoverClasses.icon}`}>
+                              {card.icon}
+                            </div>
+                            <div className="text-xl">
+                              {card.emoji}
+                            </div>
+                          </div>
 
-                  <h3 className="text-lg sm:text-xl font-bold mb-1.5 sm:mb-2">{card.title}</h3>
-                  <p className="text-white/80 text-xs sm:text-sm mb-3 sm:mb-4">{card.description}</p>
+                          {/* Content */}
+                          <h3 className="text-base font-bold text-white mb-1 line-clamp-1">
+                            {card.title}
+                          </h3>
+                          <p className="text-xs text-slate-400 mb-3 line-clamp-2">
+                            {card.description}
+                          </p>
 
-                  <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold group-hover:translate-x-1 transition-transform">
-                    <span>Access</span>
-                    <FaArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                          {/* CTA */}
+                          <div className={`flex items-center gap-1.5 text-xs font-semibold text-red-400 transition-colors duration-300 ${hoverClasses.text}`}>
+                            <span>Access now</span>
+                            <motion.div
+                              animate={{ x: [0, 2, 0] }}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                            >
+                              <FaArrowRight className="w-3 h-3" />
+                            </motion.div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Security Notice */}
+          <div className="bg-red-900/10 border border-red-700/20 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FaCog className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-bold text-white text-sm mb-1">Security Notice</h4>
+                <p className="text-xs text-slate-300">
+                  You are logged in as Super Administrator. All actions are logged in the system audit trail.
+                  Exercise caution when modifying system settings.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl"
-        >
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-yellow-500 text-white rounded-full flex items-center justify-center flex-shrink-0">
-              <FaShieldAlt className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-bold text-yellow-800 text-sm mb-1">Security Notice</h4>
-              <p className="text-yellow-700 text-xs sm:text-sm">
-                You have full system access. All actions are logged and monitored.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+      </main>
     </div>
   );
 };

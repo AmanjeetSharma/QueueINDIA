@@ -26,9 +26,12 @@ const log = (msg) => {
     console.log(`[${new Date().toLocaleTimeString()}] ${msg}`);
 };
 
+let pingCounter = 0;
+
 // Ping all services safely
 const pingAllServices = async () => {
-    log("🔄 Pinging QueueINDIA services...");
+    pingCounter++;
+    log(`🔄 Pinging QueueINDIA services... | times: ${pingCounter}`);
 
     for (const service of SERVICES) {
         try {

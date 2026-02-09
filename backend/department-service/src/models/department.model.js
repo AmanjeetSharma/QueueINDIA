@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import serviceSchema from "./service.model.js";
+import serviceSchema from "./Service.model.js";
 import slugify from "slugify";
 
 

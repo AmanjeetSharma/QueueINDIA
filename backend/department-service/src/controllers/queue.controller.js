@@ -3,7 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ServiceToken } from "../models/ServiceToken.model.js";
-import { Department } from "../models/department.model.js";
+import { Department } from "../models/Department.model.js";
 import { Booking } from "../models/Booking.model.js";
 
 

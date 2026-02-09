@@ -1,10 +1,10 @@
 import fs from "fs";
-import { Booking } from "../models/Booking.model.js";
+import { Booking } from "../models/booking.model.js";
 import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinaryFile.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { Department } from "../models/Department.model.js";
+import { Department } from "../models/department.model.js";
 
 // utils/cloudinaryHelpers.js
 /**

@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { Department } from "../models/Department.model.js";
-import { Booking } from "../models/Booking.model.js";
+import { Department } from "../models/department.model.js";
+import { Booking } from "../models/booking.model.js";
 import dayjs from "dayjs";
 import {
     convertToMinutes,

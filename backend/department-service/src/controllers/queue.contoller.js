@@ -69,15 +69,7 @@ const getLiveQueue = asyncHandler(async (req, res) => {
         .select("tokenNumber priorityType priorityRank status")
         .lean();
 
-    console.log("Live Queue fetched for service:", {
-        departmentId,
-        serviceId,
-        date,
-        serving: serving || null,
-        waiting,
-        totalWaiting: waiting.length
-    });
-
+    console.log(`Live Queue fetched | date: ${date} | totalWaiting: ${waiting.length}`);
     return res.status(200).json(
         new ApiResponse(
             200,

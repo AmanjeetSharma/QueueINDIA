@@ -98,15 +98,15 @@ export const QueueProvider = ({ children }) => {
                 throw new Error('Department ID is required');
             }
 
-            const response = await axiosInstance.post('/queue/tokens/recall-skipped', {
+            const response = await axiosInstance.post('/departments/queue/tokens/recall-skipped', {
                 serviceId,
                 date,
                 departmentId: deptId
             });
 
             toast.success(response.data.message, {
-                duration: 3000,
-                position: 'bottom-left'
+                duration: 6000,
+                position: 'top-left'
             });
 
             // Refresh queue data after recall
@@ -150,7 +150,7 @@ export const QueueProvider = ({ children }) => {
 
             toast.success(response.data.message, {
                 duration: 3000,
-                position: 'bottom-left'
+                position: 'top-left'
             });
 
             // Refresh live queue after serving
@@ -164,7 +164,7 @@ export const QueueProvider = ({ children }) => {
             setError(errorMsg);
             toast.error(errorMsg, {
                 duration: 4000,
-                position: 'bottom-left'
+                position: 'top-center'
             });
             throw err;
         } finally {
@@ -264,7 +264,7 @@ export const QueueProvider = ({ children }) => {
 
             toast.success(response.data.message, {
                 duration: 3000,
-                position: 'bottom-left'
+                position: 'top-left'
             });
 
             // Refresh live queue if serviceId and date provided
@@ -278,7 +278,7 @@ export const QueueProvider = ({ children }) => {
             setError(errorMsg);
             toast.error(errorMsg, {
                 duration: 4000,
-                position: 'bottom-left'
+                position: 'top-center'
             });
             throw err;
         } finally {

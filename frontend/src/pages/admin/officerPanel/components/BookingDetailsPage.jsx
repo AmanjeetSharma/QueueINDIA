@@ -1,6 +1,6 @@
-// pages/admin/officerPanel/BookingDetailsPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useDepartmentOfficer } from '../../../../context/DepartmentOfficerContext';
 import { useAuth } from '../../../../context/AuthContext';
 import {
@@ -17,7 +17,8 @@ import {
     FiInfo,
     FiPrinter,
     FiDownload,
-    FiCopy
+    FiCopy,
+    FiX
 } from 'react-icons/fi';
 import {
     FaRegFilePdf,
@@ -54,15 +55,13 @@ const BookingDetailsPage = () => {
     const [showRejectConfirm, setShowRejectConfirm] = useState(false);
     const [showDocumentReject, setShowDocumentReject] = useState(null);
     const [copiedId, setCopiedId] = useState(false);
+    const [expandedDoc, setExpandedDoc] = useState(null);
 
     useEffect(() => {
         if (bookingId) {
             getBookingDetailsForOfficer(bookingId);
         }
-
-        return () => {
-            clearCurrentBooking();
-        };
+        return () => clearCurrentBooking();
     }, [bookingId, getBookingDetailsForOfficer, clearCurrentBooking]);
 
     const handleBack = () => {
@@ -82,7 +81,6 @@ const BookingDetailsPage = () => {
             toast.error('Please provide a rejection reason');
             return;
         }
-
         try {
             await rejectDocument(bookingId, docId, reason);
             setShowDocumentReject(null);
@@ -114,14 +112,12 @@ const BookingDetailsPage = () => {
             toast.error('Please provide a rejection reason');
             return;
         }
-
         try {
             await rejectBooking(bookingId, rejectionReason);
             setShowRejectConfirm(false);
             setTimeout(() => navigate('/officer-panel/bookings'), 1000);
         } catch (err) {
             setShowRejectConfirm(false);
-            // Error handled in context
         }
     };
 
@@ -129,10 +125,7 @@ const BookingDetailsPage = () => {
         if (currentBooking?._id) {
             navigator.clipboard.writeText(currentBooking._id);
             setCopiedId(true);
-            toast.success('Booking ID copied to clipboard', {
-                duration: 1500,
-                position: 'bottom-center'
-            });
+            toast.success('Booking ID copied', { duration: 1500, position: 'bottom-center' });
             setTimeout(() => setCopiedId(false), 2000);
         }
     };
@@ -146,23 +139,11 @@ const BookingDetailsPage = () => {
             link.click();
             document.body.removeChild(link);
         } else {
-            toast.error('Document URL not available for download', {
-                duration: 2000,
-                position: 'bottom-center'
-            });
+            toast.error('Document URL not available', { duration: 2000, position: 'bottom-center' });
         }
     };
 
     const getStatusBadge = (status) => {
-        if (!status) {
-            return (
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    <FiAlertCircle className="w-3 h-3" />
-                    Loading...
-                </span>
-            );
-        }
-
         const statusConfig = {
             'PENDING': { color: 'bg-yellow-100 text-yellow-800', icon: <FiAlertCircle className="w-3 h-3" /> },
             'DOCS_SUBMITTED': { color: 'bg-blue-100 text-blue-800', icon: <FiFileText className="w-3 h-3" /> },
@@ -172,51 +153,37 @@ const BookingDetailsPage = () => {
             'CANCELLED': { color: 'bg-gray-100 text-gray-800', icon: <FiXCircle className="w-3 h-3" /> },
             'COMPLETED': { color: 'bg-indigo-100 text-indigo-800', icon: <FiCheck className="w-3 h-3" /> },
         };
-
         const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', icon: <FiAlertCircle className="w-3 h-3" /> };
-
         return (
             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
                 {config.icon}
-                <span className="hidden sm:inline">{status.replace('_', ' ')}</span>
+                <span>{status?.replace('_', ' ')}</span>
             </span>
         );
     };
 
     const getPriorityBadge = (priority) => {
-        if (!priority) {
-            return (
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    N/A
-                </span>
-            );
-        }
-
         const priorityConfig = {
-            'NORMAL': { color: 'bg-gray-100 text-gray-800', icon: null },
-            'PRIORITY': { color: 'bg-yellow-100 text-yellow-800', icon: <MdPriorityHigh className="w-3 h-3" /> },
-            'EMERGENCY': { color: 'bg-red-100 text-red-800', icon: <MdPriorityHigh className="w-3 h-3" /> },
-            'SENIOR_CITIZEN': { color: 'bg-orange-100 text-orange-800', icon: <FiUser className="w-3 h-3" /> }
+            'NORMAL': { color: 'bg-gray-100 text-gray-800' },
+            'PRIORITY': { color: 'bg-yellow-100 text-yellow-800' },
+            'EMERGENCY': { color: 'bg-red-100 text-red-800' },
+            'SENIOR_CITIZEN': { color: 'bg-orange-100 text-orange-800' }
         };
-
-        const config = priorityConfig[priority] || { color: 'bg-gray-100 text-gray-800', icon: null };
-
+        const config = priorityConfig[priority] || { color: 'bg-gray-100 text-gray-800' };
         return (
             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-                {config.icon}
-                <span className="hidden sm:inline">{priority.replace('_', ' ')}</span>
+                {priority?.replace('_', ' ')}
             </span>
         );
     };
 
     const getDocumentIcon = (fileName) => {
-        if (!fileName) return <FaRegFileAlt className="w-5 h-5 text-gray-500" />;
-
+        if (!fileName) return <FaRegFileAlt className="w-4 h-4 text-gray-500" />;
         const ext = fileName.split('.').pop()?.toLowerCase();
-        if (ext === 'pdf') return <FaRegFilePdf className="w-5 h-5 text-red-500" />;
-        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return <FaRegFileImage className="w-5 h-5 text-blue-500" />;
-        if (['doc', 'docx'].includes(ext)) return <FaRegFileWord className="w-5 h-5 text-blue-600" />;
-        return <FaRegFileAlt className="w-5 h-5 text-gray-500" />;
+        if (ext === 'pdf') return <FaRegFilePdf className="w-4 h-4 text-red-500" />;
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return <FaRegFileImage className="w-4 h-4 text-blue-500" />;
+        if (['doc', 'docx'].includes(ext)) return <FaRegFileWord className="w-4 h-4 text-blue-600" />;
+        return <FaRegFileAlt className="w-4 h-4 text-gray-500" />;
     };
 
     const getDocumentStatusBadge = (status) => {
@@ -225,9 +192,7 @@ const BookingDetailsPage = () => {
             'REJECTED': { color: 'bg-red-100 text-red-800', icon: <FaTimesCircle className="w-3 h-3" /> },
             'PENDING': { color: 'bg-yellow-100 text-yellow-800', icon: <FiAlertCircle className="w-3 h-3" /> }
         };
-
         const { color, icon } = config[status] || { color: 'bg-gray-100 text-gray-800', icon: null };
-
         return (
             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${color}`}>
                 {icon}
@@ -239,15 +204,7 @@ const BookingDetailsPage = () => {
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
-    };
-
-    const formatTime = (timeSlot) => {
-        return timeSlot || '--:--';
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     const canApproveBooking = currentBooking?.submittedDocs?.every(doc => doc.status === 'APPROVED');
@@ -256,527 +213,567 @@ const BookingDetailsPage = () => {
 
     if (loading && !currentBooking) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                    <p className="mt-3 text-sm text-gray-600">Loading booking details...</p>
-                </div>
+            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+                <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="text-center"
+                >
+                    <div className="w-12 h-12 rounded-full border-4 border-blue-600 border-t-cyan-500 animate-spin mx-auto mb-4"></div>
+                    <p className="text-sm text-gray-400">Loading booking details...</p>
+                </motion.div>
             </div>
         );
     }
 
     if (error && !currentBooking) {
         return (
-            <div className="min-h-screen bg-gray-50">
-                <div className="max-w-7xl mx-auto px-4 py-6">
-                    <button
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-gray-900">
+                <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4">
+                    <motion.button
+                        whileHover={{ x: -4 }}
                         onClick={handleBack}
-                        className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm mb-4"
+                        className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm mb-4"
                     >
-                        <FiArrowLeft className="mr-1" />
-                        Back to Bookings
-                    </button>
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-                        <FiXCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
-                        <h3 className="text-base font-medium text-gray-900 mb-2">Error Loading Booking</h3>
-                        <p className="text-sm text-gray-600 mb-4">{error}</p>
-                        <button
+                        <FiArrowLeft className="mr-2" />
+                        Back
+                    </motion.button>
+                    <motion.div
+                        initial={{ scale: 0.95 }}
+                        animate={{ scale: 1 }}
+                        className="bg-red-900/20 border border-red-700 rounded-lg p-4 text-center"
+                    >
+                        <FiXCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                        <h3 className="text-sm font-medium text-gray-100 mb-1">Error Loading Booking</h3>
+                        <p className="text-xs text-gray-400 mb-3">{error}</p>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={handleBack}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded font-medium"
                         >
-                            Back to Bookings
-                        </button>
-                    </div>
+                            Go Back
+                        </motion.button>
+                    </motion.div>
                 </div>
-            </div>
+            </motion.div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="min-h-screen bg-gray-900 text-white pb-6"
+        >
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md">
-                <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3">
+            <motion.header
+                initial={{ y: -10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="bg-gray-800 border-b border-gray-700 sticky top-0 z-30"
+            >
+                <div className="px-3 sm:px-4 py-3">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            <button
-                                onClick={handleBack}
-                                className="inline-flex items-center text-white/80 hover:text-white text-sm"
-                            >
-                                <FiArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
-                                <span className="hidden sm:inline">Back to Bookings</span>
-                            </button>
-                            <div className="h-4 w-px bg-white/30 hidden sm:block"></div>
-                            <div>
-                                <h1 className="text-base sm:text-lg font-semibold">Booking Details</h1>
-                                <div className="flex items-center gap-1 mt-0.5">
-                                    <p className="text-xs text-blue-100">
-                                        ID: {currentBooking?._id || bookingId}
-                                    </p>
-                                    <button
-                                        onClick={copyBookingId}
-                                        className="text-blue-200 hover:text-white p-0.5"
-                                        title="Copy Booking ID"
-                                    >
-                                        <FiCopy className="w-3 h-3" />
-                                    </button>
-                                </div>
+                        <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleBack}
+                            className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors"
+                        >
+                            <FiArrowLeft className="w-5 h-5" />
+                        </motion.button>
+
+                        <div className="flex-1 min-w-0 px-3">
+                            <h1 className="text-sm sm:text-base font-bold truncate">Booking Details</h1>
+                            <div className="flex items-center gap-1 mt-0.5">
+                                <p className="text-xs text-gray-400 truncate">{currentBooking?._id?.slice(0, 12)}...</p>
+                                <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={copyBookingId}
+                                    className="text-gray-500 hover:text-gray-300 p-0.5"
+                                >
+                                    <FiCopy className="w-3 h-3" />
+                                </motion.button>
                             </div>
                         </div>
+
+                        <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => window.print()}
+                            className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors"
+                        >
+                            <FiPrinter className="w-5 h-5" />
+                        </motion.button>
                     </div>
                 </div>
-            </div>
+            </motion.header>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-5 lg:py-6">
-                {/* Quick Stats */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-5">
-                    <div className="bg-white rounded-lg shadow-sm p-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-                                <FiUser className="w-4 h-4 text-blue-600" />
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-xs text-gray-600 truncate">User</p>
-                                <p className="text-sm font-semibold truncate">{currentBooking?.userName || 'N/A'}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-lg shadow-sm p-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
-                                <FiCalendar className="w-4 h-4 text-green-600" />
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-xs text-gray-600">Date</p>
-                                <p className="text-sm font-semibold">{formatDate(currentBooking?.date)}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-lg shadow-sm p-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-purple-100 rounded flex items-center justify-center">
-                                <FiClock className="w-4 h-4 text-purple-600" />
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-xs text-gray-600">Time</p>
-                                <p className="text-sm font-semibold">{formatTime(currentBooking?.slotTime)}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-lg shadow-sm p-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-orange-100 rounded flex items-center justify-center">
-                                <FiFileText className="w-4 h-4 text-orange-600" />
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-xs text-gray-600 truncate">Service</p>
-                                <p className="text-sm font-semibold truncate">{currentBooking?.service?.name || 'N/A'}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
-                    {/* Left Column - Documents & Actions */}
-                    <div className="lg:col-span-2 space-y-4 sm:space-y-5">
-                        {/* Tabs */}
-                        <div className="bg-white rounded-lg shadow-sm">
-                            <div className="border-b border-gray-200">
-                                <nav className="flex">
-                                    <button
-                                        onClick={() => setActiveTab('documents')}
-                                        className={`flex-1 min-w-0 py-2.5 px-3 text-center font-medium text-sm whitespace-nowrap ${activeTab === 'documents'
-                                            ? 'border-b-2 border-blue-500 text-blue-600'
-                                            : 'text-gray-500 hover:text-gray-700'
-                                            }`}
-                                    >
-                                        <div className="flex items-center justify-center gap-1.5">
-                                            <FiFileText className="w-4 h-4" />
-                                            <span>Documents</span>
+            <div className="px-3 sm:px-4 py-3 sm:py-4">
+                <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
+                    {/* Quick Info Compact */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3"
+                    >
+                        {[
+                            { icon: FiUser, label: 'User', value: currentBooking?.userName || 'N/A' },
+                            { icon: FiCalendar, label: 'Date', value: formatDate(currentBooking?.date) },
+                            { icon: FiClock, label: 'Time', value: currentBooking?.slotTime || '--:--' },
+                            { icon: FiFileText, label: 'Service', value: currentBooking?.service?.name || 'N/A' }
+                        ].map((item, idx) => {
+                            const Icon = item.icon;
+                            return (
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.1 + idx * 0.05 }}
+                                    className="bg-gray-800 border border-gray-700 rounded-lg p-2 sm:p-3"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Icon className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                                        <div className="min-w-0">
+                                            <p className="text-xs text-gray-400">{item.label}</p>
+                                            <p className="text-xs sm:text-sm font-medium truncate">{item.value}</p>
                                         </div>
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('details')}
-                                        className={`flex-1 min-w-0 py-2.5 px-3 text-center font-medium text-sm whitespace-nowrap ${activeTab === 'details'
-                                            ? 'border-b-2 border-blue-500 text-blue-600'
-                                            : 'text-gray-500 hover:text-gray-700'
-                                            }`}
-                                    >
-                                        <div className="flex items-center justify-center gap-1.5">
-                                            <FiInfo className="w-4 h-4" />
-                                            <span>Details</span>
-                                        </div>
-                                    </button>
-                                </nav>
-                            </div>
-
-                            {/* Documents Tab */}
-                            {activeTab === 'documents' && (
-                                <div className="p-4 sm:p-5">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h3 className="text-base sm:text-lg font-semibold text-gray-900">Submitted Documents</h3>
-                                        <p className="text-xs text-gray-500">
-                                            {currentBooking?.submittedDocs?.length || 0} doc(s)
-                                        </p>
                                     </div>
+                                </motion.div>
+                            );
+                        })}
+                    </motion.div>
 
-                                    {!hasDocuments ? (
-                                        <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                                            <FiFileText className="mx-auto h-10 w-10 text-gray-400" />
-                                            <h3 className="mt-3 text-sm font-medium text-gray-900">No documents submitted</h3>
-                                            <p className="mt-1 text-xs text-gray-600">User hasn't uploaded any documents yet</p>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-3">
-                                            {currentBooking?.submittedDocs?.map((doc) => (
-                                                <div key={doc._id} className="border border-gray-200 rounded-lg p-3 hover:border-blue-300 transition-colors">
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex items-start gap-2 flex-1 min-w-0">
-                                                            {getDocumentIcon(doc.name)}
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="flex items-center gap-1.5 mb-1">
-                                                                    <h4 className="text-sm font-medium text-gray-900 truncate">{doc.name}</h4>
-                                                                    {getDocumentStatusBadge(doc.status)}
+                    {/* Main Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+                        {/* Left - Documents & Actions */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="lg:col-span-2 space-y-3 sm:space-y-4"
+                        >
+                            {/* Tabs */}
+                            <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+                                <div className="flex border-b border-gray-700">
+                                    {[
+                                        { id: 'documents', label: 'Documents', icon: FiFileText },
+                                        { id: 'details', label: 'Details', icon: FiInfo }
+                                    ].map((tab) => {
+                                        const Icon = tab.icon;
+                                        return (
+                                            <motion.button
+                                                key={tab.id}
+                                                onClick={() => setActiveTab(tab.id)}
+                                                className={`flex-1 py-2.5 px-3 text-xs sm:text-sm font-medium flex items-center justify-center gap-1.5 transition-colors ${activeTab === tab.id
+                                                    ? 'border-b-2 border-blue-500 text-blue-400 bg-gray-800/50'
+                                                    : 'text-gray-400 hover:text-gray-300'
+                                                    }`}
+                                            >
+                                                <Icon className="w-4 h-4" />
+                                                <span>{tab.label}</span>
+                                            </motion.button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Tab Content */}
+                                <AnimatePresence mode="wait">
+                                    {activeTab === 'documents' && (
+                                        <motion.div
+                                            key="documents"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="p-3 sm:p-4"
+                                        >
+                                            <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                                                <span>Submitted Documents</span>
+                                                <span className="text-xs bg-gray-700 px-2 py-0.5 rounded-full">{currentBooking?.submittedDocs?.length || 0}</span>
+                                            </h3>
+
+                                            {!hasDocuments ? (
+                                                <motion.div
+                                                    initial={{ scale: 0.95 }}
+                                                    animate={{ scale: 1 }}
+                                                    className="text-center py-6 border-2 border-dashed border-gray-700 rounded-lg"
+                                                >
+                                                    <FiFileText className="mx-auto h-8 w-8 text-gray-600 mb-2" />
+                                                    <p className="text-xs text-gray-400">No documents submitted</p>
+                                                </motion.div>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    {currentBooking?.submittedDocs?.map((doc, idx) => (
+                                                        <motion.div
+                                                            key={doc._id}
+                                                            initial={{ opacity: 0, y: 10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: idx * 0.05 }}
+                                                            className="border border-gray-700 rounded-lg p-2.5 sm:p-3 hover:border-gray-600 transition-colors"
+                                                        >
+                                                            {/* Document Header */}
+                                                            <div className="flex items-start gap-2 cursor-pointer" onClick={() => setExpandedDoc(expandedDoc === doc._id ? null : doc._id)}>
+                                                                {getDocumentIcon(doc.name)}
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                                                                        <p className="text-xs sm:text-sm font-medium truncate">{doc.name}</p>
+                                                                        {getDocumentStatusBadge(doc.status)}
+                                                                    </div>
                                                                 </div>
-                                                                {doc.rejectionReason && (
-                                                                    <p className="text-xs text-red-600 bg-red-50 p-1.5 rounded mb-2">
-                                                                        <span className="font-medium">Reason: </span>
-                                                                        {doc.rejectionReason}
-                                                                    </p>
-                                                                )}
-                                                                {/* Download Button */}
-                                                                {hasValidDocumentUrl(doc) ? (
-                                                                    <button
-                                                                        onClick={() => downloadDocument(doc)}
-                                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white bg-blue-600 border border-blue-600 rounded hover:bg-blue-700 transition-colors mt-2"
-                                                                    >
-                                                                        <FiDownload className="w-3 h-3" />
-                                                                        Download Document
-                                                                    </button>
-                                                                ) : (
-                                                                    <p className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2">
-                                                                        <FiAlertCircle className="inline w-3 h-3 mr-1" />
-                                                                        Document URL not available
-                                                                    </p>
-                                                                )}
                                                             </div>
-                                                        </div>
-                                                    </div>
 
-                                                    {/* Document Approval/Rejection - Show for pending documents with URL */}
-                                                    {doc.status === 'PENDING'  && (
-                                                        <div className="mt-3 pt-3 border-t border-gray-100">
-                                                            <p className="text-xs text-gray-600 mb-2">Review document before taking action:</p>
-                                                            {showDocumentReject === doc._id ? (
-                                                                <div className="space-y-2">
-                                                                    <div className="flex items-center justify-between">
-                                                                        <span className="text-xs font-medium text-gray-700">Rejection Reason</span>
-                                                                        <button
-                                                                            onClick={() => setShowDocumentReject(null)}
-                                                                            className="text-xs text-gray-500 hover:text-gray-700"
-                                                                        >
-                                                                            Cancel
-                                                                        </button>
-                                                                    </div>
-                                                                    <div className="flex gap-2">
-                                                                        <input
-                                                                            type="text"
-                                                                            placeholder="Enter reason..."
-                                                                            id={`reject-reason-${doc._id}`}
-                                                                            className="flex-1 block w-full px-2.5 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-red-500 focus:border-red-500"
-                                                                        />
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                const reason = document.getElementById(`reject-reason-${doc._id}`)?.value || '';
-                                                                                handleRejectDocument(doc._id, reason);
-                                                                            }}
-                                                                            className="inline-flex justify-center items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none"
-                                                                        >
-                                                                            <FiXCircle className="w-3 h-3 mr-1" />
-                                                                            Submit
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="flex gap-2">
-                                                                    <button
-                                                                        onClick={() => handleApproveDocument(doc._id)}
-                                                                        disabled={loading}
-                                                                        className="flex-1 inline-flex justify-center items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none disabled:opacity-50"
+                                                            {/* Expanded Details */}
+                                                            <AnimatePresence>
+                                                                {expandedDoc === doc._id && (
+                                                                    <motion.div
+                                                                        initial={{ opacity: 0, height: 0 }}
+                                                                        animate={{ opacity: 1, height: 'auto' }}
+                                                                        exit={{ opacity: 0, height: 0 }}
+                                                                        className="mt-3 pt-3 border-t border-gray-700 space-y-2"
                                                                     >
-                                                                        <FiCheck className="w-3 h-3 mr-1" />
-                                                                        Approve Document
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => setShowDocumentReject(doc._id)}
-                                                                        className="flex-1 inline-flex justify-center items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none"
-                                                                    >
-                                                                        <FiXCircle className="w-3 h-3 mr-1" />
-                                                                        Reject Document
-                                                                    </button>
-                                                                </div>
-                                                            )}
+                                                                        {/* Rejection Reason */}
+                                                                        {doc.rejectionReason && (
+                                                                            <motion.div
+                                                                                initial={{ opacity: 0 }}
+                                                                                animate={{ opacity: 1 }}
+                                                                                className="text-xs text-red-400 bg-red-900/20 border border-red-700/30 p-2 rounded"
+                                                                            >
+                                                                                <span className="font-bold">Rejection: </span>{doc.rejectionReason}
+                                                                            </motion.div>
+                                                                        )}
+
+                                                                        {/* Download Button */}
+                                                                        {hasValidDocumentUrl(doc) && (
+                                                                            <motion.button
+                                                                                whileHover={{ scale: 1.02 }}
+                                                                                whileTap={{ scale: 0.98 }}
+                                                                                onClick={() => downloadDocument(doc)}
+                                                                                className="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+                                                                            >
+                                                                                <FiDownload className="w-3 h-3" />
+                                                                                Download
+                                                                            </motion.button>
+                                                                        )}
+
+                                                                        {/* Actions for Pending Docs */}
+                                                                        {doc.status === 'PENDING' && (
+                                                                            <motion.div
+                                                                                initial={{ opacity: 0 }}
+                                                                                animate={{ opacity: 1 }}
+                                                                                className="space-y-2 pt-2 border-t border-gray-700"
+                                                                            >
+                                                                                {showDocumentReject === doc._id ? (
+                                                                                    <div className="space-y-2">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            placeholder="Rejection reason..."
+                                                                                            id={`reject-reason-${doc._id}`}
+                                                                                            className="w-full px-2 py-1.5 text-xs bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-red-500 outline-none"
+                                                                                        />
+                                                                                        <div className="flex gap-2">
+                                                                                            <motion.button
+                                                                                                whileHover={{ scale: 1.02 }}
+                                                                                                whileTap={{ scale: 0.98 }}
+                                                                                                onClick={() => {
+                                                                                                    const reason = document.getElementById(`reject-reason-${doc._id}`)?.value || '';
+                                                                                                    handleRejectDocument(doc._id, reason);
+                                                                                                }}
+                                                                                                className="flex-1 px-2 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded"
+                                                                                            >
+                                                                                                Submit
+                                                                                            </motion.button>
+                                                                                            <motion.button
+                                                                                                whileHover={{ scale: 1.02 }}
+                                                                                                whileTap={{ scale: 0.98 }}
+                                                                                                onClick={() => setShowDocumentReject(null)}
+                                                                                                className="flex-1 px-2 py-1.5 text-xs font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded"
+                                                                                            >
+                                                                                                Cancel
+                                                                                            </motion.button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="flex gap-2">
+                                                                                        <motion.button
+                                                                                            whileHover={{ scale: 1.02 }}
+                                                                                            whileTap={{ scale: 0.98 }}
+                                                                                            onClick={() => handleApproveDocument(doc._id)}
+                                                                                            className="flex-1 px-2 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded flex items-center justify-center gap-1"
+                                                                                        >
+                                                                                            <FiCheck className="w-3 h-3" />
+                                                                                            Approve
+                                                                                        </motion.button>
+                                                                                        <motion.button
+                                                                                            whileHover={{ scale: 1.02 }}
+                                                                                            whileTap={{ scale: 0.98 }}
+                                                                                            onClick={() => setShowDocumentReject(doc._id)}
+                                                                                            className="flex-1 px-2 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded flex items-center justify-center gap-1"
+                                                                                        >
+                                                                                            <FiXCircle className="w-3 h-3" />
+                                                                                            Reject
+                                                                                        </motion.button>
+                                                                                    </div>
+                                                                                )}
+                                                                            </motion.div>
+                                                                        )}
+                                                                    </motion.div>
+                                                                )}
+                                                            </AnimatePresence>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+
+                                    {activeTab === 'details' && (
+                                        <motion.div
+                                            key="details"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="p-3 sm:p-4 space-y-4"
+                                        >
+                                            {/* User Info */}
+                                            <div>
+                                                <h4 className="text-xs font-bold text-gray-300 mb-2 uppercase tracking-wide">User Information</h4>
+                                                <div className="space-y-1.5 text-xs">
+                                                    <div className="flex justify-between">
+                                                        <span className="text-gray-400">Name:</span>
+                                                        <span className="font-medium">{currentBooking?.userName}</span>
+                                                    </div>
+                                                    {currentBooking?.email && (
+                                                        <div className="flex justify-between">
+                                                            <span className="text-gray-400">Email:</span>
+                                                            <span className="font-medium truncate ml-2">{currentBooking.email}</span>
+                                                        </div>
+                                                    )}
+                                                    {currentBooking?.phone && (
+                                                        <div className="flex justify-between">
+                                                            <span className="text-gray-400">Phone:</span>
+                                                            <span className="font-medium">{currentBooking.phone}</span>
                                                         </div>
                                                     )}
                                                 </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Details Tab */}
-                            {activeTab === 'details' && (
-                                <div className="p-4 sm:p-5">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {/* User Information */}
-                                        <div>
-                                            <h4 className="text-sm font-medium text-gray-900 mb-2">User Information</h4>
-                                            <div className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-                                                        <FiUser className="w-4 h-4 text-blue-600" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-medium text-gray-900">{currentBooking?.userName}</p>
-                                                        <p className="text-xs text-gray-500">Full Name</p>
-                                                    </div>
-                                                </div>
-                                                {currentBooking?.email && (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
-                                                            <FiMail className="w-4 h-4 text-green-600" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-medium text-gray-900 truncate">{currentBooking.email}</p>
-                                                            <p className="text-xs text-gray-500">Email</p>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {currentBooking?.phone && (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-8 h-8 bg-purple-100 rounded flex items-center justify-center">
-                                                            <FiPhone className="w-4 h-4 text-purple-600" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-medium text-gray-900">{currentBooking.phone}</p>
-                                                            <p className="text-xs text-gray-500">Phone</p>
-                                                        </div>
-                                                    </div>
-                                                )}
                                             </div>
-                                        </div>
 
-                                        {/* Booking Information */}
-                                        <div>
-                                            <h4 className="text-sm font-medium text-gray-900 mb-2">Booking Information</h4>
-                                            <div className="space-y-1.5">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-xs text-gray-600">Booking ID:</span>
-                                                    <div className="flex items-center gap-1">
-                                                        <code className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">
-                                                            {currentBooking?._id}
-                                                        </code>
-                                                        <button
-                                                            onClick={copyBookingId}
-                                                            className="text-gray-500 hover:text-gray-700 p-0.5"
-                                                            title="Copy ID"
-                                                        >
-                                                            <FiCopy className="w-3 h-3" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-xs text-gray-600">Created:</span>
-                                                    <span className="text-xs">
-                                                        {currentBooking?.createdAt ? formatDate(currentBooking.createdAt) : 'N/A'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-xs text-gray-600">Service:</span>
-                                                    <span className="text-xs font-medium truncate ml-2">{currentBooking?.service?.name}</span>
-                                                </div>
-                                                {currentBooking?.tokenNumber && (
+                                            {/* Booking Info */}
+                                            <div className="border-t border-gray-700 pt-3">
+                                                <h4 className="text-xs font-bold text-gray-300 mb-2 uppercase tracking-wide">Booking Information</h4>
+                                                <div className="space-y-1.5 text-xs">
                                                     <div className="flex justify-between">
-                                                        <span className="text-xs text-gray-600">Token:</span>
-                                                        <span className="text-xs font-medium">#{currentBooking.tokenNumber}</span>
+                                                        <span className="text-gray-400">Service:</span>
+                                                        <span className="font-medium">{currentBooking?.service?.name}</span>
                                                     </div>
-                                                )}
+                                                    {currentBooking?.tokenNumber && (
+                                                        <div className="flex justify-between">
+                                                            <span className="text-gray-400">Token:</span>
+                                                            <span className="font-medium">#{currentBooking.tokenNumber}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex justify-between">
+                                                        <span className="text-gray-400">Booking Created on:</span>
+                                                        <span className="font-medium">{formatDate(currentBooking?.createdAt)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-gray-400">User's ID:</span>
+                                                        <span className="font-medium">{currentBooking?.user}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Booking Actions */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="bg-gray-800 border border-gray-700 rounded-lg p-3 sm:p-4"
+                            >
+                                <h3 className="text-sm font-bold text-white mb-3">Booking Actions</h3>
+                                <div className="space-y-2">
+                                    {/* Complete & Cancel */}
+                                    <div className="flex gap-2">
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={handleCompleteBooking}
+                                            disabled={currentBooking?.status !== 'APPROVED' || !canApproveBooking}
+                                            className="flex-1 px-2.5 py-2 text-xs font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded flex items-center justify-center gap-1"
+                                        >
+                                            <FaClipboardCheck className="w-3.5 h-3.5" />
+                                            <span className="hidden sm:inline">Complete</span>
+                                        </motion.button>
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={handleCancelBooking}
+                                            disabled={currentBooking?.status === 'COMPLETED'}
+                                            className="flex-1 px-2.5 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded flex items-center justify-center gap-1"
+                                        >
+                                            <FaBan className="w-3.5 h-3.5" />
+                                            <span className="hidden sm:inline">Cancel</span>
+                                        </motion.button>
                                     </div>
-                                </div>
-                            )}
-                        </div>
 
-                        {/* Booking Actions */}
-                        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-5">
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Booking Actions</h3>
-                            <div className="space-y-3">
-                                {/* Complete & Cancel */}
-                                <div className="flex flex-col sm:flex-row gap-2">
-                                    <button
-                                        onClick={handleCompleteBooking}
-                                        disabled={currentBooking?.status !== 'APPROVED' || !canApproveBooking}
-                                        className="flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <FaClipboardCheck className="w-4 h-4 mr-1.5" />
-                                        Complete Booking
-                                    </button>
-                                    <button
-                                        onClick={handleCancelBooking}
-                                        disabled={currentBooking?.status === 'COMPLETED'}
-                                        className="flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <FaBan className="w-4 h-4 mr-1.5" />
-                                        Cancel Booking
-                                    </button>
-                                </div>
-
-                                {/* Reject Booking */}
-                                <div>
+                                    {/* Reject Booking */}
                                     <div className="flex flex-col sm:flex-row gap-2">
-                                        <div className="flex-1">
-                                            <input
-                                                type="text"
-                                                placeholder="Enter rejection reason..."
-                                                value={rejectionReason}
-                                                onChange={(e) => setRejectionReason(e.target.value)}
-                                                className="block w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
-                                            />
-                                        </div>
-                                        <button
+                                        <input
+                                            type="text"
+                                            placeholder="Rejection reason..."
+                                            value={rejectionReason}
+                                            onChange={(e) => setRejectionReason(e.target.value)}
+                                            className="flex-1 px-2.5 py-1.5 text-xs bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-red-500 outline-none"
+                                        />
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
                                             onClick={() => setShowRejectConfirm(true)}
                                             disabled={!rejectionReason.trim()}
-                                            className="inline-flex justify-center items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="px-2.5 py-1.5 text-xs font-medium text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed rounded whitespace-nowrap flex items-center justify-center gap-1"
                                         >
-                                            <FaTimesCircle className="w-4 h-4 mr-1.5" />
-                                            Reject Entire Booking
-                                        </button>
+                                            <FaTimesCircle className="w-3 h-3" />
+                                            <span className="hidden sm:inline">Reject</span>
+                                        </motion.button>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
+                            </motion.div>
+                        </motion.div>
 
-                    {/* Right Column - Quick Actions & Info */}
-                    <div className="space-y-4 sm:space-y-5">
-                        {/* Quick Actions Card */}
-                        <div className="bg-white rounded-lg shadow-sm p-4">
-                            <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Actions</h3>
-                            <div className="space-y-2">
-                                <button
-                                    onClick={handleBack}
-                                    className="w-full inline-flex justify-center items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                                >
-                                    <FiArrowLeft className="w-4 h-4 mr-1.5" />
-                                    Back to List
-                                </button>
-                                <button
-                                    onClick={() => window.print()}
-                                    className="w-full inline-flex justify-center items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                                >
-                                    <FiPrinter className="w-4 h-4 mr-1.5" />
-                                    Print Details
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Status Timeline */}
-                        <div className="bg-white rounded-lg shadow-sm p-4">
-                            <h3 className="text-sm font-medium text-gray-900 mb-3">Status Overview</h3>
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-600">Current Status:</span>
-                                    {getStatusBadge(currentBooking?.status)}
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-600">Priority:</span>
-                                    {getPriorityBadge(currentBooking?.priorityType)}
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-600">Documents:</span>
-                                    <span className="text-xs font-medium">
-                                        {currentBooking?.submittedDocs?.filter(d => d.status === 'APPROVED').length || 0} / {currentBooking?.submittedDocs?.length || 0} approved
-                                    </span>
-                                </div>
-                                <div className="pt-2 border-t border-gray-100">
+                        {/* Right - Status & Info */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="space-y-3 sm:space-y-4"
+                        >
+                            {/* Status Card */}
+                            <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 sm:p-4">
+                                <h3 className="text-xs font-bold text-gray-300 mb-3 uppercase tracking-wide">Status Overview</h3>
+                                <div className="space-y-2 text-xs">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-gray-600">Last Updated:</span>
-                                        <span className="text-xs text-gray-500">
-                                            {currentBooking?.updatedAt ? formatDate(currentBooking.updatedAt) : 'N/A'}
+                                        <span className="text-gray-400">Status:</span>
+                                        {getStatusBadge(currentBooking?.status)}
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-400">Priority:</span>
+                                        {getPriorityBadge(currentBooking?.priorityType)}
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-400">Documents:</span>
+                                        <span className="font-medium">
+                                            {currentBooking?.submittedDocs?.filter(d => d.status === 'APPROVED').length || 0}/{currentBooking?.submittedDocs?.length || 0}
                                         </span>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Department Info */}
-                        <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4">
-                            <h3 className="text-sm font-medium text-blue-900 mb-1">Department</h3>
-                            <p className="text-xs text-blue-800 truncate">
-                                {currentBooking?.department?.name || 'Department'}
-                            </p>
-                            <p className="text-xs text-blue-700 mt-2">
-                                Officer: {user?.name?.split(' ')[0] || 'Officer'}
-                            </p>
-                            <p className="text-xs text-blue-600 mt-1">
-                                Reviewing: {currentBooking?.service?.name || 'Service'}
-                            </p>
-                        </div>
+                            {/* Quick Actions */}
+                            <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 sm:p-4">
+                                <h3 className="text-xs font-bold text-gray-300 mb-3 uppercase tracking-wide">Quick Actions</h3>
+                                <div className="space-y-2">
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={handleBack}
+                                        className="w-full px-2.5 py-1.5 text-xs font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center gap-1"
+                                    >
+                                        <FiArrowLeft className="w-3 h-3" />
+                                        Back to List
+                                    </motion.button>
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={copyBookingId}
+                                        className={`w-full px-2.5 py-1.5 text-xs font-medium rounded flex items-center justify-center gap-1 transition-colors ${copiedId ? 'bg-green-600 text-white' : 'text-gray-300 bg-gray-700 hover:bg-gray-600'
+                                            }`}
+                                    >
+                                        <FiCopy className="w-3 h-3" />
+                                        {copiedId ? 'Copied!' : 'Copy Booking ID'}
+                                    </motion.button>
+                                </div>
+                            </div>
+
+                            {/* Department Info */}
+                            <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-3 sm:p-4">
+                                <h3 className="text-xs font-bold text-blue-300 mb-2">Department</h3>
+                                <p className="text-xs text-blue-200 truncate mb-2">{currentBooking?.department?.name}</p>
+                                <p className="text-xs text-blue-300">Officer: {user?.name?.split(' ')[0]}</p>
+                            </div>
+                        </motion.div>
                     </div>
                 </div>
             </div>
 
-            {/* Reject Booking Confirmation Modal */}
-            {showRejectConfirm && (
-                <div className="fixed inset-0 z-50 overflow-y-auto">
-                    <div className="flex items-center justify-center min-h-screen px-3 py-4 text-center">
-                        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowRejectConfirm(false)}></div>
-                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full">
-                            <div className="bg-white px-4 pt-5 pb-4 sm:p-5">
-                                <div className="sm:flex sm:items-start">
-                                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-red-100">
-                                        <FiAlertCircle className="h-5 w-5 text-red-600" />
+            {/* Reject Confirmation Modal */}
+            <AnimatePresence>
+                {showRejectConfirm && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center p-3 sm:p-4"
+                    >
+                        <motion.div
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 20, opacity: 0 }}
+                            className="w-full sm:max-w-sm bg-gray-800 border border-gray-700 rounded-lg overflow-hidden"
+                        >
+                            <div className="p-4 sm:p-5">
+                                <div className="flex items-start gap-3 mb-4">
+                                    <div className="w-10 h-10 bg-red-900/30 border border-red-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <FiAlertCircle className="w-5 h-5 text-red-500" />
                                     </div>
-                                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                        <h3 className="text-base leading-6 font-medium text-gray-900">
-                                            Reject Entire Booking?
-                                        </h3>
-                                        <div className="mt-2">
-                                            <p className="text-sm text-gray-500">
-                                                This will reject the entire booking and cannot be undone.
-                                            </p>
-                                            <div className="mt-2 p-2 bg-yellow-50 rounded text-xs">
-                                                <p className="font-medium text-yellow-800">Reason:</p>
-                                                <p className="text-yellow-700 mt-0.5">{rejectionReason}</p>
-                                            </div>
-                                        </div>
+                                    <div className="flex-1">
+                                        <h3 className="text-sm font-bold text-white">Reject Entire Booking?</h3>
+                                        <p className="text-xs text-gray-400 mt-1">This action cannot be undone.</p>
                                     </div>
+                                    <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => setShowRejectConfirm(false)}
+                                        className="text-gray-400 hover:text-gray-300"
+                                    >
+                                        <FiX className="w-5 h-5" />
+                                    </motion.button>
+                                </div>
+
+                                <div className="bg-gray-700/30 border border-gray-600 rounded p-2 mb-4">
+                                    <p className="text-xs text-gray-400 mb-1">Reason:</p>
+                                    <p className="text-xs text-gray-200">{rejectionReason}</p>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => setShowRejectConfirm(false)}
+                                        className="flex-1 px-3 py-2 text-xs font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded"
+                                    >
+                                        Cancel
+                                    </motion.button>
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={handleRejectBooking}
+                                        className="flex-1 px-3 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded"
+                                    >
+                                        Reject Booking
+                                    </motion.button>
                                 </div>
                             </div>
-                            <div className="bg-gray-50 px-4 py-3 sm:px-5 sm:flex sm:flex-row-reverse">
-                                <button
-                                    type="button"
-                                    onClick={handleRejectBooking}
-                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto"
-                                >
-                                    Yes, Reject Entire Booking
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowRejectConfirm(false)}
-                                    className="mt-2 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-3 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
     );
 };
 

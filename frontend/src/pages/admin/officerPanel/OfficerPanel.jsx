@@ -1,6 +1,5 @@
-// pages/admin/officerPanel/OfficerPanel.jsx
-import React, { useState } from 'react';
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import {
@@ -10,15 +9,21 @@ import {
     FaUsers,
     FaArrowRight,
     FaBuilding,
-    FaSignOutAlt,
     FaHome
 } from "react-icons/fa";
 import { FiCalendar, FiClock } from "react-icons/fi";
 
 const OfficerPanel = () => {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('bookings');
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     const officerCards = [
         {
@@ -26,47 +31,42 @@ const OfficerPanel = () => {
             title: "All Bookings",
             description: "Manage department bookings and documents",
             icon: <FaClipboardList className="w-6 h-6 sm:w-7 sm:h-7" />,
-            path: "/officer-panel/bookings",  // ✅ Fixed path
-            color: "from-blue-500 to-cyan-500",
-            stats: "Manage",
-            count: null
+            path: "/officer-panel/bookings",
+            bgColor: "bg-blue-600",
+            hoverBgColor: "hover:bg-blue-700",
+            emoji: "📋"
         },
         {
             id: "queue",
             title: "Live Queue",
             description: "View real-time service queue status",
             icon: <FaUsers className="w-6 h-6 sm:w-7 sm:h-7" />,
-            path: "/officer-panel/queue-services",  // ✅ Fixed path
-            color: "from-purple-500 to-pink-500",
-            stats: "Real-time",
-            count: null
+            path: "/officer-panel/queue-services",
+            bgColor: "bg-purple-600",
+            hoverBgColor: "hover:bg-purple-700",
+            emoji: "👥"
         },
         {
             id: "analytics",
             title: "Analytics",
             description: "Department performance insights",
             icon: <FaChartBar className="w-6 h-6 sm:w-7 sm:h-7" />,
-            path: "/officer-panel/analytics",  // ✅ Fixed path
-            color: "from-green-500 to-emerald-500",
-            stats: "Insights",
-            count: null
+            path: "/officer-panel/analytics",
+            bgColor: "bg-green-600",
+            hoverBgColor: "hover:bg-green-700",
+            emoji: "📊"
         },
         {
             id: "profile",
             title: "My Profile",
             description: "Update profile and settings",
             icon: <FaUser className="w-6 h-6 sm:w-7 sm:h-7" />,
-            path: "/profile",  // ✅ Fixed path
-            color: "from-orange-500 to-red-500",
-            stats: "Personal",
-            count: null
+            path: "/profile",
+            bgColor: "bg-orange-600",
+            hoverBgColor: "hover:bg-orange-700",
+            emoji: "👤"
         }
     ];
-
-    const handleLogout = async () => {
-        await logout();
-        navigate('/login');
-    };
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -75,26 +75,52 @@ const OfficerPanel = () => {
         return "Good Evening";
     };
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.05,
+                delayChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 15 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header - Gradient Theme */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md">
-                <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="flex-1">
+        <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="min-h-screen bg-gray-900 text-white"
+        >
+            {/* Header */}
+            <motion.header
+                variants={itemVariants}
+                className="bg-gray-800 border-b border-gray-700 sticky top-0 z-40"
+            >
+                <div className="px-6 md:px-8 py-5">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex items-center justify-between">
+                            {/* Left Section */}
                             <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="flex items-center gap-3 mb-2"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.1 }}
+                                className="flex items-center gap-4"
                             >
-                                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                                    <FaBuilding className="w-5 h-5" />
+                                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center shadow-md">
+                                    <FaBuilding className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-xl sm:text-2xl font-bold">
-                                        DEPARTMENT OFFICER PORTAL
+                                    <h1 className="text-2xl md:text-3xl font-bold text-white">
+                                        Officer Portal
                                     </h1>
-                                    <p className="text-sm text-blue-100 mt-1">
+                                    <p className="text-xs md:text-sm text-gray-400 mt-1">
                                         {user?.department?.name || 'Department Management'}
                                     </p>
                                 </div>
@@ -102,140 +128,147 @@ const OfficerPanel = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </motion.header>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-                {/* Welcome Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="mb-6 sm:mb-8 bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200"
-                >
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                        <div className="flex-1">
-                            <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
-                                {getGreeting()} 👋 Officer {user?.name?.split(' ')[0] || ''}!
-                            </h2>
-                            <p className="text-sm text-gray-600">
-                                Manage department bookings, review documents, and track service queue.
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <FiCalendar className="w-4 h-4" />
-                                <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
-                            </div>
-                            <div className="h-6 w-px bg-gray-300"></div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <FiClock className="w-4 h-4" />
-                                <span>{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Quick Access Cards */}
-                <div className="mb-6 sm:mb-8">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Quick Access</h2>
-                    <p className="text-sm text-gray-600 mb-4 sm:mb-6">Select an area to manage</p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                        {officerCards.map((card, index) => (
+            <div className="px-6 md:px-8 py-8 bg-gray-900">
+                <div className="max-w-7xl mx-auto space-y-8">
+                    {/* Welcome Section */}
+                    <motion.div
+                        variants={itemVariants}
+                        className="bg-gray-800 border border-gray-700 rounded-xl shadow-sm p-4 sm:p-6"
+                    >
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                             <motion.div
-                                key={card.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                whileHover={{ y: -4, scale: 1.02 }}
-                                className="h-full"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.15 }}
+                                className="flex-1 min-w-0"
                             >
-                                <Link
-                                    to={card.path}
-                                    onClick={() => setActiveTab(card.id)}
-                                    className={`block bg-gradient-to-br ${card.color} rounded-xl p-4 sm:p-6 text-white shadow-lg hover:shadow-xl transition-all duration-200 group h-full`}
-                                >
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                                            {card.icon}
-                                        </div>
-                                        {card.count !== null && (
-                                            <span className="text-xs font-bold bg-white/30 px-2 py-1 rounded-full">
-                                                {card.count}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <h3 className="text-lg sm:text-xl font-bold mb-2">{card.title}</h3>
-                                    <p className="text-white/80 text-sm mb-4">{card.description}</p>
-
-                                    <div className="flex items-center gap-1.5 text-sm font-semibold group-hover:translate-x-1 transition-transform">
-                                        <span>Access Now</span>
-                                        <FaArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    </div>
-                                </Link>
+                                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
+                                    {getGreeting()} 👋
+                                </h2>
+                                <p className="text-sm sm:text-base text-gray-300 mb-1">
+                                    Welcome back, <span className="font-semibold text-blue-400">{user?.name?.split(' ')[0] || 'Officer'}</span>
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                    Manage bookings, review documents, track service queue
+                                </p>
                             </motion.div>
-                        ))}
-                    </div>
+
+                            {/* Time Display - Compact with seconds */}
+                            <motion.div
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.15 }}
+                                className="flex-shrink-0"
+                            >
+                                <div className="bg-gray-700 border border-gray-600 rounded-lg p-3">
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                        <FiCalendar className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                                        <span className="font-medium text-xs sm:text-sm text-gray-300 truncate">
+                                            {new Date().toLocaleDateString('en-US', { 
+                                                month: 'short', 
+                                                day: 'numeric', 
+                                                year: 'numeric' 
+                                            })}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <FiClock className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                                        <span className="font-bold text-sm sm:text-base text-white font-mono">
+                                            {currentTime.toLocaleTimeString('en-US', { 
+                                                hour: '2-digit', 
+                                                minute: '2-digit',
+                                                second: '2-digit'
+                                            })}
+                                        </span>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    </motion.div>
+
+                    {/* Quick Access Section */}
+                    <motion.div variants={itemVariants}>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="mb-6"
+                        >
+                            <h2 className="text-3xl font-bold text-white mb-2">Quick Access</h2>
+                            <p className="text-gray-400">Select an area to manage your department operations</p>
+                        </motion.div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {officerCards.map((card, index) => (
+                                <motion.div
+                                    key={card.id}
+                                    variants={itemVariants}
+                                    transition={{ delay: 0.35 + index * 0.05 }}
+                                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                                    className="group h-full"
+                                >
+                                    <Link to={card.path} onClick={() => setActiveTab(card.id)} className="block h-full">
+                                        {/* Card */}
+                                        <div className={`bg-gray-800 border border-gray-700 ${card.hoverBgColor} rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all p-6 h-full flex flex-col cursor-pointer`}>
+                                            {/* Icon & Badge */}
+                                            <div className="flex items-start justify-between mb-6">
+                                                <div className={`w-14 h-14 ${card.bgColor} rounded-lg flex items-center justify-center shadow-md text-white group-hover:scale-110 transition-transform`}>
+                                                    {card.icon}
+                                                </div>
+
+                                                <div className="text-2xl">
+                                                    {card.emoji}
+                                                </div>
+                                            </div>
+
+                                            {/* Title & Description */}
+                                            <h3 className="text-xl font-bold text-white mb-2">
+                                                {card.title}
+                                            </h3>
+                                            <p className="text-gray-400 text-sm mb-6 leading-relaxed flex-1">
+                                                {card.description}
+                                            </p>
+
+                                            {/* CTA */}
+                                            <div className="mt-auto flex items-center gap-2 text-sm font-semibold text-blue-400">
+                                                <span>Access Now</span>
+                                                <motion.div
+                                                    animate={{ x: [0, 4, 0] }}
+                                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                                >
+                                                    <FaArrowRight className="w-4 h-4" />
+                                                </motion.div>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </motion.div>
+
+                    {/* Footer Info */}
+                    <motion.div
+                        variants={itemVariants}
+                        className="bg-gray-800 border border-gray-700 rounded-lg p-6"
+                    >
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <FaHome className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-white mb-1">Officer Responsibilities</h4>
+                                <p className="text-gray-400 text-sm">
+                                    Review documents, manage bookings, track service queue, and ensure smooth department operations. Access real-time analytics and monitor queue status efficiently.
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
                 </div>
-
-                {/* Quick Stats Banner */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.7 }}
-                    className="mt-4 sm:mt-6 bg-gradient-to-r from-blue-800 to-blue-900 text-white rounded-xl shadow-sm p-4 sm:p-6"
-                >
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex-1">
-                            <h3 className="text-base sm:text-lg font-bold mb-2">Department Overview</h3>
-                            <p className="text-sm text-blue-200">
-                                Manage your department's service queue and bookings efficiently
-                            </p>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full sm:w-auto">
-                            <div className="bg-white/10 rounded-lg p-3 text-center backdrop-blur-sm">
-                                <p className="text-xs text-white/70 mb-1">Today's Bookings</p>
-                                <p className="text-xl font-bold">--</p>
-                            </div>
-                            <div className="bg-white/10 rounded-lg p-3 text-center backdrop-blur-sm">
-                                <p className="text-xs text-white/70 mb-1">Pending Review</p>
-                                <p className="text-xl font-bold">--</p>
-                            </div>
-                            <div className="bg-white/10 rounded-lg p-3 text-center backdrop-blur-sm">
-                                <p className="text-xs text-white/70 mb-1">Live Queue</p>
-                                <p className="text-xl font-bold">--</p>
-                            </div>
-                            <div className="bg-white/10 rounded-lg p-3 text-center backdrop-blur-sm">
-                                <p className="text-xs text-white/70 mb-1">Completed Today</p>
-                                <p className="text-xl font-bold">--</p>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Footer Note */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                    className="mt-4 sm:mt-6 p-4 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-300 rounded-xl"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                            <FaHome className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-gray-800 text-sm mb-1">Department Officer Responsibilities</h4>
-                            <p className="text-gray-600 text-xs sm:text-sm">
-                                Review documents, manage bookings, track service queue, and ensure smooth department operations.
-                            </p>
-                        </div>
-                    </div>
-                </motion.div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

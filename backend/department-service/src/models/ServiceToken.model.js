@@ -57,5 +57,9 @@ serviceTokenSchema.index(
     { department: 1, date: 1, slotTime: 1, tokenNumber: 1 },
     { unique: true }
 );
+        
+const ServiceToken =
+    mongoose.models.ServiceToken ||
+    mongoose.model("ServiceToken", serviceTokenSchema);
 
-export const ServiceToken = mongoose.model("ServiceToken", serviceTokenSchema);
+export default ServiceToken;

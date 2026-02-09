@@ -1,10 +1,9 @@
 import fs from "fs";
-import { Booking } from "../models/booking.model.js";
 import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinaryFile.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { Department } from "../models/department.model.js";
+import Booking from "../models/booking.model.js";
 
 // utils/cloudinaryHelpers.js
 /**
@@ -57,7 +56,7 @@ const uploadDocument = asyncHandler(async (req, res) => {
     }
 
     // ❌ Block invalid states
-    if (!["PENDING_DOCS", "DOCS_SUBMITTED","UNDER_REVIEW"].includes(booking.status)) {
+    if (!["PENDING_DOCS", "DOCS_SUBMITTED", "UNDER_REVIEW"].includes(booking.status)) {
         throw new ApiError(
             400,
             `Cannot upload documents in ${booking.status} state`

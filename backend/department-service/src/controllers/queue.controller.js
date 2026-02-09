@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { ServiceToken } from "../models/serviceToken.model.js";
-import { Department } from "../models/department.model.js";
-import { Booking } from "../models/booking.model.js";
+import ServiceToken from "../models/serviceToken.model.js";
+import Department from "../models/department.model.js";
+import Booking from "../models/booking.model.js";
 
 
 

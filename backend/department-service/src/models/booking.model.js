@@ -202,7 +202,7 @@ bookingSchema.virtual('slotDisplay').get(function () {
 });
 
 // helps in preventing duplicate bookings by same user for same slot
-const Booking = mongoose.models.Booking || mongoose.model("Booking", bookingSchema);
+const Booking =
+    mongoose.models.Booking || mongoose.model("Booking", bookingSchema);
 
-
-export { Booking };
+export default Booking;

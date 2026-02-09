@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import serviceSchema from "./Service.model.js";
+import serviceSchema from "./service.model.js";
 import slugify from "slugify";
 
 
@@ -178,8 +178,7 @@ departmentSchema.pre("validate", async function (next) {
     next();
 });
 
-const Department = mongoose.models.Department || mongoose.model("Department", departmentSchema);
-// if the model already exists (e.g., due to hot-reloading), use it; otherwise, create a new one
-// this allows us to avoid "OverwriteModelError: Cannot overwrite `Department` model once compiled" during development
+const Department =
+  mongoose.models.Department || mongoose.model("Department", departmentSchema);
 
-export { Department };
+export default Department;

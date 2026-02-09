@@ -18,7 +18,7 @@ import {
 import { GiPartyPopper } from 'react-icons/gi';
 import Confetti from 'react-confetti';
 
-const BookingSuccess = () => {
+const BookingSuccess = ({ bookingData }) => {
   const navigate = useNavigate();
   const [showConfetti, setShowConfetti] = useState(true);
   const [windowSize, setWindowSize] = useState({
@@ -26,14 +26,15 @@ const BookingSuccess = () => {
     height: window.innerHeight
   });
 
-  // Mock user data
-  const userBooking = {
-    name: 'John Doe',
-    date: new Date(Date.now() + 86400000 * 2).toISOString(),
-    timeSlot: '10:00 AM - 11:00 AM',
-    service: 'Passport Application',
-    department: 'Passport Office',
-    location: 'Central Passport Office, City Center'
+  // Use actual booking data passed as props
+  const userBooking = bookingData || {
+    name: 'User Name',
+    date: new Date().toISOString(),
+    timeSlot: 'Time Slot',
+    service: 'Service Name',
+    department: 'Department',
+    location: 'Location',
+    bookingId: 'N/A'
   };
 
   useEffect(() => {
@@ -63,7 +64,7 @@ const BookingSuccess = () => {
   });
 
   const handleShare = () => {
-    const message = `✅ I've booked an appointment for ${userBooking.service}! \n\nCheck out this service for your needs.`;
+    const message = `✅ I've booked an appointment for ${userBooking.service}!\n📅 Date: ${formattedDate}\n⏰ Time: ${userBooking.timeSlot}\n📍 Location: ${userBooking.location}\n\nCheck out this service for your needs.`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -119,33 +120,29 @@ const BookingSuccess = () => {
           width={windowSize.width}
           height={windowSize.height}
           recycle={true}
-          numberOfPieces={70} // Fewer but bigger pieces
-          gravity={0.15} // Faster falling
-          initialVelocityY={1} // Start falling from above
+          numberOfPieces={70}
+          gravity={0.15}
+          initialVelocityY={1}
           colors={[
-            '#ef4444', // Red (moved to front - highest visibility)
-            '#0ea5e9', // Blue 
-            '#f59e0b', // Amber
-            '#10b981', // Emerald
-            '#8b5cf6', // Purple
-            '#ec4899', // Pink
-            '#059669'  // Green
+            '#ef4444',
+            '#0ea5e9',
+            '#f59e0b',
+            '#10b981',
+            '#8b5cf6',
+            '#ec4899',
+            '#059669'
           ]}
           drawShape={ctx => {
-            // Bigger shapes - size 10-15px
             const size = 3 + Math.random() * 5;
             const shapeType = Math.random();
 
             ctx.beginPath();
 
             if (shapeType < 0.5) {
-              // Small Circle
               ctx.arc(0, 0, size, 0, 2 * Math.PI);
             } else if (shapeType < 0.8) {
-              // Small Square
               ctx.rect(-size, -size, size * 2, size * 2);
             } else {
-              // Small Triangle
               ctx.moveTo(0, -size);
               ctx.lineTo(size * 0.8, size * 0.6);
               ctx.lineTo(-size * 0.8, size * 0.6);
@@ -206,7 +203,7 @@ const BookingSuccess = () => {
                 transition={{ delay: 0.3 }}
                 className="text-2xl font-bold text-slate-900 mb-1"
               >
-                Booking Done! <span className="inline-block"></span>
+                Booking Confirmed!
               </motion.h1>
               <motion.p
                 initial={{ y: 10, opacity: 0 }}
@@ -230,6 +227,11 @@ const BookingSuccess = () => {
                 >
                   <div className="font-bold text-slate-900 text-lg">{userBooking.service}</div>
                   <div className="text-slate-600 text-sm">{userBooking.department}</div>
+                  {userBooking.bookingId && (
+                    <div className="text-xs text-slate-500 mt-1">
+                      Booking ID: <span className="font-mono font-semibold">{userBooking.bookingId}</span>
+                    </div>
+                  )}
                 </motion.div>
 
                 {/* Date & Time Grid */}
@@ -376,6 +378,11 @@ const BookingSuccess = () => {
       </div>
     </>
   );
+};
+
+// Default props as fallback (useful during development/testing)
+BookingSuccess.defaultProps = {
+  bookingData: null
 };
 
 export default BookingSuccess;

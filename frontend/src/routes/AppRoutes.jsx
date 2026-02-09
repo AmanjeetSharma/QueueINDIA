@@ -64,15 +64,12 @@ import BookingsList from "../pages/admin/officerPanel/components/BookingsList.js
 import BookingDetailsPage from "../pages/admin/officerPanel/components/BookingDetailsPage.jsx";
 import QueueListServices from "../pages/queue/QueueListServices.jsx";
 import QueueManagement from "../pages/queue/QueueManagement.jsx";
+import AnalyticsPage from "../pages/admin/officerPanel/components/AnalyticsPage.jsx";
 
 import NotFound from "../pages/NotFound.jsx";
 
 import ScrollToTop from "../components/ScrollToTop.jsx";
 
-
-
-const AnalyticsPage = () => <div className="p-6">Analytics Page - Coming Soon</div>;
-const ProfilePage = () => <div className="p-6">Profile Page - Coming Soon</div>;
 
 
 
@@ -274,18 +271,7 @@ const AppRoutes = () => {
             </AuthorizedRoles>
           }
         />
-
-        <Route
-          path="/officer-panel/profile"
-          element={
-            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
-              <ProfilePage />
-            </AuthorizedRoles>
-          }
-        />
-
-
-
+          
 
 
 

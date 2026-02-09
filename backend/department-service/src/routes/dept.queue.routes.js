@@ -9,7 +9,7 @@ import {
     skipToken,
     getQueueStats,
     getDepartmentServicesForQueue
-} from "../controllers/queue.contoller.js";
+} from "../controllers/queue.controller.js";
 
 const router = express.Router();
 

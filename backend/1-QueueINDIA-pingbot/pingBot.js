@@ -51,8 +51,8 @@ const pingAllServices = async () => {
 };
 
 // Start bot
-log("🚀 QueueINDIA Interview Ping Bot Started");
-log(`⏰ Interval: ${PING_INTERVAL / 60000} minutes`);
+log("🚀 QueueINDIA Ping Bot Has Started...");
+log(`⏰ Interval: ${PING_INTERVAL / 60000} minutes...`);
 log(`🛑 Auto-stop after: ${MAX_RUNTIME / 60000} minutes (${MAX_RUNTIME / 3600000} hrs)`);
 console.log("────────────────────────────────────────");
 

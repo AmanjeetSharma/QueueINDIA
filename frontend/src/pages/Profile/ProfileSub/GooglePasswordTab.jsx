@@ -63,7 +63,9 @@ const GooglePasswordTab = ({
             await onSetGooglePassword();
             setSubmitSuccess(true);
             setRedirecting(true);
-            window.location.href = '/profile';
+            setTimeout(() => {
+                window.location.href = "/profile";
+            }, 3000);
 
         } catch (error) {
             setRedirecting(false);
@@ -144,47 +146,6 @@ const GooglePasswordTab = ({
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-3 sm:px-6 py-6 sm:py-10">
             <div className="max-w-lg mx-auto">
-                {/* Success Overlay */}
-                <AnimatePresence>
-                    {submitSuccess && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        >
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.9, opacity: 0 }}
-                                className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-sm w-full text-center"
-                            >
-                                <motion.div
-                                    animate={{ scale: [1, 1.15, 1] }}
-                                    transition={{ duration: 0.6 }}
-                                    className="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4"
-                                >
-                                    <FaCheck className="text-emerald-600 text-xl sm:text-2xl" />
-                                </motion.div>
-                                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
-                                    Password Set!
-                                </h3>
-                                <p className="text-sm sm:text-base text-slate-600 mb-6">
-                                    You can now login with Google or email/password.
-                                </p>
-
-                                {redirecting && (
-                                    <motion.div
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                                        className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto"
-                                    />
-                                )}
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -15 }}

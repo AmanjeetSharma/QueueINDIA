@@ -124,7 +124,7 @@ const SuperAdminPanel = () => {
                   Full system access granted to <span className="font-semibold text-red-400">{user?.name?.split(' ')[0] || 'Administrator'}</span>
                 </p>
                 <p className="text-xs text-slate-400">
-                  Manage users, departments, analytics, and system configurations
+                  Manage users, departments, analytics, and system management.
                 </p>
               </div>
 
@@ -141,10 +141,6 @@ const SuperAdminPanel = () => {
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
                     <span className="text-slate-300">Complete system control</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                    <span className="text-slate-300">Audit log access</span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -154,7 +150,6 @@ const SuperAdminPanel = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-white">Management Areas</h2>
-              <span className="text-xs text-slate-500">{adminCards.length} sections</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

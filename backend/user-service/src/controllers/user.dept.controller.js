@@ -19,7 +19,7 @@ const findUserByEmail = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, user, "User found successfully"));
+        .json(new ApiResponse(200, user, `User found | ${user.email}`));
 });
 
 

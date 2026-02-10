@@ -104,11 +104,6 @@ export const QueueProvider = ({ children }) => {
                 departmentId: deptId
             });
 
-            toast.success(response.data.message, {
-                duration: 6000,
-                position: 'top-left'
-            });
-
             // Refresh queue data after recall
             if (serviceId && date && deptId) {
                 await getLiveQueue(serviceId, date, deptId);

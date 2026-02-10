@@ -20,15 +20,11 @@ const assignAdminToDepartment = asyncHandler(async (req, res) => {
     if (!department) throw new ApiError(404, "Department not found");
 
     // Auth Check: Only SUPER_ADMIN or Assigned Admin can add new admin
-    const isAssignedAdmin = department.admins?.some(
-        id => id.toString() === req.user._id.toString()
-    );
-
+    const isAssignedAdmin = department.admins?.some(id => id.toString() === req.user._id.toString());
     if (req.user.role !== "SUPER_ADMIN" && !isAssignedAdmin) {
         throw new ApiError(403, "Not authorized to assign admins to this department");
     }
 
-    // Forward the access token to User Service
     const token =
         req.headers.authorization ||
         (req.cookies?.accessToken ? `Bearer ${req.cookies.accessToken}` : null);

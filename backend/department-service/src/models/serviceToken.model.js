@@ -19,6 +19,11 @@ const serviceTokenSchema = new mongoose.Schema({
         required: true
     },
 
+    userName: {
+        type: String,
+        required: true
+    },
+
     date: {
         type: String,
         required: true

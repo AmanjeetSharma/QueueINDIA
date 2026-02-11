@@ -68,6 +68,7 @@ const QueueManagement = () => {
         }
         return () => stopPolling();
     }, [isAutoRefresh, refreshInterval, serviceId, date]);
+    console.log('Live Queue Data:', liveQueue);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -221,9 +222,9 @@ const QueueManagement = () => {
 
     const getPriorityLabel = (priorityType) => {
         const labels = {
-            'SENIOR_CITIZEN': 'Senior',
-            'PREGNANT_WOMEN': 'Pregnant',
-            'DIFFERENTLY_ABLED': 'Disabled',
+            'SENIOR_CITIZEN': 'Senior Citizen',
+            'PREGNANT_WOMEN': 'Pregnant Women',
+            'DIFFERENTLY_ABLED': 'Differently Abled',
             'NONE': 'Normal'
         };
         return labels[priorityType] || 'Normal';
@@ -452,6 +453,7 @@ const QueueManagement = () => {
                         </div>
 
                         {/* Waiting Queue - Compact */}
+                        {/* Waiting Queue - Compact */}
                         <div className="bg-slate-800 border border-slate-700 rounded-xl md:rounded-2xl overflow-hidden">
                             <div className="bg-purple-500/10 px-4 py-3 border-b border-slate-700 flex items-center justify-between">
                                 <h2 className="font-semibold flex items-center gap-2">
@@ -475,19 +477,19 @@ const QueueManagement = () => {
                                             <div
                                                 key={token._id}
                                                 className={`flex items-center justify-between p-3 rounded-lg border ${index === 0
-                                                    ? 'bg-purple-500/10 border-purple-400/20'
-                                                    : 'bg-slate-700/30 border-slate-600/30'
+                                                        ? 'bg-purple-500/10 border-purple-400/20'
+                                                        : 'bg-slate-700/30 border-slate-600/30'
                                                     }`}
                                             >
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-3 flex-1 min-w-0">
                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index === 0
-                                                        ? 'bg-purple-600 text-white'
-                                                        : 'bg-slate-600 text-slate-300'
+                                                            ? 'bg-purple-600 text-white'
+                                                            : 'bg-slate-600 text-slate-300'
                                                         }`}>
                                                         {index + 1}
                                                     </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-1.5">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                                                             <span className="font-bold">
                                                                 {token.tokenNumber}
                                                             </span>
@@ -496,9 +498,24 @@ const QueueManagement = () => {
                                                                 {getPriorityLabel(token.priorityType)}
                                                             </span>
                                                         </div>
+
+                                                        {/* Customer Name */}
+                                                        <p className="text-xs text-slate-300 font-medium truncate">
+                                                            {token.userName || 'Customer'}
+                                                        </p>
+
+                                                        {/* Slot Time */}
+                                                        {token.slotTime && (
+                                                            <div className="flex items-center gap-1 mt-0.5">
+                                                                <Clock className="w-3 h-3 text-slate-500" />
+                                                                <span className="text-xs text-slate-400">
+                                                                    {token.slotTime}
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
-                                                <div className="text-xs text-slate-500">
+                                                <div className="text-xs text-slate-500 flex-shrink-0 ml-2">
                                                     #{index + 1}
                                                 </div>
                                             </div>

@@ -101,6 +101,7 @@ export const BookingProvider = ({ children }) => {
             setLoading(true);
             setError(null);
             const preparedData = prepareBookingData(bookingData);
+            console.log("Prepared booking data for API:", preparedData);
             const response = await axiosInstance.post(`/departments/${deptId}/booking/${serviceId}/book`, preparedData);
 
             const newBooking = transformBookingData(response.data.data);

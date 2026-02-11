@@ -300,7 +300,10 @@ const addPhone = asyncHandler(async (req, res) => {
     }
 
     if (!phoneValidator(phone)) {
-        throw new ApiError(400, "Invalid phone number. Provide a valid 10-digit phone number.");
+        throw new ApiError(
+            400,
+            "Invalid phone number. Provide a valid 10-digit phone number."
+        );
     }
 
     const user = await User.findById(req.user._id);
@@ -308,13 +311,19 @@ const addPhone = asyncHandler(async (req, res) => {
         throw new ApiError(404, "User not found");
     }
 
-    // 🔐 UNIQUE PHONE CHECK (Important)
-    const phoneOwner = await User.findOne({ phone });
+    // 🔐 Unique phone check (against verified + pending)
+    const phoneOwner = await User.findOne({
+        $or: [{ phone }, { pendingPhone: phone }]
+    });
+
     if (phoneOwner && phoneOwner._id.toString() !== user._id.toString()) {
-        throw new ApiError(409, "This phone number is already linked with another account");
+        throw new ApiError(
+            409,
+            "This phone number is already linked with another account"
+        );
     }
 
-    // If same phone already verified
+    // If already verified with same number
     if (user.phone === phone && user.isPhoneVerified) {
         throw new ApiError(409, "Phone number already verified");
     }
@@ -322,18 +331,28 @@ const addPhone = asyncHandler(async (req, res) => {
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    user.phone = phone;
+    // ✅ DO NOT overwrite main phone yet
+    user.pendingPhone = phone;
+
+    // Reset verification status (important)
+    user.isPhoneVerified = false;
+
     user.phoneVerificationCode = otp;
-    user.phoneVerificationExpiry = Date.now() + 10 * 60 * 1000;
+    user.phoneVerificationExpiry = Date.now() + 10 * 60 * 1000; // 10 mins
 
     await user.save();
 
     console.log(`📲 OTP sent to ${phone}:`, otp);
 
     return res.status(200).json(
-        new ApiResponse(200, { phone }, "OTP sent to phone successfully")
+        new ApiResponse(
+            200,
+            { phone },
+            "OTP sent to phone successfully"
+        )
     );
 });
+
 
 
 
@@ -360,16 +379,32 @@ const verifyPhone = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid OTP");
     }
 
+    // ✅ Move pendingPhone to main phone
+    user.phone = user.pendingPhone;
+
+    // Mark verified
     user.isPhoneVerified = true;
+
+    // Clear temp + OTP fields
+    user.pendingPhone = null;
     user.phoneVerificationCode = null;
     user.phoneVerificationExpiry = null;
 
     await user.save();
-    console.log(`✅ Phone number verified for user: ${user.name}, Phone: ${user.phone}`);
+
+    console.log(
+        `✅ Phone verified for user: ${user.name}, Phone: ${user.phone}`
+    );
+
     return res.status(200).json(
-        new ApiResponse(200, { phone: user.phone }, "✅ Phone verified successfully")
+        new ApiResponse(
+            200,
+            { phone: user.phone },
+            "✅ Phone verified successfully"
+        )
     );
 });
+
 
 
 

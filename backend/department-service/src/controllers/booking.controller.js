@@ -202,7 +202,7 @@ const getAvailableSlots = asyncHandler(async (req, res) => {
 
 // Create a new booking
 const createBooking = asyncHandler(async (req, res) => {
-    console.log("createBooking called with body:", req.body);
+    // console.log("createBooking called with body:", req.body);
     const { deptId, serviceId } = req.params;
     const {
         date,
@@ -215,6 +215,13 @@ const createBooking = asyncHandler(async (req, res) => {
 
     if (!date || !slotTime) {
         throw new ApiError(400, "Date and slotTime are required");
+    }
+
+    if (!req.user.isVerified) {
+        throw new ApiError(
+            403,
+            "Please verify at least one contact method (Email, Secondary Email, or Phone) before booking."
+        );
     }
 
     const department = await Department.findById(deptId);
@@ -346,6 +353,7 @@ const createBooking = asyncHandler(async (req, res) => {
     const booking = await Booking.create({
         user: req.user._id,
         userName: req.user.name,
+        email: req.user.email,
         department: deptId,
 
         service: {

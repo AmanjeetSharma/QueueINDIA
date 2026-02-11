@@ -68,6 +68,12 @@ const userSchema = new Schema(
             type: Date,
             default: null
         },
+        // Fields for phone number change verification
+        pendingPhone: {
+            type: String,
+            trim: true,
+            default: null,
+        },
         phoneResetOTP: {
             type: String,
             default: null

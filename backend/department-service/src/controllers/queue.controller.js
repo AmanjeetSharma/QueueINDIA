@@ -66,7 +66,7 @@ const getLiveQueue = asyncHandler(async (req, res) => {
             priorityRank: -1, // higher priority first
             tokenNumber: 1    // FIFO inside same priority
         })
-        .select("tokenNumber priorityType priorityRank status")
+        .select("tokenNumber priorityType priorityRank status userName slotTime")
         .lean();
 
     console.log(`Live Queue fetched | date: ${date} | totalWaiting: ${waiting.length}`);

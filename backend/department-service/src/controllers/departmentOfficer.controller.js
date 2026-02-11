@@ -218,7 +218,8 @@ const approveBooking = asyncHandler(async (req, res) => {
     const lastToken = await ServiceToken.findOne({
         department: booking.department,
         date: booking.date,
-        slotTime: booking.slotTime
+        slotTime: booking.slotTime,
+        userName: booking.userName
     }).sort({ tokenNumber: -1 });
 
     const nextTokenNumber = lastToken ? lastToken.tokenNumber + 1 : 1;
@@ -234,7 +235,8 @@ const approveBooking = asyncHandler(async (req, res) => {
         slotTime: booking.slotTime,
         tokenNumber: nextTokenNumber,
         priorityType,
-        priorityRank
+        priorityRank,
+        userName: booking.userName
     });
 
     booking.status = "APPROVED";

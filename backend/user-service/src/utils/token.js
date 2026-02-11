@@ -18,7 +18,8 @@ const generateAccessToken = (user) => {
             email: user.email,
             name: user.name,
             role: user.role,
-            departmentId: user.departmentId || null
+            departmentId: user.departmentId || null,
+            isVerified: user.isEmailVerified || user.isPhoneVerified || user.secondaryEmailVerified || false,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {

@@ -63,6 +63,23 @@ const ServiceDetails = () => {
             return;
         }
 
+        // ✅ VERIFICATION CHECK: User must be verified via at least one method
+        const isVerified = user?.isEmailVerified || user?.secondaryEmailVerified || user?.isPhoneVerified;
+
+        if (!isVerified) {
+            toast.error('Please verify your email or phone number before booking', {
+                duration: 6000,
+                position: "bottom-left"
+            });
+            navigate('/profile', {
+                state: {
+                    returnTo: `/departments/${deptId}/services/${serviceId}`,
+                    message: 'Verification required to book appointments'
+                }
+            });
+            return;
+        }
+
         if (!currentDepartment?.isSlotBookingEnabled) {
             toast.error('Online booking is not available for this department', {
                 duration: 4000,
@@ -120,6 +137,7 @@ const ServiceDetails = () => {
     const requiredDocs = currentService.requiredDocs || [];
     const priorityCriteria = currentDepartment?.priorityCriteria || {};
     const canBookSlot = isAuthenticated && isSlotBookingEnabled;
+    const isVerified = user?.isEmailVerified || user?.secondaryEmailVerified || user?.isPhoneVerified;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
@@ -184,8 +202,8 @@ const ServiceDetails = () => {
                                         <motion.span
                                             whileHover={{ scale: 1.05 }}
                                             className={`px-2 py-1 sm:px-2.5 sm:py-1.5 rounded text-xs sm:text-sm font-semibold backdrop-blur-sm flex items-center gap-1 ${isSlotBookingEnabled
-                                                    ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/30'
-                                                    : 'bg-gradient-to-r from-slate-500/20 to-slate-600/20 border border-slate-400/30'
+                                                ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/30'
+                                                : 'bg-gradient-to-r from-slate-500/20 to-slate-600/20 border border-slate-400/30'
                                                 }`}
                                         >
                                             {isSlotBookingEnabled ? <FaCalendarCheck className="text-xs" /> : <FaCheckCircle className="text-xs" />}
@@ -207,13 +225,13 @@ const ServiceDetails = () => {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleStartBooking}
-                                disabled={!canBookSlot}
-                                className={`w-full py-3 sm:py-4 rounded-lg sm:rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base lg:text-lg ${canBookSlot
+                                disabled={!canBookSlot || (isAuthenticated && !isVerified)}
+                                className={`w-full py-3 sm:py-4 px-4 rounded-lg sm:rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base lg:text-lg ${canBookSlot && isVerified
                                         ? 'bg-gradient-to-r from-white to-blue-50 text-blue-600 hover:from-blue-50 hover:to-blue-100 hover:shadow-xl border-2 border-white/50 px-4 cursor-pointer'
                                         : 'bg-white/20 text-white/60 cursor-not-allowed backdrop-blur-sm'
                                     }`}
                             >
-                                {canBookSlot ? (
+                                {canBookSlot && isVerified ? (
                                     <>
                                         <FaCalendarAlt className="text-sm sm:text-base" />
                                         <span>Start Booking</span>
@@ -221,6 +239,8 @@ const ServiceDetails = () => {
                                     </>
                                 ) : !isAuthenticated ? (
                                     'Login to Book'
+                                ) : !isVerified ? (
+                                    'Verification Required'
                                 ) : (
                                     'Walk-in Only'
                                 )}
@@ -397,18 +417,57 @@ const ServiceDetails = () => {
                                 />
                             </div>
 
+                            {/* Verification Warning - Show if authenticated but not verified */}
+                            {isAuthenticated && !isVerified && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg"
+                                >
+                                    <div className="flex items-start gap-2">
+                                        <FaExclamationTriangle className="text-amber-600 text-sm mt-0.5 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-xs font-semibold text-amber-800">Verification Required</p>
+                                            <p className="text-xs text-amber-700 mt-1">
+                                                Please verify your email or phone number to book appointments.
+                                            </p>
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => navigate('/profile', {
+                                                    state: {
+                                                        returnTo: `/departments/${deptId}/services/${serviceId}`
+                                                    }
+                                                })}
+                                                className="mt-2 text-xs bg-amber-600 text-white px-3 py-1.5 rounded-lg hover:bg-amber-700 transition-colors inline-flex items-center gap-1"
+                                            >
+                                                <FaShieldAlt className="text-xs" />
+                                                Verify Now
+                                            </motion.button>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleStartBooking}
-                                disabled={!canBookSlot}
-                                className={`w-full py-3 sm:py-4 px-4 rounded-lg sm:rounded-xl transition-all font-semibold text-sm sm:text-base shadow-lg flex items-center justify-center gap-2 ${canBookSlot
+                                disabled={!canBookSlot || (isAuthenticated && !isVerified)}
+                                className={`w-full py-3 sm:py-4 px-0 rounded-lg sm:rounded-xl transition-all font-semibold text-sm sm:text-base shadow-lg flex items-center justify-center gap-2 ${canBookSlot && isVerified
                                         ? 'bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 text-white hover:from-green-700 hover:via-emerald-700 hover:to-green-800 hover:shadow-xl'
                                         : 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-400 cursor-not-allowed'
                                     }`}
                             >
                                 <FaCalendarAlt className="text-sm" />
-                                {canBookSlot ? 'Start Booking Now' : !isAuthenticated ? 'Login to Book' : 'Walk-in Only'}
+                                {canBookSlot && isVerified
+                                    ? 'Start Booking Now'
+                                    : !isAuthenticated
+                                        ? 'Login to Book'
+                                        : !isVerified
+                                            ? 'Verification Required'
+                                            : 'Walk-in Only'
+                                }
                             </motion.button>
 
                             {!isAuthenticated && isSlotBookingEnabled && (
@@ -621,8 +680,8 @@ const DocumentCard = ({ document, index }) => (
                 <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                     <h4 className="font-bold text-slate-900 text-sm sm:text-base">{document.name}</h4>
                     <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded text-xs font-semibold ${document.isMandatory
-                            ? 'bg-gradient-to-br from-red-100 to-red-200 text-red-700 border border-red-200'
-                            : 'bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 border border-blue-200'
+                        ? 'bg-gradient-to-br from-red-100 to-red-200 text-red-700 border border-red-200'
+                        : 'bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 border border-blue-200'
                         }`}>
                         {document.isMandatory ? 'Required' : 'Optional'}
                     </span>

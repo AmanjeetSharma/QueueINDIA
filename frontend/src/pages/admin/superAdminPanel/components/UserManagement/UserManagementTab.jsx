@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import {
   MdRefresh,
   MdRedo,
@@ -22,8 +23,7 @@ import {
   MdDelete,
   MdCheckCircle,
   MdOutlineAdminPanelSettings,
-  MdOutlineDashboard,
-  MdClose
+  MdArrowBack,
 } from "react-icons/md";
 import { FaUsers, FaUserShield, FaUserTie, FaUser } from "react-icons/fa";
 
@@ -43,6 +43,7 @@ const UserManagementTab = () => {
     deleteUserByAdmin: authDeleteUserByAdmin
   } = useAuth();
 
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -495,6 +496,13 @@ const UserManagementTab = () => {
       {/* Header */}
       <div className="relative z-10 border-b border-slate-700/50 bg-slate-800/40 backdrop-blur-xl sticky top-0">
         <div className="px-4 sm:px-6 py-4">
+          <button
+            onClick={() => navigate('/super-admin-panel')}
+            className="inline-flex bg-slate-700 px-4 py-1 rounded-sm items-center text-sm text-slate-400 hover:text-white mb-4 transition-colors group cursor-pointer"
+          >
+            <MdArrowBack className="w-4 h-4 mr-1.5 transform group-hover:-translate-x-1 transition-transform" />
+            Back
+          </button>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
@@ -856,8 +864,8 @@ const UserManagementTab = () => {
                     disabled={pagination.currentPage === 1}
                     onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
                     className={`px-2.5 py-1.5 rounded text-xs font-medium ${pagination.currentPage === 1
-                        ? 'text-slate-600 cursor-not-allowed'
-                        : 'text-slate-300 hover:bg-slate-700'
+                      ? 'text-slate-600 cursor-not-allowed'
+                      : 'text-slate-300 hover:bg-slate-700'
                       }`}
                   >
                     Previous
@@ -881,8 +889,8 @@ const UserManagementTab = () => {
                           key={pageNum}
                           onClick={() => setPagination(prev => ({ ...prev, currentPage: pageNum }))}
                           className={`w-7 h-7 rounded text-xs font-medium ${pagination.currentPage === pageNum
-                              ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
-                              : 'text-slate-400 hover:bg-slate-700'
+                            ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
+                            : 'text-slate-400 hover:bg-slate-700'
                             }`}
                         >
                           {pageNum}
@@ -895,8 +903,8 @@ const UserManagementTab = () => {
                     disabled={pagination.currentPage === pagination.totalPages}
                     onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
                     className={`px-2.5 py-1.5 rounded text-xs font-medium ${pagination.currentPage === pagination.totalPages
-                        ? 'text-slate-600 cursor-not-allowed'
-                        : 'text-slate-300 hover:bg-slate-700'
+                      ? 'text-slate-600 cursor-not-allowed'
+                      : 'text-slate-300 hover:bg-slate-700'
                       }`}
                   >
                     Next

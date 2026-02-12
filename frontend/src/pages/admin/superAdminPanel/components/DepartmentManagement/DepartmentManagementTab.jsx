@@ -17,7 +17,8 @@ import {
   FiXCircle,
   FiChevronDown,
   FiChevronUp,
-  FiList
+  FiList,
+  FiArrowLeft
 } from 'react-icons/fi';
 import {
   FaBuilding,
@@ -244,6 +245,13 @@ const DepartmentManagementTab = () => {
 
       {/* Header */}
       <div className="relative z-10 mb-4">
+        <button
+          onClick={() => navigate('/super-admin-panel')}
+          className="inline-flex bg-slate-700 px-4 py-1 rounded-sm items-center text-sm text-slate-400 hover:text-white mb-4 transition-colors group cursor-pointer"
+        >
+          <FiArrowLeft className="w-4 h-4 mr-1.5 transform group-hover:-translate-x-1 transition-transform" />
+          Back
+        </button>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
           <div>
             <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
@@ -578,8 +586,8 @@ const DepartmentManagementTab = () => {
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPageContext(currentPage - 1)}
                   className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${currentPage === 1
-                      ? 'text-slate-600 cursor-not-allowed'
-                      : 'text-slate-300 hover:bg-slate-700'
+                    ? 'text-slate-600 cursor-not-allowed'
+                    : 'text-slate-300 hover:bg-slate-700'
                     }`}
                 >
                   Prev
@@ -603,8 +611,8 @@ const DepartmentManagementTab = () => {
                         key={pageNum}
                         onClick={() => setCurrentPageContext(pageNum)}
                         className={`w-7 h-7 rounded text-xs font-medium transition-colors ${currentPage === pageNum
-                            ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
-                            : 'text-slate-400 hover:bg-slate-700'
+                          ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
+                          : 'text-slate-400 hover:bg-slate-700'
                           }`}
                       >
                         {pageNum}
@@ -617,8 +625,8 @@ const DepartmentManagementTab = () => {
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPageContext(currentPage + 1)}
                   className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${currentPage === totalPages
-                      ? 'text-slate-600 cursor-not-allowed'
-                      : 'text-slate-300 hover:bg-slate-700'
+                    ? 'text-slate-600 cursor-not-allowed'
+                    : 'text-slate-300 hover:bg-slate-700'
                     }`}
                 >
                   Next
@@ -693,8 +701,8 @@ const DepartmentManagementTab = () => {
                     onClick={() => handleDelete(deleteConfirm)}
                     disabled={deleteConfirmationText !== 'DELETE'}
                     className={`w-full py-2.5 px-4 rounded-lg text-xs sm:text-sm font-medium text-white transition-colors ${deleteConfirmationText === 'DELETE'
-                        ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700'
-                        : 'bg-red-900/50 text-red-300 cursor-not-allowed'
+                      ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700'
+                      : 'bg-red-900/50 text-red-300 cursor-not-allowed'
                       }`}
                   >
                     Delete Department

@@ -268,7 +268,7 @@ const updateDepartment = asyncHandler(async (req, res) => {
 
     await department.save();
 
-    console.log(`✳️ Department Updated → ${department.name}`);
+    console.log(`Department Updated | ${department.name} | ID: ${department._id} | Updated By: ${req.user.email}`);
 
     return res.status(200).json(
         new ApiResponse(200, department, "Department updated successfully")

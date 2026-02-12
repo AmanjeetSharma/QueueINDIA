@@ -4,27 +4,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useDepartment } from "../../../../../context/DepartmentContext";
 import toast from "react-hot-toast";
 import {
-    FiSave,
-    FiX,
+
     FiChevronLeft,
     FiClock,
-    FiMapPin,
-    FiPhone,
-    FiMail,
-    FiGlobe,
     FiAlertCircle,
     FiCode,
     FiCheckCircle,
     FiShield
 } from "react-icons/fi";
+import { IoMdCreate } from "react-icons/io";
+
 import {
     FaBuilding,
     FaRegBuilding,
     FaClock,
     FaMapMarkerAlt,
     FaPhoneAlt,
-    FaEnvelope,
-    FaGlobe
 } from "react-icons/fa";
 import { MdOutlineContentPaste } from "react-icons/md";
 
@@ -339,7 +334,7 @@ const DepartmentCreate = () => {
                                 </>
                             ) : (
                                 <>
-                                    <FiSave className="w-4 h-4" />
+                                    <IoMdCreate className="w-4 h-4" />
                                     <span>Create</span>
                                 </>
                             )}
@@ -357,11 +352,10 @@ const DepartmentCreate = () => {
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.99 }}
                             onClick={() => setActiveTab("form")}
-                            className={`px-5 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
-                                activeTab === "form"
+                            className={`px-5 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${activeTab === "form"
                                     ? "text-white bg-slate-700 shadow-sm"
                                     : "text-slate-400 hover:text-slate-200"
-                            }`}
+                                }`}
                         >
                             <FaRegBuilding className="w-4 h-4" />
                             <span>Form</span>
@@ -370,11 +364,10 @@ const DepartmentCreate = () => {
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.99 }}
                             onClick={() => setActiveTab("json")}
-                            className={`px-5 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
-                                activeTab === "json"
+                            className={`px-5 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${activeTab === "json"
                                     ? "text-white bg-slate-700 shadow-sm"
                                     : "text-slate-400 hover:text-slate-200"
-                            }`}
+                                }`}
                         >
                             <FiCode className="w-4 h-4" />
                             <span>JSON</span>
@@ -479,8 +472,8 @@ const DepartmentCreate = () => {
                                 {/* Basic Information */}
                                 <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
                                     <div className="flex items-center gap-2 mb-4">
-                                        <div className="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center">
-                                            <FaBuilding className="w-4 h-4 text-slate-300" />
+                                        <div className="w-8 h-8 bg-white/70 rounded-lg flex items-center justify-center">
+                                            <FaBuilding className="w-4 h-4 text-slate-950" />
                                         </div>
                                         <div>
                                             <h3 className="text-base font-semibold text-white">Basic Information</h3>
@@ -502,11 +495,10 @@ const DepartmentCreate = () => {
                                                         departmentCategory: e.target.value,
                                                     })
                                                 }
-                                                className={`w-full px-3 py-2.5 bg-slate-900/80 border text-sm rounded-lg focus:ring-1 outline-none ${
-                                                    validationErrors.departmentCategory
+                                                className={`w-full px-3 py-2.5 bg-slate-900/80 border text-sm rounded-lg focus:ring-1 outline-none ${validationErrors.departmentCategory
                                                         ? 'border-red-800/50 focus:border-red-700 focus:ring-red-900/30'
                                                         : 'border-slate-700 focus:border-slate-600 focus:ring-slate-700'
-                                                }`}
+                                                    }`}
                                             >
                                                 <option value="" className="bg-slate-800">Select category</option>
                                                 {departmentCategories.map((cat) => (
@@ -533,11 +525,10 @@ const DepartmentCreate = () => {
                                                     setFormData({ ...formData, name: e.target.value })
                                                 }
                                                 placeholder="e.g., Municipal Office"
-                                                className={`w-full px-3 py-2.5 bg-slate-900/80 border text-sm rounded-lg focus:ring-1 outline-none placeholder-slate-600 ${
-                                                    validationErrors.name
+                                                className={`w-full px-3 py-2.5 bg-slate-900/80 border text-sm rounded-lg focus:ring-1 outline-none placeholder-slate-600 ${validationErrors.name
                                                         ? 'border-red-800/50 focus:border-red-700 focus:ring-red-900/30'
                                                         : 'border-slate-700 focus:border-slate-600 focus:ring-slate-700'
-                                                }`}
+                                                    }`}
                                             />
                                             {validationErrors.name && (
                                                 <p className="text-xs text-red-400 flex items-center gap-1">
@@ -616,8 +607,8 @@ const DepartmentCreate = () => {
                                 {/* Address Information */}
                                 <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
                                     <div className="flex items-center gap-2 mb-4">
-                                        <div className="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center">
-                                            <FaMapMarkerAlt className="w-4 h-4 text-slate-300" />
+                                        <div className="w-8 h-8 bg-white/80 rounded-lg flex items-center justify-center">
+                                            <FaMapMarkerAlt className="w-4 h-4 text-red-500" />
                                         </div>
                                         <div>
                                             <h3 className="text-base font-semibold text-white">Address Information</h3>
@@ -641,11 +632,10 @@ const DepartmentCreate = () => {
                                                     })
                                                 }
                                                 placeholder="e.g., Market Road"
-                                                className={`w-full px-3 py-2.5 bg-slate-900/80 border text-sm rounded-lg focus:ring-1 outline-none placeholder-slate-600 ${
-                                                    validationErrors.street
+                                                className={`w-full px-3 py-2.5 bg-slate-900/80 border text-sm rounded-lg focus:ring-1 outline-none placeholder-slate-600 ${validationErrors.street
                                                         ? 'border-red-800/50 focus:border-red-700 focus:ring-red-900/30'
                                                         : 'border-slate-700 focus:border-slate-600 focus:ring-slate-700'
-                                                }`}
+                                                    }`}
                                             />
                                             {validationErrors.street && (
                                                 <p className="text-xs text-red-400 flex items-center gap-1">
@@ -671,11 +661,10 @@ const DepartmentCreate = () => {
                                                         })
                                                     }
                                                     placeholder="City"
-                                                    className={`w-full px-3 py-2.5 bg-slate-900/80 border text-sm rounded-lg focus:ring-1 outline-none placeholder-slate-600 ${
-                                                        validationErrors.city
+                                                    className={`w-full px-3 py-2.5 bg-slate-900/80 border text-sm rounded-lg focus:ring-1 outline-none placeholder-slate-600 ${validationErrors.city
                                                             ? 'border-red-800/50 focus:border-red-700 focus:ring-red-900/30'
                                                             : 'border-slate-700 focus:border-slate-600 focus:ring-slate-700'
-                                                    }`}
+                                                        }`}
                                                 />
                                                 {validationErrors.city && (
                                                     <p className="text-xs text-red-400 flex items-center gap-1">
@@ -718,11 +707,10 @@ const DepartmentCreate = () => {
                                                         })
                                                     }
                                                     placeholder="State"
-                                                    className={`w-full px-3 py-2.5 bg-slate-900/80 border text-sm rounded-lg focus:ring-1 outline-none placeholder-slate-600 ${
-                                                        validationErrors.state
+                                                    className={`w-full px-3 py-2.5 bg-slate-900/80 border text-sm rounded-lg focus:ring-1 outline-none placeholder-slate-600 ${validationErrors.state
                                                             ? 'border-red-800/50 focus:border-red-700 focus:ring-red-900/30'
                                                             : 'border-slate-700 focus:border-slate-600 focus:ring-slate-700'
-                                                    }`}
+                                                        }`}
                                                 />
                                                 {validationErrors.state && (
                                                     <p className="text-xs text-red-400 flex items-center gap-1">
@@ -747,11 +735,10 @@ const DepartmentCreate = () => {
                                                         })
                                                     }
                                                     placeholder="Pincode"
-                                                    className={`w-full px-3 py-2.5 bg-slate-900/80 border text-sm rounded-lg focus:ring-1 outline-none placeholder-slate-600 ${
-                                                        validationErrors.pincode
+                                                    className={`w-full px-3 py-2.5 bg-slate-900/80 border text-sm rounded-lg focus:ring-1 outline-none placeholder-slate-600 ${validationErrors.pincode
                                                             ? 'border-red-800/50 focus:border-red-700 focus:ring-red-900/30'
                                                             : 'border-slate-700 focus:border-slate-600 focus:ring-slate-700'
-                                                    }`}
+                                                        }`}
                                                 />
                                                 {validationErrors.pincode && (
                                                     <p className="text-xs text-red-400 flex items-center gap-1">
@@ -767,8 +754,8 @@ const DepartmentCreate = () => {
                                 {/* Contact Information */}
                                 <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
                                     <div className="flex items-center gap-2 mb-4">
-                                        <div className="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center">
-                                            <FaPhoneAlt className="w-4 h-4 text-slate-300" />
+                                        <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                                            <FaPhoneAlt className="w-4 h-4 text-blue-600" />
                                         </div>
                                         <div>
                                             <h3 className="text-base font-semibold text-white">Contact Information</h3>
@@ -831,8 +818,8 @@ const DepartmentCreate = () => {
                                 <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center">
-                                                <FaClock className="w-4 h-4 text-slate-300" />
+                                            <div className="w-8 h-8 bg-white/70 rounded-lg flex items-center justify-center">
+                                                <FaClock className="w-4 h-4 text-slate-900" />
                                             </div>
                                             <div>
                                                 <h3 className="text-base font-semibold text-white">Working Hours</h3>
@@ -906,8 +893,8 @@ const DepartmentCreate = () => {
                                 {/* Priority Criteria */}
                                 <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
                                     <div className="flex items-center gap-2 mb-4">
-                                        <div className="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center">
-                                            <FiShield className="w-4 h-4 text-slate-300" />
+                                        <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
+                                            <FiShield className="w-4 h-4 text-white" />
                                         </div>
                                         <div>
                                             <h3 className="text-base font-semibold text-white">Priority Criteria</h3>
@@ -1045,7 +1032,7 @@ const DepartmentCreate = () => {
                                             </>
                                         ) : (
                                             <>
-                                                <FiSave className="w-4 h-4" />
+                                                <IoMdCreate className="w-4 h-4" />
                                                 <span>Create Department</span>
                                             </>
                                         )}

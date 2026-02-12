@@ -178,10 +178,11 @@ export const DepartmentProvider = ({ children }) => {
 
     // Update department (SUPER_ADMIN or assigned ADMIN)
     const updateDepartment = async (deptId, updateData) => {
+        console.log(`Updating department ${deptId} with data:`, updateData);
         try {
             setLoading(true);
             setError(null);
-            const response = await axiosInstance.put(`/departments/update/${deptId}`, updateData);
+            const response = await axiosInstance.patch(`/departments/update/${deptId}`, updateData);
 
             const updatedDept = transformDepartmentData(response.data.data);
             setDepartments(prev =>

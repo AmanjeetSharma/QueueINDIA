@@ -133,12 +133,12 @@ export const QueueProvider = ({ children }) => {
 
 
     // Serve next token
-    const serveNextToken = useCallback(async (serviceId, date) => {
+    const serveNextToken = useCallback(async (serviceId, date, departmentId) => {
         try {
             setLoading(true);
             setError(null);
-
             const response = await axiosInstance.post('/departments/queue/tokens/serve-next', {
+                departmentId,
                 serviceId,
                 date
             });
@@ -150,7 +150,7 @@ export const QueueProvider = ({ children }) => {
 
             // Refresh live queue after serving
             if (serviceId && date) {
-                getLiveQueue(serviceId, date);
+                getLiveQueue(serviceId, date, departmentId);
             }
 
             return response.data.data;
@@ -193,7 +193,7 @@ export const QueueProvider = ({ children }) => {
 
             return response.data.data;
         } catch (err) {
-            const errorMsg = err?.response?.data?.message || 'Failed to serve token';
+            const errorMsg = err?.response?.data?.message || 'Failed to serve token by ID';
             setError(errorMsg);
             toast.error(errorMsg, {
                 duration: 4000,

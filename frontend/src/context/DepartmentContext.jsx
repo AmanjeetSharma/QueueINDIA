@@ -181,7 +181,7 @@ export const DepartmentProvider = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axiosInstance.put(`/departments/update/${deptId}`, updateData);
+            const response = await axiosInstance.patch(`/departments/update/${deptId}`, updateData);
 
             const updatedDept = transformDepartmentData(response.data.data);
             setDepartments(prev =>

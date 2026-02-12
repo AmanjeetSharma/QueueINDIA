@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useDepartmentOfficer } from '../../../../context/DepartmentOfficerContext';
-import { 
-  FiSearch, 
-  FiFilter, 
-  FiRefreshCw, 
-  FiCalendar, 
-  FiClock, 
-  FiUser, 
-  FiXCircle, 
+import {
+  FiSearch,
+  FiFilter,
+  FiRefreshCw,
+  FiCalendar,
+  FiClock,
+  FiUser,
+  FiXCircle,
   FiAlertCircle,
   FiChevronLeft,
   FiChevronRight
@@ -123,8 +123,8 @@ const BookingsList = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
       year: '2-digit'
     });
@@ -164,80 +164,79 @@ const BookingsList = () => {
     >
       {/* Header */}
       <motion.div
-  variants={itemVariants}
-  initial="hidden"
-  animate="visible"
-  className="bg-gray-800 border-b border-gray-700 sticky top-0 z-20"
->
-  <div className="px-3 sm:px-4 py-4">
-    <div className="max-w-7xl mx-auto">
-      <div className="flex items-center justify-between gap-3 mb-4">
-        {/* Left side with back button and title */}
-        <div className="flex items-center gap-3">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/officer-panel')}
-            className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center justify-center"
-            aria-label="Go back to dashboard"
-          >
-            <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </motion.button>
-          
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">Bookings</h1>
-            <p className="text-xs sm:text-sm text-gray-400">
-              <span className="text-cyan-400 font-semibold">{totalBookings}</span> total • Page{' '}
-              <span className="text-cyan-400 font-semibold">{currentPage}/{totalPages}</span>
-            </p>
+        variants={itemVariants}
+        initial="hidden"
+        animate="visible"
+        className="bg-gray-800 border-b border-gray-700 sticky top-0 z-20"
+      >
+        <div className="px-3 sm:px-4 py-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              {/* Left side with back button and title */}
+              <div className="flex items-center gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate(-1)}
+                  className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center justify-center"
+                  aria-label="Go back to dashboard"
+                >
+                  <FiChevronLeft className="w-5 h-5" />
+                  <p className='px-2'>Back</p>
+                </motion.button>
+
+                <div className="min-w-0">
+                  <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">Bookings</h1>
+                  <p className="text-xs sm:text-sm text-gray-400">
+                    <span className="text-cyan-400 font-semibold">{totalBookings}</span> total • Page{' '}
+                    <span className="text-cyan-400 font-semibold">{currentPage}/{totalPages}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Right side with filter and refresh buttons */}
+              <div className="flex items-center gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="p-2.5 sm:px-3 sm:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                >
+                  <FiFilter className="w-4 h-4" />
+                  <span className="hidden sm:inline">Filter</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={fetchBookings}
+                  disabled={loading}
+                  className="p-2.5 sm:px-3 sm:py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                >
+                  <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">Refresh</span>
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Quick Search */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="relative"
+            >
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search bookings..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 text-white text-sm placeholder-gray-400 rounded-lg focus:border-blue-500 outline-none transition-colors"
+              />
+            </motion.div>
           </div>
         </div>
-        
-        {/* Right side with filter and refresh buttons */}
-        <div className="flex items-center gap-2">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowFilters(!showFilters)}
-            className="p-2.5 sm:px-3 sm:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-          >
-            <FiFilter className="w-4 h-4" />
-            <span className="hidden sm:inline">Filter</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={fetchBookings}
-            disabled={loading}
-            className="p-2.5 sm:px-3 sm:py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-          >
-            <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </motion.button>
-        </div>
-      </div>
-
-      {/* Quick Search */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="relative"
-      >
-        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search bookings..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 text-white text-sm placeholder-gray-400 rounded-lg focus:border-blue-500 outline-none transition-colors"
-        />
       </motion.div>
-    </div>
-  </div>
-</motion.div>
 
       {/* Filters Section */}
       <AnimatePresence>
@@ -397,7 +396,7 @@ const BookingsList = () => {
                           {getStatusBadge(booking.status)}
                           {getPriorityBadge(booking.priorityType)}
                         </div>
-                        
+
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -428,8 +427,8 @@ const BookingsList = () => {
                 </motion.div>
                 <h3 className="text-lg font-bold text-white mb-2">No bookings found</h3>
                 <p className="text-gray-400 text-sm mb-4 max-w-sm mx-auto">
-                  {Object.values(filters).some(f => f) 
-                    ? "No bookings match your filters. Try adjusting your search." 
+                  {Object.values(filters).some(f => f)
+                    ? "No bookings match your filters. Try adjusting your search."
                     : "There are no bookings in your department yet."}
                 </p>
                 {Object.values(filters).some(f => f) && (
@@ -463,7 +462,7 @@ const BookingsList = () => {
                     </span>{' '}
                     of <span className="text-cyan-400 font-semibold">{totalBookings}</span> bookings
                   </p>
-                  
+
                   <div className="flex items-center justify-center gap-1 overflow-x-auto">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
@@ -475,7 +474,7 @@ const BookingsList = () => {
                     >
                       <FiChevronLeft className="w-5 h-5" />
                     </motion.button>
-                    
+
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum;
                       if (totalPages <= 5) {
@@ -494,17 +493,16 @@ const BookingsList = () => {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setCurrentPage(pageNum)}
-                          className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors flex-shrink-0 ${
-                            currentPage === pageNum
-                              ? 'bg-blue-600 text-white'
-                              : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700'
-                          }`}
+                          className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors flex-shrink-0 ${currentPage === pageNum
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700'
+                            }`}
                         >
                           {pageNum}
                         </motion.button>
                       );
                     })}
-                    
+
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}

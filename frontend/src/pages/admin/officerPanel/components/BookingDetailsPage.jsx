@@ -65,7 +65,7 @@ const BookingDetailsPage = () => {
     }, [bookingId, getBookingDetailsForOfficer, clearCurrentBooking]);
 
     const handleBack = () => {
-        navigate('/officer-panel/bookings');
+        navigate('/department/bookings');
     };
 
     const handleApproveDocument = async (docId) => {

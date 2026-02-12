@@ -68,7 +68,6 @@ const QueueManagement = () => {
         }
         return () => stopPolling();
     }, [isAutoRefresh, refreshInterval, serviceId, date]);
-    console.log('Live Queue Data:', liveQueue);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -160,7 +159,7 @@ const QueueManagement = () => {
         if (!serviceId || !date) return;
         try {
             setActionInProgress('serveNext');
-            await serveNextToken(serviceId, date);
+            await serveNextToken(serviceId, date, departmentId);
             await fetchQueueData();
         } catch (err) {
             // Silently handle error
@@ -262,10 +261,10 @@ const QueueManagement = () => {
                     <h3 className="text-xl font-bold text-white mb-2">Missing Parameters</h3>
                     <p className="text-gray-300 mb-6">Select service and date from queue management.</p>
                     <button
-                        onClick={() => navigate('/officer-panel/queue-services')}
+                        onClick={() => navigate(-1)}
                         className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                     >
-                        Back to Services
+                        Back
                     </button>
                 </div>
             </div>
@@ -280,7 +279,7 @@ const QueueManagement = () => {
                     <div className="flex items-center justify-between flex-wrap gap-3">
                         <div className="flex items-center gap-3">
                             <button
-                                onClick={() => navigate('/officer-panel/queue-services')}
+                                onClick={() => navigate(-1)}
                                 className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
                             >
                                 <ArrowLeft className="w-5 h-5" />
@@ -477,14 +476,14 @@ const QueueManagement = () => {
                                             <div
                                                 key={token._id}
                                                 className={`flex items-center justify-between p-3 rounded-lg border ${index === 0
-                                                        ? 'bg-purple-500/10 border-purple-400/20'
-                                                        : 'bg-slate-700/30 border-slate-600/30'
+                                                    ? 'bg-purple-500/10 border-purple-400/20'
+                                                    : 'bg-slate-700/30 border-slate-600/30'
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-3 flex-1 min-w-0">
                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index === 0
-                                                            ? 'bg-purple-600 text-white'
-                                                            : 'bg-slate-600 text-slate-300'
+                                                        ? 'bg-purple-600 text-white'
+                                                        : 'bg-slate-600 text-slate-300'
                                                         }`}>
                                                         {index + 1}
                                                     </div>

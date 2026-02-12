@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDepartment } from '../../../../../context/DepartmentContext';
 import toast from 'react-hot-toast';
-import { 
-  FiPlus, 
-  FiSearch, 
-  FiFilter, 
-  FiRefreshCw, 
-  FiEdit, 
+import {
+  FiPlus,
+  FiSearch,
+  FiFilter,
+  FiRefreshCw,
+  FiEdit,
   FiTrash2,
   FiMapPin,
   FiPhone,
@@ -20,7 +20,7 @@ import {
   FiChevronUp,
   FiList
 } from 'react-icons/fi';
-import { 
+import {
   FaBuilding,
   FaRegBuilding,
   FaListAlt,
@@ -98,7 +98,6 @@ const DepartmentManagementTab = () => {
       await deleteDepartment(deptId);
       setDeleteConfirm(null);
       setDeleteConfirmationText('');
-      toast.success('Department deleted successfully', { duration: 2000, position: 'top-center' });
       fetchDepartments();
     } catch (err) {
       toast.error(err.message || 'Failed to delete department');
@@ -144,7 +143,7 @@ const DepartmentManagementTab = () => {
 
   const getCategoryIcon = (category) => {
     if (!category) return <FaRegBuilding className="w-4 h-4 text-slate-400" />;
-    
+
     const categoryLower = category.toLowerCase();
     if (categoryLower.includes('health')) return <FaBuilding className="w-4 h-4 text-red-400" />;
     if (categoryLower.includes('education')) return <FaBuilding className="w-4 h-4 text-blue-400" />;
@@ -253,7 +252,7 @@ const DepartmentManagementTab = () => {
             </h1>
             <p className="text-sm text-slate-400 mt-0.5">Manage all government departments</p>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={handleCreateDepartment}
@@ -261,7 +260,7 @@ const DepartmentManagementTab = () => {
             >
               <FiPlus className="w-4 h-4 mr-1.5" />
               <span className="hidden sm:inline">New Department</span>
-              <span className="sm:hidden">New</span>
+              <span className="sm:hidden">New Department</span>
             </button>
           </div>
         </div>
@@ -293,7 +292,7 @@ const DepartmentManagementTab = () => {
                 <FiFilter className="w-4 h-4 sm:mr-1.5" />
                 <span className="hidden sm:inline">Filters</span>
               </button>
-              
+
               <button
                 onClick={applySearch}
                 className="inline-flex items-center px-3 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-colors cursor-pointer"
@@ -301,7 +300,7 @@ const DepartmentManagementTab = () => {
                 <FiSearch className="w-4 h-4 sm:mr-1.5" />
                 <span className="hidden sm:inline">Search</span>
               </button>
-              
+
               <button
                 onClick={fetchDepartments}
                 disabled={loading}
@@ -330,21 +329,21 @@ const DepartmentManagementTab = () => {
                     >
                       Sort by Name
                       {sortConfig.sortBy === 'name' && (
-                        sortConfig.sortOrder === 'asc' ? 
-                        <FiChevronUp className="ml-1 w-3 h-3" /> : 
-                        <FiChevronDown className="ml-1 w-3 h-3" />
+                        sortConfig.sortOrder === 'asc' ?
+                          <FiChevronUp className="ml-1 w-3 h-3" /> :
+                          <FiChevronDown className="ml-1 w-3 h-3" />
                       )}
                     </button>
-                    
+
                     <button
                       onClick={() => handleSort('status')}
                       className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors"
                     >
                       Sort by Status
                       {sortConfig.sortBy === 'status' && (
-                        sortConfig.sortOrder === 'asc' ? 
-                        <FiChevronUp className="ml-1 w-3 h-3" /> : 
-                        <FiChevronDown className="ml-1 w-3 h-3" />
+                        sortConfig.sortOrder === 'asc' ?
+                          <FiChevronUp className="ml-1 w-3 h-3" /> :
+                          <FiChevronDown className="ml-1 w-3 h-3" />
                       )}
                     </button>
                   </div>
@@ -453,7 +452,7 @@ const DepartmentManagementTab = () => {
                   <div className="flex items-start gap-3">
                     {/* Icon - Clickable for Public View */}
                     <div className="flex-shrink-0">
-                      <div 
+                      <div
                         className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 flex items-center justify-center cursor-pointer hover:border-blue-500/50 transition-colors"
                         onClick={() => openPublicDepartmentPage(dept._id)}
                         title="View Public Page"
@@ -466,7 +465,7 @@ const DepartmentManagementTab = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-start justify-between gap-1.5 mb-1.5">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h4 
+                          <h4
                             className="text-sm sm:text-base font-semibold text-white truncate max-w-[150px] sm:max-w-none cursor-pointer hover:text-blue-400 transition-colors"
                             onClick={() => openPublicDepartmentPage(dept._id)}
                             title="View Public Page"
@@ -533,7 +532,7 @@ const DepartmentManagementTab = () => {
                       <FiList className="w-3 h-3 md:mr-1.5" />
                       <span className="hidden md:inline">Manage</span>
                     </button>
-                    
+
                     <button
                       onClick={() => handleManageAdmins(dept._id)}
                       className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors"
@@ -542,7 +541,7 @@ const DepartmentManagementTab = () => {
                       <FaUserTie className="w-3 h-3 md:mr-1.5" />
                       <span className="hidden md:inline">Admins/Officers</span>
                     </button>
-                    
+
                     <button
                       onClick={() => handleEditDepartment(dept._id)}
                       className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg hover:bg-purple-500/30 transition-colors"
@@ -551,7 +550,7 @@ const DepartmentManagementTab = () => {
                       <FiEdit className="w-3 h-3 md:mr-1.5" />
                       <span className="hidden md:inline">Edit</span>
                     </button>
-                    
+
                     <button
                       onClick={() => setDeleteConfirm(dept._id)}
                       className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors"
@@ -574,20 +573,19 @@ const DepartmentManagementTab = () => {
               <div className="text-xs text-slate-400">
                 Showing {(currentPage - 1) * 6 + 1} to {Math.min(currentPage * 6, total)} of {total} departments
               </div>
-              
+
               <div className="flex items-center gap-1">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPageContext(currentPage - 1)}
-                  className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${
-                    currentPage === 1
+                  className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${currentPage === 1
                       ? 'text-slate-600 cursor-not-allowed'
                       : 'text-slate-300 hover:bg-slate-700'
-                  }`}
+                    }`}
                 >
                   Prev
                 </button>
-                
+
                 <div className="flex items-center gap-0.5">
                   {[...Array(Math.min(5, totalPages))].map((_, i) => {
                     let pageNum;
@@ -605,26 +603,24 @@ const DepartmentManagementTab = () => {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPageContext(pageNum)}
-                        className={`w-7 h-7 rounded text-xs font-medium transition-colors ${
-                          currentPage === pageNum
+                        className={`w-7 h-7 rounded text-xs font-medium transition-colors ${currentPage === pageNum
                             ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
                             : 'text-slate-400 hover:bg-slate-700'
-                        }`}
+                          }`}
                       >
                         {pageNum}
                       </button>
                     );
                   })}
                 </div>
-                
+
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPageContext(currentPage + 1)}
-                  className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${
-                    currentPage === totalPages
+                  className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${currentPage === totalPages
                       ? 'text-slate-600 cursor-not-allowed'
                       : 'text-slate-300 hover:bg-slate-700'
-                  }`}
+                    }`}
                 >
                   Next
                 </button>
@@ -649,7 +645,7 @@ const DepartmentManagementTab = () => {
                 setDeleteConfirmationText('');
               }}
             />
-            
+
             {/* Modal */}
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
               <motion.div
@@ -664,16 +660,16 @@ const DepartmentManagementTab = () => {
                     <div className="mx-auto flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-red-500/20 mb-3 sm:mb-4">
                       <FiTrash2 className="h-6 w-6 sm:h-7 sm:w-7 text-red-400" />
                     </div>
-                    
+
                     <h3 className="text-base sm:text-lg font-bold text-white mb-2">
                       Delete Department?
                     </h3>
-                    
+
                     <p className="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-5">
-                      This action <span className="font-semibold text-red-400">cannot be undone</span>. 
+                      This action <span className="font-semibold text-red-400">cannot be undone</span>.
                       Type <span className="font-bold text-red-400">DELETE</span> to confirm.
                     </p>
-                    
+
                     <div className="space-y-3">
                       <input
                         type="text"
@@ -683,10 +679,10 @@ const DepartmentManagementTab = () => {
                         placeholder="Type DELETE"
                         autoFocus
                       />
-                      
+
                       <div className={`text-xs sm:text-sm font-medium ${deleteConfirmationText === 'DELETE' ? 'text-green-400' : 'text-slate-500'}`}>
-                        {deleteConfirmationText === 'DELETE' 
-                          ? '✓ Ready to delete' 
+                        {deleteConfirmationText === 'DELETE'
+                          ? '✓ Ready to delete'
                           : 'Enter "DELETE" to enable delete button'}
                       </div>
                     </div>
@@ -697,11 +693,10 @@ const DepartmentManagementTab = () => {
                     type="button"
                     onClick={() => handleDelete(deleteConfirm)}
                     disabled={deleteConfirmationText !== 'DELETE'}
-                    className={`w-full py-2.5 px-4 rounded-lg text-xs sm:text-sm font-medium text-white transition-colors ${
-                      deleteConfirmationText === 'DELETE' 
-                        ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700' 
+                    className={`w-full py-2.5 px-4 rounded-lg text-xs sm:text-sm font-medium text-white transition-colors ${deleteConfirmationText === 'DELETE'
+                        ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700'
                         : 'bg-red-900/50 text-red-300 cursor-not-allowed'
-                    }`}
+                      }`}
                   >
                     Delete Department
                   </button>

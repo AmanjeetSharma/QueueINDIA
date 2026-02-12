@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import  Department  from "../models/department.model.js";
+import Department from "../models/department.model.js";
 
 
 
@@ -16,17 +16,15 @@ import  Department  from "../models/department.model.js";
 
 
 
-
-// Create Department
+// Create Department (Services removed)
 const createDepartment = asyncHandler(async (req, res) => {
     const {
         departmentCategory,
         name,
         address,
         contact,
-        workingHours = [],   // now an array of workingHoursSchema
-        services = [],       // array of serviceSchema
-        tokenManagement,     // optional tokenManagementSchema
+        workingHours = [],
+        tokenManagement,
         isSlotBookingEnabled = true,
         bookingWindowDays = 7,
         priorityCriteria = {
@@ -59,41 +57,11 @@ const createDepartment = asyncHandler(async (req, res) => {
         "address.pincode": address.pincode
     });
 
-    if (exist) throw new ApiError(409, "Department already exists in this location");
-
-    // 🛡 Ensure serviceCode uniqueness inside array
-    if (services.length) {
-        const codes = services.map(s => s.serviceCode?.toUpperCase());
-        const dupCode = codes.find((c, i) => codes.indexOf(c) !== i);
-        if (dupCode) {
-            throw new ApiError(400, `Duplicate serviceCode detected: ${dupCode}`);
-        }
+    if (exist) {
+        throw new ApiError(409, "Department already exists in this location");
     }
 
-    // 🔁 Normalize services according to new schema
-    const normalizedServices = services.map(service => ({
-        name: service.name,
-        serviceCode: service.serviceCode?.toUpperCase(),
-        description: service.description || "",
-        priorityAllowed: service.priorityAllowed ?? true,
-        isDocumentUploadRequired: service.isDocumentUploadRequired ?? true,
-        tokenManagement: service.tokenManagement || {
-            maxDailyServiceTokens: null,
-            maxTokensPerSlot: 10,
-            queueType: "Hybrid",
-            timeBtwEverySlot: 15,
-            slotStartTime: "10:00",
-            slotEndTime: "17:00",
-            slotWindows: []
-        },
-        requiredDocs: service.requiredDocs?.map(doc => ({
-            name: doc.name,
-            description: doc.description || "",
-            isMandatory: doc.isMandatory ?? true
-        })) || []
-    }));
-
-    // 🔁 Validate working hours
+    // 🔁 Normalize working hours
     const normalizedWorkingHours = workingHours.map(wh => ({
         day: wh.day,
         isClosed: wh.isClosed || false,
@@ -101,11 +69,14 @@ const createDepartment = asyncHandler(async (req, res) => {
         closeTime: wh.closeTime
     }));
 
-    // Validate that required times are present when not closed
+    // Validate working hours
     normalizedWorkingHours.forEach(wh => {
         if (!wh.isClosed) {
             if (!wh.openTime || !wh.closeTime) {
-                throw new ApiError(400, `Open and close times are required for ${wh.day} when not closed`);
+                throw new ApiError(
+                    400,
+                    `Open and close times are required for ${wh.day} when not closed`
+                );
             }
         }
     });
@@ -126,7 +97,10 @@ const createDepartment = asyncHandler(async (req, res) => {
             website: contact?.website || ""
         },
         workingHours: normalizedWorkingHours,
-        services: normalizedServices,
+
+        // ✅ Services empty initially
+        services: [],
+
         tokenManagement: tokenManagement || {
             maxDailyServiceTokens: null,
             maxTokensPerSlot: 10,
@@ -136,20 +110,21 @@ const createDepartment = asyncHandler(async (req, res) => {
             slotEndTime: "17:00",
             slotWindows: []
         },
+
         isSlotBookingEnabled,
-        bookingWindowDays: Math.min(Math.max(bookingWindowDays, 1), 30), // Clamp between 1-30
+        bookingWindowDays: Math.min(Math.max(bookingWindowDays, 1), 30),
+
         priorityCriteria: {
             seniorCitizenAge: Math.max(priorityCriteria.seniorCitizenAge || 60, 0),
             allowPregnantWomen: priorityCriteria.allowPregnantWomen ?? true,
             allowDifferentlyAbled: priorityCriteria.allowDifferentlyAbled ?? true
         },
+
         status,
         createdBy: req.user._id,
         admins: [],
         ratings: []
     });
-
-    await department.save();
 
     console.log(`🏛 Department Created → ${department.name} (ID: ${department._id})`);
 
@@ -157,6 +132,7 @@ const createDepartment = asyncHandler(async (req, res) => {
         .status(201)
         .json(new ApiResponse(201, department, "Department created successfully"));
 });
+
 
 
 
@@ -188,15 +164,11 @@ const updateDepartment = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Department ID is required");
     }
 
-    // 🔍 Fetch department FIRST (important)
     const department = await Department.findById(deptId);
     if (!department) {
         throw new ApiError(404, "Department not found");
     }
 
-    // 🔐 AUTHORIZATION
-    // SUPER_ADMIN → full access
-    // ADMIN → only assigned department
     if (req.user.role === "ADMIN") {
         const isAssigned = department.admins.some(
             adminId => adminId.toString() === req.user._id.toString()
@@ -207,7 +179,6 @@ const updateDepartment = asyncHandler(async (req, res) => {
         }
     }
 
-    // 🛑 DUPLICATE CHECK (name + location)
     if (
         updateData.name ||
         updateData.address?.city ||
@@ -225,41 +196,36 @@ const updateDepartment = asyncHandler(async (req, res) => {
         }
     }
 
-    // ───── UPDATE BASIC FIELDS ─────
     if (updateData.departmentCategory !== undefined) {
         department.departmentCategory = updateData.departmentCategory;
     }
 
     if (updateData.name !== undefined) {
-        department.name = updateData.name; 
-        // 🔥 slug will auto-update via model hook
+        department.name = updateData.name;
     }
 
     if (updateData.status !== undefined) {
         department.status = updateData.status;
     }
 
-    // ───── ADDRESS ─────
     if (updateData.address) {
         department.address = {
-            street: updateData.address.street || department.address.street,
-            city: updateData.address.city || department.address.city,
-            district: updateData.address.district || department.address.district,
-            state: updateData.address.state || department.address.state,
-            pincode: updateData.address.pincode || department.address.pincode
+            street: updateData.address.street ?? department.address.street,
+            city: updateData.address.city ?? department.address.city,
+            district: updateData.address.district ?? department.address.district,
+            state: updateData.address.state ?? department.address.state,
+            pincode: updateData.address.pincode ?? department.address.pincode
         };
     }
 
-    // ───── CONTACT ─────
     if (updateData.contact) {
         department.contact = {
-            phone: updateData.contact.phone || department.contact.phone,
-            email: updateData.contact.email || department.contact.email,
-            website: updateData.contact.website || department.contact.website
+            phone: updateData.contact.phone ?? department.contact.phone,
+            email: updateData.contact.email ?? department.contact.email,
+            website: updateData.contact.website ?? department.contact.website
         };
     }
 
-    // ───── WORKING HOURS ─────
     if (Array.isArray(updateData.workingHours)) {
         updateData.workingHours.forEach(wh => {
             if (!wh.isClosed && (!wh.openTime || !wh.closeTime)) {
@@ -269,34 +235,10 @@ const updateDepartment = asyncHandler(async (req, res) => {
                 );
             }
         });
+
         department.workingHours = updateData.workingHours;
     }
 
-    // ───── SERVICES ─────
-    if (Array.isArray(updateData.services)) {
-        const codes = updateData.services.map(s => s.serviceCode?.toUpperCase());
-        const dupCode = codes.find((c, i) => codes.indexOf(c) !== i);
-
-        if (dupCode) {
-            throw new ApiError(400, `Duplicate serviceCode detected: ${dupCode}`);
-        }
-
-        department.services = updateData.services.map(service => ({
-            name: service.name,
-            serviceCode: service.serviceCode?.toUpperCase(),
-            description: service.description || "",
-            priorityAllowed: service.priorityAllowed ?? true,
-            isDocumentUploadRequired: service.isDocumentUploadRequired ?? true,
-            tokenManagement: service.tokenManagement,
-            requiredDocs: service.requiredDocs?.map(doc => ({
-                name: doc.name,
-                description: doc.description || "",
-                isMandatory: doc.isMandatory ?? true
-            })) || []
-        }));
-    }
-
-    // ───── PRIORITY CRITERIA ─────
     if (updateData.priorityCriteria) {
         department.priorityCriteria = {
             seniorCitizenAge: Math.max(
@@ -313,7 +255,6 @@ const updateDepartment = asyncHandler(async (req, res) => {
         };
     }
 
-    // ───── BOOKING WINDOW ─────
     if (updateData.bookingWindowDays !== undefined) {
         department.bookingWindowDays = Math.min(
             Math.max(updateData.bookingWindowDays, 1),
@@ -321,13 +262,11 @@ const updateDepartment = asyncHandler(async (req, res) => {
         );
     }
 
-    // ───── SLOT BOOKING ─────
     if (updateData.isSlotBookingEnabled !== undefined) {
         department.isSlotBookingEnabled = updateData.isSlotBookingEnabled;
     }
 
-    // ✅ SAVE (IMPORTANT)
-    await department.save(); // hooks + validation + slug update
+    await department.save();
 
     console.log(`✳️ Department Updated → ${department.name}`);
 

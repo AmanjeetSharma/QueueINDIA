@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDepartment } from '../../../../../context/DepartmentContext';
@@ -32,6 +32,7 @@ const DepartmentEdit = () => {
     const [pendingChanges, setPendingChanges] = useState({});
     const [hasChanges, setHasChanges] = useState(false);
     const [mobileTabsOpen, setMobileTabsOpen] = useState(false);
+    const dropdownRef = useRef(null);
 
     const { register, handleSubmit, watch, setValue, getValues, reset, formState: { errors } } = useForm({
         defaultValues: {
@@ -59,6 +60,19 @@ const DepartmentEdit = () => {
             }
         }
     });
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setMobileTabsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     // Fetch department data
     useEffect(() => {
@@ -368,10 +382,10 @@ const DepartmentEdit = () => {
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
                 {/* Mobile Tab Buttons */}
-                <div className="md:hidden mb-4">
+                <div className="md:hidden mb-4 relative" ref={dropdownRef}>
                     <motion.button
                         onClick={() => setMobileTabsOpen(!mobileTabsOpen)}
-                        className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white font-medium flex items-center justify-between hover:bg-slate-750 transition-colors"
+                        className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white font-medium flex items-center justify-between hover:bg-slate-750 transition-colors relative z-20"
                     >
                         <span className="flex items-center gap-2">
                             {tabs.find(t => t.id === activeTab)?.icon &&
@@ -396,7 +410,11 @@ const DepartmentEdit = () => {
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                className="absolute left-3 right-3 top-28 bg-slate-800 border border-slate-700 rounded-lg overflow-hidden z-40"
+                                transition={{ duration: 0.2 }}
+                                className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg overflow-hidden z-50 shadow-xl"
+                                style={{
+                                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3)'
+                                }}
                             >
                                 {tabs.map((tab, index) => (
                                     <motion.button
@@ -409,6 +427,7 @@ const DepartmentEdit = () => {
                                             ? 'bg-blue-600/20 text-blue-400'
                                             : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
                                             }`}
+                                        whileHover={{ x: 4 }}
                                     >
                                         <tab.icon className="flex-shrink-0" />
                                         <span className="font-medium">{tab.label}</span>

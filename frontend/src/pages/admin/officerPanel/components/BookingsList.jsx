@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useDepartmentOfficer } from '../../../../context/DepartmentOfficerContext';
 import {
   FiSearch,
@@ -14,6 +14,7 @@ import {
   FiChevronLeft,
   FiChevronRight
 } from 'react-icons/fi';
+import { useAuth } from '../../../../context/AuthContext';
 
 const BookingsList = () => {
   const navigate = useNavigate();
@@ -27,8 +28,9 @@ const BookingsList = () => {
     limit,
     getDepartmentBookings,
     setCurrentPage,
-    setLimit
   } = useDepartmentOfficer();
+
+  const { user } = useAuth();
 
   const [filters, setLocalFilters] = useState({
     status: '',
@@ -52,6 +54,14 @@ const BookingsList = () => {
 
   const handleViewDetails = (bookingId) => {
     navigate(`/department/bookings/${bookingId}`);
+  };
+
+  const handleNavigateBack = () => {
+    if (user?.role === 'SUPER_ADMIN') {
+      navigate(`/super-admin-panel/departments`);
+    } else {
+      navigate('/officer-panel');
+    }
   };
 
   const handleFilterChange = (e) => {
@@ -177,7 +187,7 @@ const BookingsList = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate(-1)}
+                  onClick={handleNavigateBack}
                   className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center justify-center"
                   aria-label="Go back to dashboard"
                 >

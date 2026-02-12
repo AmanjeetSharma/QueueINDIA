@@ -261,7 +261,7 @@ const QueueManagement = () => {
                     <h3 className="text-xl font-bold text-white mb-2">Missing Parameters</h3>
                     <p className="text-gray-300 mb-6">Select service and date from queue management.</p>
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate("/department/queue-services")}
                         className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                     >
                         Back
@@ -279,7 +279,7 @@ const QueueManagement = () => {
                     <div className="flex items-center justify-between flex-wrap gap-3">
                         <div className="flex items-center gap-3">
                             <button
-                                onClick={() => navigate(-1)}
+                                onClick={() => navigate("/department/queue-services")}
                                 className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
                             >
                                 <ArrowLeft className="w-5 h-5" />

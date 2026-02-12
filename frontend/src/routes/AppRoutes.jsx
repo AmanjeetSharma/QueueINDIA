@@ -76,6 +76,7 @@ const AppRoutes = () => {
   return (
     <BrowserRouter>
       <ScrollToTop />
+
       <Navbar />
 
       <Routes>

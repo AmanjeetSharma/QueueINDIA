@@ -92,7 +92,7 @@ const BookingDetailsPage = () => {
     const handleCompleteBooking = async () => {
         try {
             await completeBooking(bookingId);
-            setTimeout(() => navigate('/officer-panel/bookings'), 1000);
+            setTimeout(() => navigate('/department/bookings'), 1000);
         } catch (err) {
             // Error handled in context
         }
@@ -101,7 +101,7 @@ const BookingDetailsPage = () => {
     const handleCancelBooking = async () => {
         try {
             await cancelBooking(bookingId);
-            setTimeout(() => navigate('/officer-panel/bookings'), 1000);
+            setTimeout(() => navigate('/department/bookings'), 1000);
         } catch (err) {
             // Error handled in context
         }
@@ -115,7 +115,7 @@ const BookingDetailsPage = () => {
         try {
             await rejectBooking(bookingId, rejectionReason);
             setShowRejectConfirm(false);
-            setTimeout(() => navigate('/officer-panel/bookings'), 1000);
+            setTimeout(() => navigate('/department/bookings'), 1000);
         } catch (err) {
             setShowRejectConfirm(false);
         }

@@ -241,7 +241,7 @@ const DepartmentEdit = () => {
             await updateDepartment(deptId, updatePayload);
 
             setTimeout(() => {
-                navigate(`/super-admin-panel/departments/${deptId}`);
+                navigate(`/super-admin-panel/departments`);
             }, 1500);
 
         } catch (error) {

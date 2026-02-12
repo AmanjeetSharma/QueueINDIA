@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../../../context/AuthContext';
 import toast from 'react-hot-toast';
-import { 
-  MdRefresh, 
-  MdRedo, 
-  MdSearch, 
-  MdFilterList, 
-  MdArrowUpward, 
+import {
+  MdRefresh,
+  MdRedo,
+  MdSearch,
+  MdFilterList,
+  MdArrowUpward,
   MdArrowDownward,
   MdPerson,
   MdEmail,
@@ -20,7 +20,10 @@ import {
   MdLockReset,
   MdLogout,
   MdDelete,
-  MdCheckCircle
+  MdCheckCircle,
+  MdOutlineAdminPanelSettings,
+  MdOutlineDashboard,
+  MdClose
 } from "react-icons/md";
 import { FaUsers, FaUserShield, FaUserTie, FaUser } from "react-icons/fa";
 
@@ -70,14 +73,15 @@ const UserManagementTab = () => {
   const [temporaryPassword, setTemporaryPassword] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(null);
 
   // Fetch users
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      
+
       const response = await authGetAllUsers();
-      
+
       let allUsers = [];
       if (response?.data?.users) {
         allUsers = response.data.users;
@@ -86,10 +90,10 @@ const UserManagementTab = () => {
       } else if (Array.isArray(response)) {
         allUsers = response;
       }
-      
+
       // Client-side filtering
       let filteredUsers = [...allUsers];
-      
+
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase().trim();
         filteredUsers = filteredUsers.filter(user =>
@@ -98,28 +102,28 @@ const UserManagementTab = () => {
           user.phone?.toLowerCase().includes(term)
         );
       }
-      
+
       if (filters.role !== 'ALL') {
         filteredUsers = filteredUsers.filter(user => user.role === filters.role);
       }
-      
+
       if (filters.emailVerified !== 'ALL') {
-        filteredUsers = filteredUsers.filter(user => 
+        filteredUsers = filteredUsers.filter(user =>
           filters.emailVerified === 'VERIFIED' ? user.isEmailVerified : !user.isEmailVerified
         );
       }
-      
+
       if (filters.phoneVerified !== 'ALL') {
-        filteredUsers = filteredUsers.filter(user => 
+        filteredUsers = filteredUsers.filter(user =>
           filters.phoneVerified === 'VERIFIED' ? user.isPhoneVerified : !user.isPhoneVerified
         );
       }
-      
+
       // Sorting
       filteredUsers.sort((a, b) => {
         let aValue, bValue;
-        
-        switch(filters.sortBy) {
+
+        switch (filters.sortBy) {
           case 'name':
             aValue = a.name?.toLowerCase() || '';
             bValue = b.name?.toLowerCase() || '';
@@ -137,25 +141,25 @@ const UserManagementTab = () => {
             aValue = new Date(a.createdAt || 0).getTime();
             bValue = new Date(b.createdAt || 0).getTime();
         }
-        
+
         if (filters.sortOrder === 'asc') {
           return aValue > bValue ? 1 : -1;
         } else {
           return aValue < bValue ? 1 : -1;
         }
       });
-      
+
       const startIndex = (pagination.currentPage - 1) * pagination.limit;
       const endIndex = startIndex + pagination.limit;
       const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-      
+
       setUsers(paginatedUsers);
       setPagination(prev => ({
         ...prev,
         totalPages: Math.ceil(filteredUsers.length / pagination.limit),
         totalUsers: filteredUsers.length
       }));
-      
+
     } catch (error) {
       console.error('Failed to fetch users:', error);
       toast.error('Failed to load users');
@@ -183,6 +187,8 @@ const UserManagementTab = () => {
       sortBy: 'createdAt',
       sortOrder: 'desc'
     });
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+    fetchUsers();
   };
 
   const toggleSortOrder = () => {
@@ -216,26 +222,31 @@ const UserManagementTab = () => {
   const openDeletePopup = (user) => {
     setSelectedUser(user);
     setPopupState(prev => ({ ...prev, showDelete: true }));
+    setShowMobileMenu(null);
   };
 
   const openLogoutPopup = (user) => {
     setSelectedUser(user);
     setPopupState(prev => ({ ...prev, showLogout: true }));
+    setShowMobileMenu(null);
   };
 
   const openResetPasswordPopup = (user) => {
     setSelectedUser(user);
     setPopupState(prev => ({ ...prev, showResetPassword: true }));
+    setShowMobileMenu(null);
   };
 
   const openViewUserPopup = (user) => {
     setSelectedUser(user);
     setPopupState(prev => ({ ...prev, showViewUser: true }));
+    setShowMobileMenu(null);
   };
 
   const openChangeRolePopup = (user) => {
     setSelectedUser(user);
     setPopupState(prev => ({ ...prev, showChangeRole: true }));
+    setShowMobileMenu(null);
   };
 
   // Action handlers
@@ -243,6 +254,7 @@ const UserManagementTab = () => {
     try {
       setActionLoading(true);
       await authDeleteUserByAdmin(selectedUser._id);
+      toast.success('User deleted successfully', { duration: 2000, position: 'top-center' });
       closeAllPopups();
       fetchUsers();
     } catch (error) {
@@ -256,6 +268,7 @@ const UserManagementTab = () => {
     try {
       setActionLoading(true);
       await authForceLogout(selectedUser._id);
+      toast.success('User logged out successfully', { duration: 2000, position: 'top-center' });
       closeAllPopups();
       fetchUsers();
     } catch (error) {
@@ -281,6 +294,7 @@ const UserManagementTab = () => {
     try {
       setActionLoading(true);
       await authChangeRole(selectedUser._id, newRole);
+      toast.success(`Role updated to ${newRole.replace('_', ' ')}`, { duration: 2000, position: 'top-center' });
       closeAllPopups();
       fetchUsers();
     } catch (error) {
@@ -304,13 +318,13 @@ const UserManagementTab = () => {
   const getRoleBadgeColor = (role) => {
     switch (role) {
       case 'SUPER_ADMIN':
-        return 'bg-red-50 text-red-700 border border-red-200';
+        return 'bg-red-500/20 text-red-300 border border-red-500/30';
       case 'ADMIN':
-        return 'bg-purple-50 text-purple-700 border border-purple-200';
+        return 'bg-purple-500/20 text-purple-300 border border-purple-500/30';
       case 'DEPARTMENT_OFFICER':
-        return 'bg-blue-50 text-blue-700 border border-blue-200';
+        return 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
       default:
-        return 'bg-green-50 text-green-700 border border-green-200';
+        return 'bg-green-500/20 text-green-300 border border-green-500/30';
     }
   };
 
@@ -318,13 +332,13 @@ const UserManagementTab = () => {
   const getRoleIcon = (role) => {
     switch (role) {
       case 'SUPER_ADMIN':
-        return <MdShield className="text-red-500" />;
+        return <MdShield className="text-red-400" />;
       case 'ADMIN':
-        return <FaUserShield className="text-purple-500" />;
+        return <FaUserShield className="text-purple-400" />;
       case 'DEPARTMENT_OFFICER':
-        return <FaUserTie className="text-blue-500" />;
+        return <FaUserTie className="text-blue-400" />;
       default:
-        return <FaUser className="text-green-500" />;
+        return <FaUser className="text-green-400" />;
     }
   };
 
@@ -336,7 +350,7 @@ const UserManagementTab = () => {
     const officers = users.filter(u => u.role === 'DEPARTMENT_OFFICER').length;
     const regularUsers = users.filter(u => u.role === 'USER').length;
     const verifiedUsers = users.filter(u => u.isEmailVerified && u.isPhoneVerified).length;
-    
+
     return { total, superAdmins, admins, officers, regularUsers, verifiedUsers };
   };
 
@@ -345,142 +359,172 @@ const UserManagementTab = () => {
   // Action buttons component
   const ActionButtons = ({ user }) => {
     return (
-      <div className="flex gap-1.5">
-        {/* Desktop Actions with Text */}
-        <div className="hidden md:flex flex-wrap gap-1.5">
+      <>
+        {/* Desktop Actions */}
+        <div className="hidden md:flex items-center gap-1.5">
           <button
             onClick={() => openViewUserPopup(user)}
-            className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 text-xs bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors flex items-center gap-1.5"
             title="View user details"
           >
-            <MdPerson className="text-sm" />
-            View
+            <MdPerson className="w-3.5 h-3.5" />
+            <span>View</span>
           </button>
-          
+
           <button
             onClick={() => openChangeRolePopup(user)}
-            className="px-3 py-1.5 text-xs bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 rounded-lg transition-colors flex items-center gap-1.5"
             title="Change user role"
           >
-            <MdEdit className="text-sm" />
-            Role
+            <MdEdit className="w-3.5 h-3.5" />
+            <span>Role</span>
           </button>
-          
+
           <button
             onClick={() => openResetPasswordPopup(user)}
-            className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-300 rounded-lg transition-colors flex items-center gap-1.5"
             title="Reset user password"
           >
-            <MdLockReset className="text-sm" />
-            Reset
+            <MdLockReset className="w-3.5 h-3.5" />
+            <span>Reset</span>
           </button>
-          
+
           <button
             onClick={() => openLogoutPopup(user)}
-            className="px-3 py-1.5 text-xs bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 text-xs bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 rounded-lg transition-colors flex items-center gap-1.5"
             title="Force logout from all sessions"
           >
-            <MdLogout className="text-sm" />
-            Logout All
+            <MdLogout className="w-3.5 h-3.5" />
+            <span>Logout</span>
           </button>
-          
+
           <button
             onClick={() => openDeletePopup(user)}
-            className="px-3 py-1.5 text-xs bg-red-50 text-red-700 rounded-lg hover:bg-red-100 flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 text-xs bg-red-900/30 hover:bg-red-900/50 text-red-300 rounded-lg transition-colors flex items-center gap-1.5"
             title="Delete user permanently"
           >
-            <MdDelete className="text-sm" />
-            Delete
+            <MdDelete className="w-3.5 h-3.5" />
+            <span>Delete</span>
           </button>
         </div>
-        
-        {/* Mobile Actions - Icons Only */}
-        <div className="flex md:hidden gap-1">
+
+        {/* Mobile Actions - Menu Button */}
+        <div className="relative md:hidden">
           <button
-            onClick={() => openViewUserPopup(user)}
-            className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-            title="View details"
+            onClick={() => setShowMobileMenu(showMobileMenu === user._id ? null : user._id)}
+            className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors"
           >
-            <MdPerson className="text-base" />
+            <MdOutlineAdminPanelSettings className="w-4 h-4 text-slate-300" />
           </button>
-          <button
-            onClick={() => openChangeRolePopup(user)}
-            className="p-1.5 text-purple-500 hover:text-purple-700 hover:bg-purple-100 rounded-lg transition-colors cursor-pointer"
-            title="Change role"
-          >
-            <MdEdit className="text-base" />
-          </button>
-          <button
-            onClick={() => openResetPasswordPopup(user)}
-            className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer"
-            title="Reset password"
-          >
-            <MdLockReset className="text-base" />
-          </button>
-          <button
-            onClick={() => openLogoutPopup(user)}
-            className="p-1.5 text-yellow-500 hover:text-yellow-700 hover:bg-yellow-100 rounded-lg transition-colors cursor-pointer"
-            title="Force logout"
-          >
-            <MdLogout className="text-base" />
-          </button>
-          <button
-            onClick={() => openDeletePopup(user)}
-            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors cursor-pointer"
-            title="Delete user"
-          >
-            <MdDelete className="text-base" />
-          </button>
+
+          <AnimatePresence>
+            {showMobileMenu === user._id && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50"
+              >
+                <div className="p-1.5">
+                  <button
+                    onClick={() => openViewUserPopup(user)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    <MdPerson className="w-3.5 h-3.5" />
+                    View Details
+                  </button>
+                  <button
+                    onClick={() => openChangeRolePopup(user)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-purple-300 hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    <MdEdit className="w-3.5 h-3.5" />
+                    Change Role
+                  </button>
+                  <button
+                    onClick={() => openResetPasswordPopup(user)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-blue-300 hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    <MdLockReset className="w-3.5 h-3.5" />
+                    Reset Password
+                  </button>
+                  <button
+                    onClick={() => openLogoutPopup(user)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-amber-300 hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    <MdLogout className="w-3.5 h-3.5" />
+                    Force Logout
+                  </button>
+                  <button
+                    onClick={() => openDeletePopup(user)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-300 hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    <MdDelete className="w-3.5 h-3.5" />
+                    Delete User
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
+      </>
     );
   };
 
   if (loading && !actionLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-red-600 border-t-transparent mx-auto"></div>
-          <p className="mt-6 text-lg font-medium text-gray-700">Loading user database...</p>
-          <p className="mt-2 text-gray-500">Please wait while we fetch all users</p>
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+            <div className="w-8 h-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          </div>
+          <p className="text-lg font-medium text-slate-300">Loading users...</p>
+          <p className="mt-2 text-sm text-slate-400">Please wait while we fetch the data</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+      {/* Animated Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500 rounded-full blur-3xl opacity-5"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full blur-3xl opacity-5"></div>
+      </div>
+
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="relative z-10 border-b border-slate-700/50 bg-slate-800/40 backdrop-blur-xl sticky top-0">
+        <div className="px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900">User Management</h1>
-              <p className="mt-1 text-sm text-gray-600">Manage and monitor all system users</p>
+              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                User Management
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-slate-400">Manage and monitor all system users</p>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <button
                 onClick={handleResetFilters}
-                className="px-3 py-2 text-xs border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-1 transition-colors cursor-pointer"
+                className="p-2 sm:px-3 sm:py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors flex items-center gap-1.5 text-xs sm:text-sm"
               >
-                <MdRedo className="text-base" />
+                <MdRedo className="w-4 h-4" />
                 <span className="hidden sm:inline">Reset</span>
               </button>
-              
+
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="px-3 py-2 text-xs border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-1 transition-colors cursor-pointer"
+                className="p-2 sm:px-3 sm:py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors flex items-center gap-1.5 text-xs sm:text-sm"
               >
-                <MdFilterList className="text-base" />
+                <MdFilterList className="w-4 h-4" />
                 <span className="hidden sm:inline">Filters</span>
               </button>
-              
+
               <button
                 onClick={fetchUsers}
-                className="px-3 py-2 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-1 transition-colors cursor-pointer"
+                className="p-2 sm:px-3 sm:py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-lg transition-colors flex items-center gap-1.5 text-xs sm:text-sm"
               >
-                <MdRefresh className="text-base" />
+                <MdRefresh className="w-4 h-4" />
                 <span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
@@ -488,124 +532,95 @@ const UserManagementTab = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
-          >
+      {/* Stats Cards - Compact */}
+      <div className="relative z-10 px-4 sm:px-6 py-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600">Total Users</p>
-                <p className="text-xl font-bold text-gray-900 mt-1">{stats.total}</p>
+                <p className="text-xs font-medium text-slate-400">Total</p>
+                <p className="text-lg font-bold text-white mt-0.5">{stats.total}</p>
               </div>
-              <div className="p-2 rounded-lg bg-blue-50">
-                <FaUsers className="text-lg text-blue-500" />
+              <div className="p-1.5 rounded-lg bg-blue-500/20">
+                <FaUsers className="w-4 h-4 text-blue-400" />
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
-          >
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600">Super Admins</p>
-                <p className="text-xl font-bold text-red-600 mt-1">{stats.superAdmins}</p>
+                <p className="text-xs font-medium text-slate-400">Super</p>
+                <p className="text-lg font-bold text-red-400 mt-0.5">{stats.superAdmins}</p>
               </div>
-              <div className="p-2 rounded-lg bg-red-50">
-                <MdShield className="text-lg text-red-500" />
+              <div className="p-1.5 rounded-lg bg-red-500/20">
+                <MdShield className="w-4 h-4 text-red-400" />
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
-          >
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600">Admins</p>
-                <p className="text-xl font-bold text-purple-600 mt-1">{stats.admins}</p>
+                <p className="text-xs font-medium text-slate-400">Admin</p>
+                <p className="text-lg font-bold text-purple-400 mt-0.5">{stats.admins}</p>
               </div>
-              <div className="p-2 rounded-lg bg-purple-50">
-                <FaUserShield className="text-lg text-purple-500" />
+              <div className="p-1.5 rounded-lg bg-purple-500/20">
+                <FaUserShield className="w-4 h-4 text-purple-400" />
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
-          >
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600">Officers</p>
-                <p className="text-xl font-bold text-blue-600 mt-1">{stats.officers}</p>
+                <p className="text-xs font-medium text-slate-400">Officer</p>
+                <p className="text-lg font-bold text-blue-400 mt-0.5">{stats.officers}</p>
               </div>
-              <div className="p-2 rounded-lg bg-blue-50">
-                <FaUserTie className="text-lg text-blue-500" />
+              <div className="p-1.5 rounded-lg bg-blue-500/20">
+                <FaUserTie className="w-4 h-4 text-blue-400" />
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
-          >
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600">Regular Users</p>
-                <p className="text-xl font-bold text-green-600 mt-1">{stats.regularUsers}</p>
+                <p className="text-xs font-medium text-slate-400">User</p>
+                <p className="text-lg font-bold text-green-400 mt-0.5">{stats.regularUsers}</p>
               </div>
-              <div className="p-2 rounded-lg bg-green-50">
-                <FaUser className="text-lg text-green-500" />
+              <div className="p-1.5 rounded-lg bg-green-500/20">
+                <FaUser className="w-4 h-4 text-green-400" />
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
-          >
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600">Verified Users</p>
-                <p className="text-xl font-bold text-emerald-600 mt-1">{stats.verifiedUsers}</p>
+                <p className="text-xs font-medium text-slate-400">Verified</p>
+                <p className="text-lg font-bold text-emerald-400 mt-0.5">{stats.verifiedUsers}</p>
               </div>
-              <div className="p-2 rounded-lg bg-emerald-50">
-                <MdCheckCircle className="text-lg text-emerald-500" />
+              <div className="p-1.5 rounded-lg bg-emerald-500/20">
+                <MdCheckCircle className="w-4 h-4 text-emerald-400" />
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
-      {/* Compact Search and Filters Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-          <div className="flex flex-col md:flex-row md:items-center gap-3">
+      {/* Search and Filters */}
+      <div className="relative z-10 px-4 sm:px-6 py-2">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
+          <div className="flex flex-col md:flex-row md:items-center gap-2">
             {/* Search Bar */}
             <div className="flex-1">
               <div className="relative">
-                <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
+                <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search users..."
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+                  className="w-full pl-9 pr-4 py-2 bg-slate-700 border border-slate-600 text-white text-sm placeholder-slate-400 rounded-lg focus:border-blue-500 outline-none transition-colors"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleApplyFilters()}
@@ -616,7 +631,7 @@ const UserManagementTab = () => {
             {/* Quick Filters */}
             <div className="flex items-center gap-2">
               <select
-                className="text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="text-sm bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:border-blue-500 outline-none transition-colors"
                 value={filters.role}
                 onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
               >
@@ -629,92 +644,95 @@ const UserManagementTab = () => {
 
               <button
                 onClick={toggleSortOrder}
-                className="px-3 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center cursor-pointer"
+                className="p-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg transition-colors"
                 title={`Sort ${filters.sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
               >
-                {filters.sortOrder === 'asc' ? 
-                  <MdArrowUpward className="text-base" /> : 
-                  <MdArrowDownward className="text-base" />
+                {filters.sortOrder === 'asc' ?
+                  <MdArrowUpward className="w-4 h-4 text-slate-300" /> :
+                  <MdArrowDownward className="w-4 h-4 text-slate-300" />
                 }
               </button>
 
               <button
                 onClick={handleApplyFilters}
-                className="px-4 py-2.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors cursor-pointer"
+                className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg font-medium transition-colors"
               >
                 Apply
               </button>
             </div>
           </div>
 
-          {/* Advanced Filters - Collapsible */}
-          {showFilters && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="overflow-hidden mt-3 pt-3 border-t border-gray-100"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Email Verification
-                  </label>
-                  <select
-                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    value={filters.emailVerified}
-                    onChange={(e) => setFilters(prev => ({ ...prev, emailVerified: e.target.value }))}
-                  >
-                    <option value="ALL">All Email Status</option>
-                    <option value="VERIFIED">Verified Only</option>
-                    <option value="UNVERIFIED">Unverified Only</option>
-                  </select>
-                </div>
+          {/* Advanced Filters */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-700">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">
+                      Email Verification
+                    </label>
+                    <select
+                      className="w-full text-sm bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:border-blue-500 outline-none transition-colors"
+                      value={filters.emailVerified}
+                      onChange={(e) => setFilters(prev => ({ ...prev, emailVerified: e.target.value }))}
+                    >
+                      <option value="ALL">All Email Status</option>
+                      <option value="VERIFIED">Verified Only</option>
+                      <option value="UNVERIFIED">Unverified Only</option>
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Phone Verification
-                  </label>
-                  <select
-                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    value={filters.phoneVerified}
-                    onChange={(e) => setFilters(prev => ({ ...prev, phoneVerified: e.target.value }))}
-                  >
-                    <option value="ALL">All Phone Status</option>
-                    <option value="VERIFIED">Verified Only</option>
-                    <option value="UNVERIFIED">Unverified Only</option>
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">
+                      Phone Verification
+                    </label>
+                    <select
+                      className="w-full text-sm bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:border-blue-500 outline-none transition-colors"
+                      value={filters.phoneVerified}
+                      onChange={(e) => setFilters(prev => ({ ...prev, phoneVerified: e.target.value }))}
+                    >
+                      <option value="ALL">All Phone Status</option>
+                      <option value="VERIFIED">Verified Only</option>
+                      <option value="UNVERIFIED">Unverified Only</option>
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Sort By
-                  </label>
-                  <select
-                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    value={filters.sortBy}
-                    onChange={(e) => changeSortField(e.target.value)}
-                  >
-                    <option value="createdAt">Join Date</option>
-                    <option value="name">Name</option>
-                    <option value="email">Email</option>
-                    <option value="role">Role</option>
-                  </select>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">
+                      Sort By
+                    </label>
+                    <select
+                      className="w-full text-sm bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:border-blue-500 outline-none transition-colors"
+                      value={filters.sortBy}
+                      onChange={(e) => changeSortField(e.target.value)}
+                    >
+                      <option value="createdAt">Join Date</option>
+                      <option value="name">Name</option>
+                      <option value="email">Email</option>
+                      <option value="role">Role</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
       {/* Users List */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="relative z-10 px-4 sm:px-6 py-4">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
           {/* List Header */}
-          <div className="px-5 py-3 border-b border-gray-200 bg-gray-50">
+          <div className="px-4 py-3 border-b border-slate-700 bg-slate-800/80">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-semibold text-gray-900">All Users</h3>
-                <p className="text-xs text-gray-600 mt-0.5">
+                <h3 className="text-sm font-semibold text-white">All Users</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
                   Showing {Math.min(pagination.currentPage * pagination.limit, pagination.totalUsers)} of {pagination.totalUsers} users
                 </p>
               </div>
@@ -722,25 +740,22 @@ const UserManagementTab = () => {
           </div>
 
           {/* Users List */}
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-slate-700">
             {users.length > 0 ? (
               users.map((user, index) => (
                 <motion.div
                   key={user._id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="p-5 hover:bg-gray-50 transition-colors"
+                  transition={{ delay: index * 0.03 }}
+                  className="p-4 hover:bg-slate-700/30 transition-colors"
                 >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     {/* User Info */}
-                    <div className="flex items-start gap-3 flex-1">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
                       {/* Avatar */}
-                      <div 
-                        className="relative group cursor-pointer"
-                        onClick={() => openViewUserPopup(user)}
-                      >
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-red-100 to-red-50 border-2 border-white shadow-sm">
+                      <div className="relative flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-slate-600">
                           {user.avatar ? (
                             <img
                               src={user.avatar}
@@ -748,53 +763,53 @@ const UserManagementTab = () => {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-red-500 text-white font-bold">
-                              {user.name.charAt(0).toUpperCase()}
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-600 to-cyan-600 text-white font-bold text-sm">
+                              {user.name?.charAt(0).toUpperCase()}
                             </div>
                           )}
                         </div>
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full border border-gray-200 flex items-center justify-center">
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-slate-800 rounded-full border border-slate-600 flex items-center justify-center">
                           {getRoleIcon(user.role)}
                         </div>
                       </div>
 
                       {/* Details */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 mb-2">
-                          <h4 className="text-base font-semibold text-gray-900 truncate">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 mb-1.5">
+                          <h4 className="text-sm font-semibold text-white truncate">
                             {user.name}
                           </h4>
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)} w-fit`}>
                             {getRoleIcon(user.role)}
-                            {user.role.replace('_', ' ')}
+                            <span>{user.role.replace('_', ' ')}</span>
                           </span>
                         </div>
-                        
+
                         <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <MdEmail className="text-gray-400 flex-shrink-0" />
+                          <div className="flex items-center gap-1.5 text-xs text-slate-300">
+                            <MdEmail className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
                             <span className="truncate">{user.email}</span>
                             {user.isEmailVerified ? (
-                              <MdVerified className="text-green-500 flex-shrink-0" title="Email Verified" />
+                              <MdVerified className="w-3.5 h-3.5 text-green-500 flex-shrink-0" title="Email Verified" />
                             ) : (
-                              <MdWarning className="text-yellow-500 flex-shrink-0" title="Email Not Verified" />
+                              <MdWarning className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" title="Email Not Verified" />
                             )}
                           </div>
-                          
+
                           {user.phone && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <MdPhone className="text-gray-400 flex-shrink-0" />
+                            <div className="flex items-center gap-1.5 text-xs text-slate-300">
+                              <MdPhone className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
                               <span>{user.phone}</span>
                               {user.isPhoneVerified ? (
-                                <MdVerified className="text-green-500 flex-shrink-0" title="Phone Verified" />
+                                <MdVerified className="w-3.5 h-3.5 text-green-500 flex-shrink-0" title="Phone Verified" />
                               ) : (
-                                <MdWarning className="text-yellow-500 flex-shrink-0" title="Phone Not Verified" />
+                                <MdWarning className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" title="Phone Not Verified" />
                               )}
                             </div>
                           )}
-                          
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <MdCalendarToday className="text-gray-400 flex-shrink-0" />
+
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                            <MdCalendarToday className="w-3.5 h-3.5 flex-shrink-0" />
                             <span>Joined {formatDate(user.createdAt)}</span>
                           </div>
                         </div>
@@ -808,17 +823,17 @@ const UserManagementTab = () => {
               ))
             ) : (
               <div className="p-8 text-center">
-                <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <FaUsers className="text-2xl text-gray-400" />
+                <div className="mx-auto w-12 h-12 bg-slate-700/50 rounded-full flex items-center justify-center mb-3">
+                  <FaUsers className="w-6 h-6 text-slate-500" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">No Users Found</h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <h3 className="text-base font-semibold text-white mb-1">No Users Found</h3>
+                <p className="text-xs text-slate-400 mb-4">
                   {searchTerm ? 'Try different search terms or filters' : 'No users in the system yet'}
                 </p>
                 {searchTerm && (
                   <button
                     onClick={handleResetFilters}
-                    className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium cursor-pointer"
+                    className="px-4 py-2 text-xs bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg font-medium transition-colors"
                   >
                     Clear Filters
                   </button>
@@ -827,28 +842,28 @@ const UserManagementTab = () => {
             )}
           </div>
 
-          {/* Pagination */}
+          {/* Pagination - Compact */}
           {pagination.totalPages > 1 && (
-            <div className="px-5 py-3 border-t border-gray-200 bg-gray-50">
+            <div className="px-4 py-3 border-t border-slate-700 bg-slate-800/80">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="text-xs text-gray-600">
-                  Page <span className="font-medium">{pagination.currentPage}</span> of{' '}
-                  <span className="font-medium">{pagination.totalPages}</span>
+                <div className="text-xs text-slate-400">
+                  Page <span className="font-medium text-white">{pagination.currentPage}</span> of{' '}
+                  <span className="font-medium text-white">{pagination.totalPages}</span>
                 </div>
-                
-                <div className="flex items-center space-x-1">
+
+                <div className="flex items-center gap-1">
                   <button
                     disabled={pagination.currentPage === 1}
                     onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
-                    className={`px-3 py-1.5 rounded text-xs font-medium ${pagination.currentPage === 1
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`px-2.5 py-1.5 rounded text-xs font-medium ${pagination.currentPage === 1
+                        ? 'text-slate-600 cursor-not-allowed'
+                        : 'text-slate-300 hover:bg-slate-700'
+                      }`}
                   >
                     Previous
                   </button>
-                  
-                  <div className="flex items-center space-x-1">
+
+                  <div className="flex items-center gap-1">
                     {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => {
                       let pageNum;
                       if (pagination.totalPages <= 5) {
@@ -865,24 +880,24 @@ const UserManagementTab = () => {
                         <button
                           key={pageNum}
                           onClick={() => setPagination(prev => ({ ...prev, currentPage: pageNum }))}
-                          className={`w-8 h-8 rounded text-xs font-medium ${pagination.currentPage === pageNum
-                            ? 'bg-red-600 text-white'
-                            : 'text-gray-700 hover:bg-gray-100'
-                          }`}
+                          className={`w-7 h-7 rounded text-xs font-medium ${pagination.currentPage === pageNum
+                              ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
+                              : 'text-slate-400 hover:bg-slate-700'
+                            }`}
                         >
                           {pageNum}
                         </button>
                       );
                     })}
                   </div>
-                  
+
                   <button
                     disabled={pagination.currentPage === pagination.totalPages}
                     onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
-                    className={`px-3 py-1.5 rounded text-xs font-medium ${pagination.currentPage === pagination.totalPages
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`px-2.5 py-1.5 rounded text-xs font-medium ${pagination.currentPage === pagination.totalPages
+                        ? 'text-slate-600 cursor-not-allowed'
+                        : 'text-slate-300 hover:bg-slate-700'
+                      }`}
                   >
                     Next
                   </button>
@@ -894,49 +909,51 @@ const UserManagementTab = () => {
       </div>
 
       {/* Popups */}
-      {popupState.showDelete && (
-        <DeletePopup
-          user={selectedUser}
-          onConfirm={handleDeleteUser}
-          onCancel={closeAllPopups}
-          loading={actionLoading}
-        />
-      )}
+      <AnimatePresence>
+        {popupState.showDelete && (
+          <DeletePopup
+            user={selectedUser}
+            onConfirm={handleDeleteUser}
+            onCancel={closeAllPopups}
+            loading={actionLoading}
+          />
+        )}
 
-      {popupState.showLogout && (
-        <LogoutPopup
-          user={selectedUser}
-          onConfirm={handleForceLogout}
-          onCancel={closeAllPopups}
-          loading={actionLoading}
-        />
-      )}
+        {popupState.showLogout && (
+          <LogoutPopup
+            user={selectedUser}
+            onConfirm={handleForceLogout}
+            onCancel={closeAllPopups}
+            loading={actionLoading}
+          />
+        )}
 
-      {popupState.showResetPassword && (
-        <ResetPasswordPopup
-          user={selectedUser}
-          onConfirm={handleResetPassword}
-          onCancel={closeAllPopups}
-          loading={actionLoading}
-          temporaryPassword={temporaryPassword}
-        />
-      )}
+        {popupState.showResetPassword && (
+          <ResetPasswordPopup
+            user={selectedUser}
+            onConfirm={handleResetPassword}
+            onCancel={closeAllPopups}
+            loading={actionLoading}
+            temporaryPassword={temporaryPassword}
+          />
+        )}
 
-      {popupState.showViewUser && (
-        <ViewUserPopup
-          user={selectedUser}
-          onClose={closeAllPopups}
-        />
-      )}
+        {popupState.showViewUser && (
+          <ViewUserPopup
+            user={selectedUser}
+            onClose={closeAllPopups}
+          />
+        )}
 
-      {popupState.showChangeRole && (
-        <ChangeRolePopup
-          user={selectedUser}
-          onConfirm={handleChangeRole}
-          onCancel={closeAllPopups}
-          loading={actionLoading}
-        />
-      )}
+        {popupState.showChangeRole && (
+          <ChangeRolePopup
+            user={selectedUser}
+            onConfirm={handleChangeRole}
+            onCancel={closeAllPopups}
+            loading={actionLoading}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

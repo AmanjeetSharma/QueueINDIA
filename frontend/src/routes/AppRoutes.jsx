@@ -1,31 +1,34 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import Home from "../pages/home/Home.jsx";
-import Login from "../pages/auth/Login";
-import Register from "../pages/auth/Register";
-import Profile from "../pages/Profile/Profile.jsx";
+// Layout components
 import Navbar from "../components/Navbar";
+import ScrollToTop from "../components/ScrollToTop";
 
-// Route protection components
+// Route protection
 import ProtectedRoute from "./ProtectedRoute";
 import ProtectedAuthRoute from "./ProtectedAuthRoute";
 import AuthorizedRoles from "./AuthorizedRoles";
 
-// Info page imports
-import HowThingsWork from "../pages/info/HowThingsWork.jsx";
-import Contact from "../pages/info/Contact.jsx";
-import Pricing from "../pages/info/Pricing.jsx";
-import AboutUs from "../pages/info/AboutUs.jsx";
+// Pages
+import Home from "../pages/home/Home.jsx";
+import NotFound from "../pages/NotFound.jsx";
 
+// Auth pages
+import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
 import ForgotPassword from "../pages/auth/ForgotPassword.jsx";
 import ResetPassword from "../pages/auth/ResetPassword.jsx";
 
-//Department related imports
+// User pages
+import Profile from "../pages/Profile/Profile.jsx";
+import Dashboard from "../pages/dashboard/Dashboard.jsx";
+
+// Department pages
 import Departments from "../pages/department/Department.jsx";
 import DepartmentDetails from "../pages/department/DepartmentDetails.jsx";
 import ServiceDetails from "../pages/DepartmentServices/ServiceDetails.jsx";
 
-//Booking imports
+// Booking pages
 import BookingWrapper from "../pages/booking/BookingWrapper.jsx";
 import BookingDateSelect from "../pages/booking/steps/BookingDateSelect.jsx";
 import BookingTimeSelect from "../pages/booking/steps/BookingTimeSelect.jsx";
@@ -35,29 +38,22 @@ import BookingSuccess from "../pages/booking/steps/BookingSuccess.jsx";
 import UserBookings from "../pages/booking/UserBookings.jsx";
 import BookingDetails from "../pages/booking/BookingDetails.jsx";
 
-//Dashboard import
-import Dashboard from "../pages/dashboard/Dashboard.jsx";
+// Info pages
+import HowThingsWork from "../pages/info/HowThingsWork.jsx";
+import Contact from "../pages/info/Contact.jsx";
+import Pricing from "../pages/info/Pricing.jsx";
+import AboutUs from "../pages/info/AboutUs.jsx";
 
-
-
-//Panel imports
+// Admin panel pages
 import SuperAdminPanel from "../pages/admin/superAdminPanel/SuperAdminPanel.jsx";
 import UserManagementTab from "../pages/admin/superAdminPanel/components/UserManagement/UserManagementTab.jsx";
-
 import DepartmentManagementTab from "../pages/admin/superAdminPanel/components/DepartmentManagement/DepartmentManagementTab.jsx";
 import DepartmentCreate from "../pages/admin/superAdminPanel/components/DepartmentManagement/DepartmentCreate.jsx";
-
-import DashboardTab from "../pages/admin/superAdminPanel/components/DashboardTab.jsx";
 import DepartmentEdit from "../pages/admin/superAdminPanel/components/DepartmentManagement/DepartmentEdit.jsx";
 import ManageDepartmentWork from "../pages/admin/superAdminPanel/components/DepartmentManagement/ManageDepartmentWork.jsx";
-
+import DashboardTab from "../pages/admin/superAdminPanel/components/DashboardTab.jsx";
 
 import AdminPanel from "../pages/admin/adminPanel/AdminPanel.jsx";
-
-
-
-
-
 import OfficerPanel from "../pages/admin/officerPanel/OfficerPanel.jsx";
 import BookingsList from "../pages/admin/officerPanel/components/BookingsList.jsx";
 import BookingDetailsPage from "../pages/admin/officerPanel/components/BookingDetailsPage.jsx";
@@ -65,350 +61,91 @@ import QueueListServices from "../pages/queue/QueueListServices.jsx";
 import QueueManagement from "../pages/queue/QueueManagement.jsx";
 import AnalyticsPage from "../pages/admin/officerPanel/components/AnalyticsPage.jsx";
 
-import NotFound from "../pages/NotFound.jsx";
-
-import ScrollToTop from "../components/ScrollToTop.jsx";
-
-
-
-
 const AppRoutes = () => {
   return (
     <BrowserRouter>
       <ScrollToTop />
-
       <Navbar />
 
       <Routes>
 
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
-
-        {/* Auth routes - redirect to home if already logged in */}
-        <Route
-          path="/login"
-          element={
-            <ProtectedAuthRoute>
-              <Login />
-            </ProtectedAuthRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <ProtectedAuthRoute>
-              <Register />
-            </ProtectedAuthRoute>
-          }
-        />
-        <Route
-          path="/forgot-password"
-          element={
-            <ProtectedAuthRoute>
-              <ForgotPassword />
-            </ProtectedAuthRoute>
-          }
-        />
-        <Route
-          path="/reset-password"
-          element={
-            <ProtectedAuthRoute>
-              <ResetPassword />
-            </ProtectedAuthRoute>
-          }
-        />
-
-
-
-
-        {/* Protected routes - redirect to login if not authenticated */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-
-
-
-
-
-
-
-
-
-
-
-
-
-        {/* Role-specific panels with authorization */}
-
-
-        {/* Super Admin Panel Routes */}
-        <Route
-          path="/super-admin-panel"
-          element={
-            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
-              <SuperAdminPanel />
-            </AuthorizedRoles>
-          }
-        >
-        </Route>
-
-        <Route
-          path="/super-admin-panel/dashboard"
-          element={
-            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
-              <DashboardTab />
-            </AuthorizedRoles>
-          }
-        />
-
-        <Route
-          path="/super-admin-panel/users"
-          element={
-            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
-              <UserManagementTab />
-            </AuthorizedRoles>
-          }
-        />
-
-        <Route
-          path="/super-admin-panel/departments"
-          element={
-            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
-              <DepartmentManagementTab />
-            </AuthorizedRoles>
-          }
-        />
-        <Route
-          path="/super-admin-panel/departments/create"
-          element={
-            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
-              <DepartmentCreate />
-            </AuthorizedRoles>
-          }
-        />
-        <Route
-          path="/super-admin-panel/departments/:deptId/edit"
-          element={
-            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
-              <DepartmentEdit />
-            </AuthorizedRoles>
-          }
-        />
-        <Route
-          path="/super-admin-panel/departments/:deptId/manage-work"
-          element={
-            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
-              <ManageDepartmentWork />
-            </AuthorizedRoles>
-          }
-        />
-        <Route
-          path="/super-admin-panel/departments/:deptId/manage-work/bookings"
-          element={
-            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
-              <BookingsList />
-            </AuthorizedRoles>
-          }
-        />
-        <Route
-          path="super-admin-panel/departments/:deptId/manage-work/bookings/:bookingId"
-          element={
-            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
-              <BookingDetailsPage />
-            </AuthorizedRoles>
-          }
-        />
-
-
-
-
-
-
-
-
-
-
-
-        <Route
-          path="/admin-panel"
-          element={
-            <AuthorizedRoles allowedRoles={['ADMIN']}>
-              <AdminPanel />
-            </AuthorizedRoles>
-          }
-        />
-
-
-        {/* Officer Panel Routes */}
-        <Route
-          path="/officer-panel"
-          element={
-            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER']}>
-              <OfficerPanel />
-            </AuthorizedRoles>
-          }
-        />
-
-
-
-
-
-
-
-
-
-
-
-        {/* SUPER_ADMIN / ADMIN / DEPARTMENT_OFFICER can access these routes */}
-
-        <Route
-          path="/department/bookings"
-          element={
-            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
-              <BookingsList />
-            </AuthorizedRoles>
-          }
-        />
-        <Route
-          path="department/bookings/:bookingId"
-          element={
-            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
-              <BookingDetailsPage />
-            </AuthorizedRoles>
-          }
-        />
-
-        {/* Queue management routes */}
-        <Route
-          path="/department/queue-services"
-          element={
-            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
-              <QueueListServices />
-            </AuthorizedRoles>
-          }
-        />
-        {/* Special route for SUPER_ADMIN to view queues of any department as they are not tied to a specific department */}
-        <Route
-          path="/department/:departmentId/queue-services"
-          element={
-            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
-              <QueueListServices />
-            </AuthorizedRoles>
-          }
-        />
-        <Route
-          path="/department/queue-management/:departmentId/:serviceId"
-          element={
-            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
-              <QueueManagement />
-            </AuthorizedRoles>
-          }
-        />
-        <Route
-          path="/department/analytics"
-          element={
-            <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
-              <AnalyticsPage />
-            </AuthorizedRoles>
-          }
-        />
-        {/* Special route for SUPER_ADMIN to view analytics of any department as they are not tied to a specific department */}
-        <Route
-          path="/department/:departmentId/analytics"
-          element={
-            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
-              <AnalyticsPage />
-            </AuthorizedRoles>
-          }
-        />
-
-
-
-
-
-
-
-
-        {/* Booking related routes */}
-        <Route
-          path="/my-bookings"
-          element={
-            <ProtectedRoute>
-              <UserBookings />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/bookings/:bookingId"
-          element={
-            <ProtectedRoute>
-              <BookingDetails />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Booking flow - multi-step protected route */}
-        <Route
-          path="/departments/:deptId/services/:serviceId/book-slot"
-          element={
-            <ProtectedRoute>
-              <BookingWrapper />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="date" replace />} />
-          <Route path="date" element={<BookingDateSelect />} />
-          <Route path="time" element={<BookingTimeSelect />} />
-          <Route path="details" element={<BookingDetailsForm />} />
-          <Route path="confirm" element={<BookingConfirmation />} />
-          {/* Remove success from here */}
-        </Route>
-
-        {/* Add separate success route */}
-        <Route
-          path="/booking-success/:bookingId"
-          element={
-            <ProtectedRoute>
-              <BookingSuccess />
-            </ProtectedRoute>
-          }
-        />
-
-
-
-
-
-
-
-
-
-        {/* Public department routes */}
         <Route path="/departments" element={<Departments />} />
         <Route path="/departments/:deptId" element={<DepartmentDetails />} />
         <Route path="/departments/:deptId/services/:serviceId" element={<ServiceDetails />} />
 
-        {/* Public routes */}
+ 
+        {/* Info Pages */}
         <Route path="/how-things-work" element={<HowThingsWork />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<AboutUs />} />
 
-        {/* 404 route */}
+   
+        {/* Auth Routes - redirect if logged in */}
+        <Route path="/login" element={<ProtectedAuthRoute><Login /></ProtectedAuthRoute>} />
+        <Route path="/register" element={<ProtectedAuthRoute><Register /></ProtectedAuthRoute>} />
+        <Route path="/forgot-password" element={<ProtectedAuthRoute><ForgotPassword /></ProtectedAuthRoute>} />
+        <Route path="/reset-password" element={<ProtectedAuthRoute><ResetPassword /></ProtectedAuthRoute>} />
+
+  
+        {/* Protected User Routes */}
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/my-bookings" element={<ProtectedRoute><UserBookings /></ProtectedRoute>} />
+        <Route path="/bookings/:bookingId" element={<ProtectedRoute><BookingDetails /></ProtectedRoute>} />
+
+
+        {/* Booking Flow */}
+        <Route path="/departments/:deptId/services/:serviceId/book-slot" element={<ProtectedRoute><BookingWrapper /></ProtectedRoute>}>
+          <Route index element={<Navigate to="date" replace />} />
+          <Route path="date" element={<BookingDateSelect />} />
+          <Route path="time" element={<BookingTimeSelect />} />
+          <Route path="details" element={<BookingDetailsForm />} />
+          <Route path="confirm" element={<BookingConfirmation />} />
+        </Route>
+
+        <Route path="/booking-success/:bookingId" element={<ProtectedRoute><BookingSuccess /></ProtectedRoute>} />
+
+
+        {/* Super Admin Routes */}
+        <Route path="/super-admin-panel" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><SuperAdminPanel /></AuthorizedRoles>} />
+        <Route path="/super-admin-panel/dashboard" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><DashboardTab /></AuthorizedRoles>} />
+        <Route path="/super-admin-panel/users" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><UserManagementTab /></AuthorizedRoles>} />
+        <Route path="/super-admin-panel/departments" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><DepartmentManagementTab /></AuthorizedRoles>} />
+        <Route path="/super-admin-panel/departments/create" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><DepartmentCreate /></AuthorizedRoles>} />
+        <Route path="/super-admin-panel/departments/:deptId/edit" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><DepartmentEdit /></AuthorizedRoles>} />
+        <Route path="/super-admin-panel/departments/:deptId/manage-work" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><ManageDepartmentWork /></AuthorizedRoles>} />
+        <Route path="/super-admin-panel/departments/:deptId/manage-work/bookings" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><BookingsList /></AuthorizedRoles>} />
+        <Route path="/super-admin-panel/departments/:deptId/manage-work/bookings/:bookingId" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><BookingDetailsPage /></AuthorizedRoles>} />
+
+
+        {/* Admin Routes */}
+        <Route path="/admin-panel" element={<AuthorizedRoles allowedRoles={['ADMIN']}><AdminPanel /></AuthorizedRoles>} />
+
+
+        {/* Officer Routes */}
+        <Route path="/officer-panel" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER']}><OfficerPanel /></AuthorizedRoles>} />
+
+
+        {/* Shared Admin/Staff Routes */}
+        <Route path="/department/bookings" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><BookingsList /></AuthorizedRoles>} />
+        <Route path="/department/bookings/:bookingId" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><BookingDetailsPage /></AuthorizedRoles>} />
+        <Route path="/department/queue-services" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><QueueListServices /></AuthorizedRoles>} />
+        <Route path="/department/:departmentId/queue-services" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><QueueListServices /></AuthorizedRoles>} />
+        <Route path="/department/queue-management/:departmentId/:serviceId" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><QueueManagement /></AuthorizedRoles>} />
+        <Route path="/department/analytics" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><AnalyticsPage /></AuthorizedRoles>} />
+        <Route path="/department/:departmentId/analytics" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><AnalyticsPage /></AuthorizedRoles>} />
+
+
+
+        {/* 404 */}
+
         <Route path="*" element={<NotFound />} />
 
       </Routes>
+
     </BrowserRouter>
   );
 };

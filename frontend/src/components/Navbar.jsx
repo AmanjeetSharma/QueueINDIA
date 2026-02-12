@@ -174,9 +174,9 @@ const Navbar = () => {
             {/* <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow">
               <span className="text-white font-bold text-lg">Q</span>
             </div> */}
-            <span className="font-bold text-3xl bg-slate-800 bg-clip-text text-transparent">
+            <span className="font-bold text-3xl bg-slate-800 bg-clip-text text-transparent select-none">
               Queue
-              <span className="font-bold text-3xl bg-blue-600 bg-clip-text text-transparent">
+              <span className="font-bold text-3xl bg-blue-600 bg-clip-text text-transparent select-none">
                 INDIA
               </span>
             </span>
@@ -186,7 +186,7 @@ const Navbar = () => {
         {/* Everything Else - Right Side */}
         <div className="flex items-center gap-6">
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-4">
+          <nav className="hidden lg:flex items-center gap-4 select-none">
             {navLinks.map((link) => (
               <Link
                 key={link.to}

@@ -17,9 +17,7 @@ import {
     FiXCircle,
     FiAlertCircle,
     FiStar,
-    FiBriefcase,
-    FiMoreVertical,
-    FiChevronRight
+    FiBriefcase
 } from 'react-icons/fi';
 import {
     FaBuilding,
@@ -35,13 +33,10 @@ import {
     FaGlobe,
     FaMapMarkerAlt,
     FaTag,
-    FaBoxes,
-    FaWifi,
-    FaParking,
-    FaWheelchair
+    FaBoxes
 } from 'react-icons/fa';
-import { MdQueue, MdAnalytics, MdDashboard, MdPeople, MdEvent, MdOutlineAccessTime } from 'react-icons/md';
-import { BsPeopleFill, BsCalendarCheck, BsGraphUp, BsThreeDotsVertical } from 'react-icons/bs';
+import { MdQueue, MdAnalytics, MdDashboard, MdPeople, MdEvent } from 'react-icons/md';
+import { BsPeopleFill, BsCalendarCheck, BsGraphUp } from 'react-icons/bs';
 
 const ManageDepartmentWork = () => {
     const navigate = useNavigate();
@@ -50,7 +45,6 @@ const ManageDepartmentWork = () => {
 
     const [department, setDepartment] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('overview');
 
     useEffect(() => {
         if (deptId) {
@@ -62,6 +56,8 @@ const ManageDepartmentWork = () => {
         try {
             setLoading(true);
             const response = await getDepartmentById(deptId);
+
+            // Extract the actual department data from response.data
             const departmentData = response?.data || response;
             setDepartment(departmentData);
         } catch (error) {
@@ -71,6 +67,7 @@ const ManageDepartmentWork = () => {
         }
     };
 
+    // Calculate stats from actual department data
     const getDepartmentStats = () => {
         if (!department) return {};
 
@@ -87,81 +84,72 @@ const ManageDepartmentWork = () => {
     const managementOptions = [
         {
             id: 'bookings',
-            title: 'Bookings',
-            description: 'View & manage appointments',
+            title: 'All Bookings',
+            description: 'View and manage all department bookings, appointments, and service requests',
             icon: BsCalendarCheck,
-            bgColor: 'from-blue-500 to-blue-600',
-            lightBg: 'bg-blue-500/10',
+            bgColor: 'bg-blue-500/10',
             iconColor: 'text-blue-400',
             borderColor: 'border-blue-500/30',
             hoverBg: 'hover:bg-blue-500/20',
             path: `/department/bookings`,
             stats: '0',
-            statLabel: 'Today'
+            statLabel: 'Today\'s Bookings'
         },
         {
             id: 'queue',
-            title: 'Queue',
-            description: 'Monitor live token system',
+            title: 'Live Queue',
+            description: 'Monitor and manage real-time service queues, token system, and waiting times',
             icon: MdQueue,
-            bgColor: 'from-green-500 to-green-600',
-            lightBg: 'bg-green-500/10',
+            bgColor: 'bg-green-500/10',
             iconColor: 'text-green-400',
             borderColor: 'border-green-500/30',
             hoverBg: 'hover:bg-green-500/20',
             path: `/department/${deptId}/queue-services`,
             stats: '0',
-            statLabel: 'Active'
+            statLabel: 'Active in Queue'
         },
         {
             id: 'analytics',
-            title: 'Analytics',
-            description: 'Reports & performance',
+            title: 'Analytics & Reports',
+            description: 'View detailed analytics, performance metrics, and generate reports',
             icon: BsGraphUp,
-            bgColor: 'from-purple-500 to-purple-600',
-            lightBg: 'bg-purple-500/10',
+            bgColor: 'bg-purple-500/10',
             iconColor: 'text-purple-400',
             borderColor: 'border-purple-500/30',
             hoverBg: 'hover:bg-purple-500/20',
             path: `/department/${deptId}/analytics`,
             stats: '12',
-            statLabel: 'Reports'
+            statLabel: 'Reports Available'
         },
         {
-            id: 'staff',
-            title: 'Staff',
-            description: 'Manage team & permissions',
+            id: 'admins',
+            title: 'Admins & Officers',
+            description: 'Manage department administrators, officers, and staff permissions',
             icon: MdPeople,
-            bgColor: 'from-orange-500 to-orange-600',
-            lightBg: 'bg-orange-500/10',
+            bgColor: 'bg-orange-500/10',
             iconColor: 'text-orange-400',
             borderColor: 'border-orange-500/30',
             hoverBg: 'hover:bg-orange-500/20',
+            // path: `/department/${deptId}/manage-staff`,
             path: `/super-admin-panel/departments/${deptId}/manage-work`,
             stats: getDepartmentStats().totalStaff || 0,
-            statLabel: 'Members'
+            statLabel: 'Total Staff'
         }
-    ];
-
-    const quickActions = [
-        { id: 'services', label: 'Services', icon: FaListAlt, path: `/department/${deptId}/services` },
-        { id: 'settings', label: 'Settings', icon: FaCog, path: `/super-admin-panel/departments/${deptId}/edit` },
-        { id: 'schedule', label: 'Schedule', icon: FaClock, path: `/department/${deptId}/schedule` }
     ];
 
     const getStatusBadge = (status) => {
         const config = {
-            'active': { color: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30', icon: FiCheckCircle },
+            'active': { color: 'bg-green-500/20 text-green-300 border border-green-500/30', icon: FiCheckCircle },
             'inactive': { color: 'bg-gray-500/20 text-gray-300 border border-gray-500/30', icon: FiXCircle },
-            'maintenance': { color: 'bg-amber-500/20 text-amber-300 border border-amber-500/30', icon: FiAlertCircle }
+            'maintenance': { color: 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30', icon: FiAlertCircle }
         };
 
         const { color, icon: Icon } = config[status] || config.inactive;
 
         return (
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color}`}>
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${color}`}>
                 {Icon && <Icon className="w-3 h-3" />}
-                <span className="hidden sm:inline">{status?.charAt(0).toUpperCase() + status?.slice(1)}</span>
+                {status?.charAt(0).toUpperCase() + status?.slice(1)}
             </span>
         );
     };
@@ -180,15 +168,14 @@ const ManageDepartmentWork = () => {
 
     if (loading || departmentLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-3 sm:p-4 lg:p-6">
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6">
                 <div className="max-w-7xl mx-auto">
-                    <div className="animate-pulse space-y-3 sm:space-y-4">
-                        <div className="h-7 sm:h-8 bg-slate-800 rounded-lg w-32 sm:w-48"></div>
-                        <div className="h-24 sm:h-32 bg-slate-800/50 rounded-xl"></div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-                            {[...Array(4)].map((_, i) => (
-                                <div key={i} className="h-16 sm:h-20 bg-slate-800/50 rounded-lg"></div>
-                            ))}
+                    <div className="animate-pulse space-y-4 sm:space-y-6">
+                        <div className="h-7 sm:h-8 bg-slate-800 rounded-lg w-36 sm:w-48"></div>
+                        <div className="h-28 sm:h-32 bg-slate-800/50 rounded-xl"></div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div className="h-36 sm:h-40 bg-slate-800/50 rounded-xl"></div>
+                            <div className="h-36 sm:h-40 bg-slate-800/50 rounded-xl"></div>
                         </div>
                     </div>
                 </div>
@@ -198,18 +185,18 @@ const ManageDepartmentWork = () => {
 
     if (!department) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
-                <div className="max-w-7xl mx-auto">
-                    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 sm:p-8 text-center">
-                        <FaBuilding className="w-12 h-12 sm:w-16 sm:h-16 text-slate-600 mx-auto mb-3 sm:mb-4" />
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6">
+                <div className="max-w-7xl mx-auto text-center">
+                    <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 sm:p-12">
+                        <FaBuilding className="w-14 h-14 sm:w-16 sm:h-16 text-slate-600 mx-auto mb-3 sm:mb-4" />
                         <h2 className="text-lg sm:text-xl font-semibold text-white mb-2">Department Not Found</h2>
-                        <p className="text-sm sm:text-base text-slate-400 mb-4 sm:mb-6">The department doesn't exist or you don't have access.</p>
+                        <p className="text-sm sm:text-base text-slate-400 mb-5 sm:mb-6">The department you're looking for doesn't exist or you don't have access.</p>
                         <button
                             onClick={() => navigate('/super-admin-panel/departments')}
-                            className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white text-sm sm:text-base rounded-lg hover:bg-blue-700 transition-colors"
+                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
                         >
-                            <FiArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                            Back
+                            <FiArrowLeft className="w-4 h-4 mr-2" />
+                            Back to Departments
                         </button>
                     </div>
                 </div>
@@ -220,136 +207,122 @@ const ManageDepartmentWork = () => {
     const stats = getDepartmentStats();
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-            {/* Mobile Optimized Container */}
-            <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6">
-                
-                {/* Header with Back Button */}
-                <div className="flex items-center justify-between mb-4 sm:mb-6">
-                    <button
-                        onClick={() => navigate('/super-admin-panel/departments')}
-                        className="inline-flex items-center text-xs sm:text-sm text-slate-400 hover:text-white transition-colors group"
-                    >
-                        <FiArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 transform group-hover:-translate-x-1 transition-transform" />
-                        <span className="hidden xs:inline">Back</span>
-                    </button>
-                    
-                    <div className="flex items-center gap-2">
-                        {getStatusBadge(department.status)}
-                        <button className="p-1.5 sm:p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors">
-                            <BsThreeDotsVertical className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
-                        </button>
-                    </div>
-                </div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-3 sm:p-6 lg:p-8">
+            {/* Animated Background */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+                <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500 rounded-full blur-3xl opacity-5"></div>
+                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full blur-3xl opacity-5"></div>
+            </div>
 
-                {/* Department Header Card - Compact */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-gradient-to-br from-slate-800/80 to-slate-800/60 backdrop-blur-sm border border-slate-700 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6"
+            {/* Main Content */}
+            <div className="relative z-10 max-w-7xl mx-auto">
+                {/* Back Button */}
+                <button
+                    onClick={() => navigate('/super-admin-panel/departments')}
+                    className="inline-flex items-center text-xs sm:text-sm text-slate-400 hover:text-white mb-4 sm:mb-6 transition-colors group"
                 >
-                    <div className="flex items-start gap-3 sm:gap-4">
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
-                            <FaBuilding className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
-                        </div>
+                    <FiArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 transform group-hover:-translate-x-1 transition-transform" />
+                    Back to Departments
+                </button>
 
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent truncate">
-                                    {department.name}
-                                </h1>
+                {/* Department Header - Mobile Optimized */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-slate-800/50 border border-slate-700 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 backdrop-blur-sm"
+                >
+                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 sm:gap-6">
+                        <div className="flex items-start gap-3 sm:gap-4">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+                                <FaBuilding className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
                             </div>
-                            
-                            <p className="text-xs sm:text-sm text-slate-400 mb-2 truncate">
-                                {department.departmentCategory || 'No category'}
-                            </p>
 
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
-                                <span className="inline-flex items-center gap-1">
-                                    <FaTag className="w-3 h-3" />
-                                    <span className="truncate max-w-[100px] sm:max-w-none">{department.departmentSlug}</span>
-                                </span>
-                                
-                                {department.address && (
-                                    <span className="inline-flex items-center gap-1 truncate">
-                                        <FiMapPin className="w-3 h-3 flex-shrink-0" />
-                                        <span className="truncate max-w-[150px] sm:max-w-xs">
-                                            {formatAddress(department.address)}
-                                        </span>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap mb-1.5 sm:mb-2">
+                                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent truncate">
+                                        {department.name}
+                                    </h1>
+                                    <div className="flex-shrink-0">
+                                        {department.status && getStatusBadge(department.status)}
+                                    </div>
+                                </div>
+
+                                <p className="text-xs sm:text-sm text-slate-400 mb-2 max-w-2xl truncate">
+                                    {department.departmentCategory || 'No category specified'}
+                                </p>
+
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
+                                    <span className="inline-flex items-center gap-1 sm:gap-1.5 text-slate-300">
+                                        <FaTag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 flex-shrink-0" />
+                                        <span className="truncate max-w-[120px] sm:max-w-none">ID: {department.departmentSlug}</span>
                                     </span>
-                                )}
+
+                                    {department.address && (
+                                        <>
+                                            <span className="text-slate-600 hidden sm:inline">•</span>
+                                            <span className="inline-flex items-center gap-1 sm:gap-1.5 text-slate-300 w-full sm:w-auto">
+                                                <FiMapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 flex-shrink-0" />
+                                                <span className="truncate text-xs sm:text-sm">{formatAddress(department.address)}</span>
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Quick Stats - Horizontal Scroll on Mobile */}
-                    <div className="flex gap-2 mt-4 pt-3 border-t border-slate-700/50 overflow-x-auto pb-1 hide-scrollbar">
-                        <div className="flex-shrink-0 bg-slate-700/30 rounded-lg px-3 py-1.5 min-w-[70px]">
-                            <p className="text-xs text-slate-400">Services</p>
-                            <p className="text-base sm:text-lg font-semibold">{stats.totalServices}</p>
-                        </div>
-                        <div className="flex-shrink-0 bg-slate-700/30 rounded-lg px-3 py-1.5 min-w-[70px]">
-                            <p className="text-xs text-slate-400">Staff</p>
-                            <p className="text-base sm:text-lg font-semibold">{stats.totalStaff}</p>
-                        </div>
-                        <div className="flex-shrink-0 bg-slate-700/30 rounded-lg px-3 py-1.5 min-w-[70px]">
-                            <p className="text-xs text-slate-400">Booking</p>
-                            <p className="text-base sm:text-lg font-semibold">
-                                {stats.isSlotBookingEnabled ? 
-                                    <span className="text-emerald-400">{stats.bookingWindowDays}d</span> : 
-                                    <span className="text-amber-400">Off</span>
-                                }
-                            </p>
-                        </div>
-                        <div className="flex-shrink-0 bg-slate-700/30 rounded-lg px-3 py-1.5 min-w-[70px]">
-                            <p className="text-xs text-slate-400">Queue</p>
-                            <p className="text-base sm:text-lg font-semibold text-blue-400">0</p>
+                        {/* Quick Stats - Mobile Compact */}
+                        <div className="flex items-center gap-2 sm:gap-3 justify-start lg:justify-end mt-2 lg:mt-0">
+                            <div className="bg-slate-700/50 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
+                                <p className="text-xs text-slate-400">Services</p>
+                                <p className="text-base sm:text-lg font-semibold text-white">{stats.totalServices}</p>
+                            </div>
+                            <div className="bg-slate-700/50 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
+                                <p className="text-xs text-slate-400">Staff</p>
+                                <p className="text-base sm:text-lg font-semibold text-white">{stats.totalStaff}</p>
+                            </div>
+                            <div className="bg-slate-700/50 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
+                                <p className="text-xs text-slate-400">Booking</p>
+                                <p className="text-base sm:text-lg font-semibold text-white">
+                                    {stats.isSlotBookingEnabled ?
+                                        <span className="text-green-400 text-sm sm:text-base">{stats.bookingWindowDays}d</span> :
+                                        <span className="text-yellow-400 text-sm sm:text-base">Off</span>
+                                    }
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </motion.div>
 
-                {/* Quick Actions Bar */}
-                <div className="flex items-center gap-2 mb-4 sm:mb-6 overflow-x-auto pb-1 hide-scrollbar">
-                    {quickActions.map((action) => (
-                        <button
-                            key={action.id}
-                            onClick={() => navigate(action.path)}
-                            className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-xs sm:text-sm text-slate-300 hover:text-white transition-colors"
-                        >
-                            <action.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span>{action.label}</span>
-                        </button>
-                    ))}
-                </div>
-
-                {/* Contact & Priority - Collapsible Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 sm:mb-6">
-                    {(department.contact?.phone || department.contact?.email) && (
+                {/* Contact & Priority Info Grid - Mobile Optimized */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    {/* Contact Information */}
+                    {(department.contact?.phone || department.contact?.email || department.contact?.website) && (
                         <motion.div
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-slate-800/30 border border-slate-700 rounded-lg p-3 sm:p-4"
+                            transition={{ delay: 0.1 }}
+                            className="bg-slate-800/30 border border-slate-700 rounded-xl p-3.5 sm:p-4 lg:col-span-2"
                         >
-                            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <FiSettings className="w-3.5 h-3.5" />
-                                Contact
+                            <h3 className="text-xs sm:text-sm font-semibold text-slate-300 mb-2.5 sm:mb-3 flex items-center gap-1.5">
+                                <FiSettings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                Contact Information
                             </h3>
-                            <div className="space-y-1.5 text-xs sm:text-sm">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
                                 {department.contact.phone && (
-                                    <span className="flex items-center gap-1.5 text-slate-300">
-                                        <FiPhone className="w-3.5 h-3.5 text-slate-400" />
-                                        {department.contact.phone}
+                                    <span className="inline-flex items-center gap-1.5 text-slate-400 truncate">
+                                        <FiPhone className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                                        <span className="truncate">{department.contact.phone}</span>
                                     </span>
                                 )}
                                 {department.contact.email && (
-                                    <span className="flex items-center gap-1.5 text-slate-300 truncate">
-                                        <FiMail className="w-3.5 h-3.5 text-slate-400" />
+                                    <span className="inline-flex items-center gap-1.5 text-slate-400 truncate">
+                                        <FiMail className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                                         <span className="truncate">{department.contact.email}</span>
                                     </span>
                                 )}
                                 {department.contact.website && (
-                                    <span className="flex items-center gap-1.5 text-slate-300 truncate">
-                                        <FiGlobe className="w-3.5 h-3.5 text-slate-400" />
+                                    <span className="inline-flex items-center gap-1.5 text-slate-400 truncate">
+                                        <FiGlobe className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                                         <span className="truncate">{department.contact.website}</span>
                                     </span>
                                 )}
@@ -357,33 +330,35 @@ const ManageDepartmentWork = () => {
                         </motion.div>
                     )}
 
+                    {/* Priority Criteria */}
                     {department.priorityCriteria && (
                         <motion.div
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-slate-800/30 border border-slate-700 rounded-lg p-3 sm:p-4"
+                            transition={{ delay: 0.15 }}
+                            className="bg-slate-800/30 border border-slate-700 rounded-xl p-3.5 sm:p-4"
                         >
-                            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <FiStar className="w-3.5 h-3.5 text-amber-400" />
-                                Priority
+                            <h3 className="text-xs sm:text-sm font-semibold text-slate-300 mb-2.5 sm:mb-3 flex items-center gap-1.5">
+                                <FiStar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" />
+                                Priority Access
                             </h3>
-                            <div className="space-y-1.5 text-xs sm:text-sm">
+                            <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                                 {department.priorityCriteria.seniorCitizenAge && (
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-400">Senior</span>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-slate-400">Senior Citizens</span>
                                         <span className="text-white font-medium">Age {department.priorityCriteria.seniorCitizenAge}+</span>
                                     </div>
                                 )}
-                                <div className="flex justify-between">
-                                    <span className="text-slate-400">Pregnant</span>
-                                    <span className={department.priorityCriteria.allowPregnantWomen ? 'text-emerald-400' : 'text-red-400'}>
-                                        {department.priorityCriteria.allowPregnantWomen ? 'Yes' : 'No'}
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-400">Pregnant Women</span>
+                                    <span className={department.priorityCriteria.allowPregnantWomen ? 'text-green-400' : 'text-red-400'}>
+                                        {department.priorityCriteria.allowPregnantWomen ? 'Allowed' : 'Not Allowed'}
                                     </span>
                                 </div>
-                                <div className="flex justify-between">
+                                <div className="flex justify-between items-center">
                                     <span className="text-slate-400">Differently Abled</span>
-                                    <span className={department.priorityCriteria.allowDifferentlyAbled ? 'text-emerald-400' : 'text-red-400'}>
-                                        {department.priorityCriteria.allowDifferentlyAbled ? 'Yes' : 'No'}
+                                    <span className={department.priorityCriteria.allowDifferentlyAbled ? 'text-green-400' : 'text-red-400'}>
+                                        {department.priorityCriteria.allowDifferentlyAbled ? 'Allowed' : 'Not Allowed'}
                                     </span>
                                 </div>
                             </div>
@@ -391,79 +366,80 @@ const ManageDepartmentWork = () => {
                     )}
                 </div>
 
-                {/* Management Options - Compact Grid */}
-                <h2 className="text-base sm:text-lg font-semibold text-white mb-3">Management</h2>
-                <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 mb-6">
+                {/* Main Management Options Grid - Mobile Optimized */}
+                <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Department Management</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
                     {managementOptions.map((option, index) => (
                         <motion.div
                             key={option.id}
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
+                            transition={{ delay: index * 0.1 }}
                             onClick={() => navigate(option.path)}
-                            className="group bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 sm:p-4 cursor-pointer hover:border-slate-600 transition-all"
+                            className={`group relative bg-slate-800/50 border ${option.borderColor} rounded-xl p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg backdrop-blur-sm`}
                         >
-                            <div className="flex items-start justify-between mb-2">
-                                <div className={`p-2 rounded-lg ${option.lightBg}`}>
-                                    <option.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${option.iconColor}`} />
+                            <div className="flex items-start justify-between mb-3 sm:mb-4">
+                                <div className={`p-2 sm:p-3 rounded-xl ${option.bgColor} ${option.hoverBg} transition-colors`}>
+                                    <option.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${option.iconColor}`} />
                                 </div>
                                 {option.stats !== undefined && (
                                     <div className="text-right">
-                                        <p className="text-lg sm:text-xl font-bold text-white">{option.stats}</p>
-                                        <p className="text-[10px] sm:text-xs text-slate-400">{option.statLabel}</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-white">{option.stats}</p>
+                                        <p className="text-xs text-slate-400">{option.statLabel}</p>
                                     </div>
                                 )}
                             </div>
 
-                            <h3 className="text-sm sm:text-base font-semibold text-white mb-1 group-hover:text-blue-400 transition-colors">
+                            <h3 className="text-base sm:text-lg font-semibold text-white mb-1.5 sm:mb-2 group-hover:text-blue-400 transition-colors">
                                 {option.title}
                             </h3>
-                            <p className="text-[10px] sm:text-xs text-slate-400 mb-2 line-clamp-2">
+                            <p className="text-xs sm:text-sm text-slate-400 mb-3 sm:mb-4 line-clamp-2">
                                 {option.description}
                             </p>
 
-                            <div className="flex items-center text-[10px] sm:text-xs font-medium text-blue-400">
-                                <span>Manage</span>
-                                <FiChevronRight className="w-3 h-3 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
+                            <div className="flex items-center text-xs font-medium text-blue-400 group-hover:text-blue-300">
+                                <span>Manage {option.title}</span>
+                                <FiArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5 ml-1 rotate-180 group-hover:translate-x-1 transition-transform" />
                             </div>
                         </motion.div>
                     ))}
                 </div>
 
-                {/* Working Hours - Compact Preview */}
+                {/* Working Hours Preview - Mobile Optimized */}
                 {department.workingHours && department.workingHours.length > 0 && (
                     <motion.div
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-slate-800/30 border border-slate-700 rounded-lg p-3 sm:p-4"
+                        transition={{ delay: 0.7 }}
+                        className="bg-slate-800/30 border border-slate-700 rounded-xl p-4 sm:p-6"
                     >
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                <FaClock className="w-3.5 h-3.5" />
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                            <h3 className="text-xs sm:text-sm font-semibold text-white flex items-center gap-1.5">
+                                <FaClock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
                                 Working Hours
                             </h3>
                             <button
                                 onClick={() => navigate(`/super-admin-panel/departments/${deptId}/edit`)}
-                                className="text-[10px] sm:text-xs text-blue-400 hover:text-blue-300"
+                                className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
                             >
-                                Edit
+                                Edit Hours
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
-                            {department.workingHours.slice(0, 7).map((day) => (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5 sm:gap-2">
+                            {department.workingHours.map((day) => (
                                 <div
                                     key={day.day}
-                                    className={`p-1.5 rounded-md text-center ${day.isClosed ? 'bg-red-500/10' : 'bg-emerald-500/10'}`}
+                                    className={`p-1.5 sm:p-2 rounded-lg text-center ${day.isClosed ? 'bg-red-500/10' : 'bg-green-500/10'}`}
                                 >
-                                    <p className="text-[10px] font-medium text-slate-300 mb-0.5">
-                                        {day.day.slice(0, 3)}
-                                    </p>
+                                    <p className="text-xs font-medium text-slate-300 mb-0.5 sm:mb-1">{day.day.slice(0, 3)}</p>
                                     {day.isClosed ? (
-                                        <span className="text-[8px] sm:text-[10px] text-red-400">Closed</span>
+                                        <span className="text-xs text-red-400">Closed</span>
                                     ) : (
-                                        <div className="text-[8px] sm:text-[10px] text-slate-400">
-                                            {day.openTime}
+                                        <div className="text-xs text-slate-400">
+                                            <div>{day.openTime}</div>
+                                            <div className="hidden sm:block">{day.closeTime}</div>
+                                            <div className="sm:hidden">{day.closeTime}</div>
                                         </div>
                                     )}
                                 </div>
@@ -472,17 +448,6 @@ const ManageDepartmentWork = () => {
                     </motion.div>
                 )}
             </div>
-
-            {/* Global styles for hide-scrollbar */}
-            <style jsx>{`
-                .hide-scrollbar::-webkit-scrollbar {
-                    display: none;
-                }
-                .hide-scrollbar {
-                    -ms-overflow-style: none;
-                    scrollbar-width: none;
-                }
-            `}</style>
         </div>
     );
 };

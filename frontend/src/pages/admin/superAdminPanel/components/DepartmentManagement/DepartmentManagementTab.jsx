@@ -529,7 +529,7 @@ const DepartmentManagementTab = () => {
                     {/* All buttons visible on all devices - compact on mobile */}
                     <button
                       onClick={() => handleManageDepartment(dept._id)}
-                      className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/30 transition-colors"
+                      className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/30 transition-colors cursor-pointer"
                       title="Manage Services"
                     >
                       <FiList className="w-3 h-3 md:mr-1.5" />
@@ -538,7 +538,7 @@ const DepartmentManagementTab = () => {
 
                     <button
                       onClick={() => handleEditDepartment(dept._id)}
-                      className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg hover:bg-purple-500/30 transition-colors"
+                      className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg hover:bg-purple-500/30 transition-colors cursor-pointer"
                       title="Edit Department"
                     >
                       <FiEdit className="w-3 h-3 md:mr-1.5" />
@@ -547,7 +547,7 @@ const DepartmentManagementTab = () => {
 
                     <button
                       onClick={() => setDeleteConfirm(dept._id)}
-                      className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors"
+                      className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors cursor-pointer"
                       title="Delete Department"
                     >
                       <FiTrash2 className="w-3 h-3 md:mr-1.5" />

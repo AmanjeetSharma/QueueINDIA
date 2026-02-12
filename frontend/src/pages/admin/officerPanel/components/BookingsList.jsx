@@ -51,7 +51,7 @@ const BookingsList = () => {
   };
 
   const handleViewDetails = (bookingId) => {
-    navigate(`/officer-panel/bookings/${bookingId}`);
+    navigate(`/department/bookings/${bookingId}`);
   };
 
   const handleFilterChange = (e) => {

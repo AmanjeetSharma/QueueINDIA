@@ -109,11 +109,7 @@ const DepartmentManagementTab = () => {
   };
 
   const handleManageDepartment = (deptId) => {
-    navigate(`/super-admin-panel/departments/${deptId}/manage`);
-  };
-
-  const handleManageAdmins = (deptId) => {
-    navigate(`/super-admin-panel/departments/${deptId}/admins`);
+    navigate(`/super-admin-panel/departments/${deptId}/manage-work`);
   };
 
   const handleCreateDepartment = () => {
@@ -538,15 +534,6 @@ const DepartmentManagementTab = () => {
                     >
                       <FiList className="w-3 h-3 md:mr-1.5" />
                       <span className="hidden md:inline">Manage</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleManageAdmins(dept._id)}
-                      className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors"
-                      title="Manage Admins"
-                    >
-                      <FaUserTie className="w-3 h-3 md:mr-1.5" />
-                      <span className="hidden md:inline">Admins/Officers</span>
                     </button>
 
                     <button

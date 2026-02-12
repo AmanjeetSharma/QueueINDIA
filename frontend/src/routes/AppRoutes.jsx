@@ -49,7 +49,7 @@ import DepartmentCreate from "../pages/admin/superAdminPanel/components/Departme
 
 import DashboardTab from "../pages/admin/superAdminPanel/components/DashboardTab.jsx";
 import DepartmentEdit from "../pages/admin/superAdminPanel/components/DepartmentManagement/DepartmentEdit.jsx";
-
+import ManageDepartmentWork from "../pages/admin/superAdminPanel/components/DepartmentManagement/ManageDepartmentWork.jsx";
 
 
 import AdminPanel from "../pages/admin/adminPanel/AdminPanel.jsx";
@@ -143,6 +143,12 @@ const AppRoutes = () => {
 
 
 
+
+
+
+
+
+
         {/* Role-specific panels with authorization */}
 
 
@@ -199,6 +205,33 @@ const AppRoutes = () => {
             </AuthorizedRoles>
           }
         />
+        <Route
+          path="/super-admin-panel/departments/:deptId/manage-work"
+          element={
+            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
+              <ManageDepartmentWork />
+            </AuthorizedRoles>
+          }
+        />
+        <Route
+          path="/super-admin-panel/departments/:deptId/manage-work/bookings"
+          element={
+            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
+              <BookingsList />
+            </AuthorizedRoles>
+          }
+        />
+        <Route
+          path="super-admin-panel/departments/:deptId/manage-work/bookings/:bookingId"
+          element={
+            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
+              <BookingDetailsPage />
+            </AuthorizedRoles>
+          }
+        />
+
+
+
 
 
 
@@ -226,8 +259,21 @@ const AppRoutes = () => {
             </AuthorizedRoles>
           }
         />
+
+
+
+
+
+
+
+
+
+
+
+        {/* SUPER_ADMIN / ADMIN / DEPARTMENT_OFFICER can access these routes */}
+
         <Route
-          path="/officer-panel/bookings"
+          path="/department/bookings"
           element={
             <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
               <BookingsList />
@@ -235,7 +281,7 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/officer-panel/bookings/:bookingId"
+          path="department/bookings/:bookingId"
           element={
             <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
               <BookingDetailsPage />
@@ -243,32 +289,53 @@ const AppRoutes = () => {
           }
         />
 
-
+        {/* Queue management routes */}
         <Route
-          path="/officer-panel/queue-services"
+          path="/department/queue-services"
           element={
             <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
               <QueueListServices />
             </AuthorizedRoles>
           }
         />
+        {/* Special route for SUPER_ADMIN to view queues of any department as they are not tied to a specific department */}
         <Route
-          path="/officer-panel/queue-management/:departmentId/:serviceId"
+          path="/department/:departmentId/queue-services"
+          element={
+            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
+              <QueueListServices />
+            </AuthorizedRoles>
+          }
+        />
+        <Route
+          path="/department/queue-management/:departmentId/:serviceId"
           element={
             <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
               <QueueManagement />
             </AuthorizedRoles>
           }
         />
-
         <Route
-          path="/officer-panel/analytics"
+          path="/department/analytics"
           element={
             <AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}>
               <AnalyticsPage />
             </AuthorizedRoles>
           }
         />
+        {/* Special route for SUPER_ADMIN to view analytics of any department as they are not tied to a specific department */}
+        <Route
+          path="/department/:departmentId/analytics"
+          element={
+            <AuthorizedRoles allowedRoles={['SUPER_ADMIN']}>
+              <AnalyticsPage />
+            </AuthorizedRoles>
+          }
+        />
+
+
+
+
 
 
 

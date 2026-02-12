@@ -99,7 +99,7 @@ const QueueListServices = () => {
     }
 
     const deptId = paramDeptId || user?.departmentId;
-    navigate(`/officer-panel/queue-management/${deptId}/${service._id}?date=${selectedDate}`);
+    navigate(`/department/queue-management/${deptId}/${service._id}?date=${selectedDate}`);
   };
 
   const formatDate = (dateString) => {

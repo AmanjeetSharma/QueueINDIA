@@ -31,7 +31,7 @@ const OfficerPanel = () => {
             title: "All Bookings",
             description: "Manage department bookings and documents",
             icon: <FaClipboardList className="w-6 h-6 sm:w-7 sm:h-7" />,
-            path: "/officer-panel/bookings",
+            path: "/department/bookings",
             bgColor: "bg-blue-600",
             hoverBgColor: "hover:bg-blue-700",
             emoji: "📋"
@@ -41,7 +41,7 @@ const OfficerPanel = () => {
             title: "Live Queue",
             description: "View real-time service queue status",
             icon: <FaUsers className="w-6 h-6 sm:w-7 sm:h-7" />,
-            path: "/officer-panel/queue-services",
+            path: `/department/queue-services`,
             bgColor: "bg-purple-600",
             hoverBgColor: "hover:bg-purple-700",
             emoji: "👥"
@@ -51,7 +51,7 @@ const OfficerPanel = () => {
             title: "Analytics",
             description: "Department performance insights",
             icon: <FaChartBar className="w-6 h-6 sm:w-7 sm:h-7" />,
-            path: "/officer-panel/analytics",
+            path: "/department/analytics",
             bgColor: "bg-green-600",
             hoverBgColor: "hover:bg-green-700",
             emoji: "📊"

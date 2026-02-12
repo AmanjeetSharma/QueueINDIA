@@ -83,6 +83,9 @@ const AppRoutes = () => {
         <Route path="/about" element={<AboutUs />} />
 
    
+
+
+   
         {/* Auth Routes - redirect if logged in */}
         <Route path="/login" element={<ProtectedAuthRoute><Login /></ProtectedAuthRoute>} />
         <Route path="/register" element={<ProtectedAuthRoute><Register /></ProtectedAuthRoute>} />
@@ -90,11 +93,20 @@ const AppRoutes = () => {
         <Route path="/reset-password" element={<ProtectedAuthRoute><ResetPassword /></ProtectedAuthRoute>} />
 
   
+
+
+
+
         {/* Protected User Routes */}
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/my-bookings" element={<ProtectedRoute><UserBookings /></ProtectedRoute>} />
         <Route path="/bookings/:bookingId" element={<ProtectedRoute><BookingDetails /></ProtectedRoute>} />
+
+
+
+
+
 
 
         {/* Booking Flow */}
@@ -109,6 +121,11 @@ const AppRoutes = () => {
         <Route path="/booking-success/:bookingId" element={<ProtectedRoute><BookingSuccess /></ProtectedRoute>} />
 
 
+
+
+
+
+
         {/* Super Admin Routes */}
         <Route path="/super-admin-panel" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><SuperAdminPanel /></AuthorizedRoles>} />
         <Route path="/super-admin-panel/dashboard" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><DashboardTab /></AuthorizedRoles>} />
@@ -121,22 +138,45 @@ const AppRoutes = () => {
         <Route path="/super-admin-panel/departments/:deptId/manage-work/bookings/:bookingId" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><BookingDetailsPage /></AuthorizedRoles>} />
 
 
+
+
+
+
+
         {/* Admin Routes */}
         <Route path="/admin-panel" element={<AuthorizedRoles allowedRoles={['ADMIN']}><AdminPanel /></AuthorizedRoles>} />
+
+
+
+
 
 
         {/* Officer Routes */}
         <Route path="/officer-panel" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER']}><OfficerPanel /></AuthorizedRoles>} />
 
 
+
+
+
+
+
         {/* Shared Admin/Staff Routes */}
         <Route path="/department/bookings" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><BookingsList /></AuthorizedRoles>} />
         <Route path="/department/bookings/:bookingId" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><BookingDetailsPage /></AuthorizedRoles>} />
+        
         <Route path="/department/queue-services" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><QueueListServices /></AuthorizedRoles>} />
         <Route path="/department/:departmentId/queue-services" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><QueueListServices /></AuthorizedRoles>} />
         <Route path="/department/queue-management/:departmentId/:serviceId" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><QueueManagement /></AuthorizedRoles>} />
         <Route path="/department/analytics" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><AnalyticsPage /></AuthorizedRoles>} />
         <Route path="/department/:departmentId/analytics" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><AnalyticsPage /></AuthorizedRoles>} />
+
+
+
+
+
+
+
+
 
 
 

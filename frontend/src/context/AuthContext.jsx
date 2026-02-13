@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { axiosInstance } from "../lib/http";
 import toast from "react-hot-toast";
+import { showBackendStartupToast } from "./components/BackendStartupToast.jsx";
 
 const AuthContext = createContext(null);
 
@@ -28,6 +29,11 @@ export const AuthProvider = ({ children }) => {
         fetchProfile();
     }, [fetchProfile]);
 
+
+
+
+
+
     const register = async (formData) => {
         try {
             await axiosInstance.post("/auth/register", formData, {
@@ -40,10 +46,7 @@ export const AuthProvider = ({ children }) => {
         } catch (err) {
             console.error("❌ Register error:", err);
             const msg = err?.response?.data?.message || "Registration failed. Please try again.";
-            toast.error(msg, {
-                duration: 6000,
-                position: "bottom-left"
-            });
+            showBackendStartupToast(msg);
             throw err;
         }
     };

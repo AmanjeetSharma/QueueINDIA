@@ -259,7 +259,7 @@ const ManageDepartmentWork = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
                             onClick={() => navigate(option.path)}
-                            className={`group relative bg-slate-800/50 border ${option.borderColor} rounded-lg p-3 cursor-pointer transition-all hover:scale-[1.02]`}
+                            className={`group relative bg-slate-800/50 border ${option.borderColor} rounded-lg p-3 cursor-pointer transition-all hover:scale-[1.015]`}
                         >
                             <div className="flex items-start justify-between mb-2">
                                 <div className={`p-1.5 rounded-lg ${option.bgColor}`}>
@@ -322,8 +322,8 @@ const ManageDepartmentWork = () => {
                             <h3 className="text-xs font-semibold text-white flex items-center gap-1.5">
                                 <FaClock className="w-3.5 h-3.5 text-slate-400" /> Hours
                             </h3>
-                            <button onClick={() => navigate(`/super-admin-panel/departments/${deptId}/edit`)} className="text-[10px] text-blue-400">
-                                Edit
+                            <button onClick={() => navigate(`/super-admin-panel/departments/${deptId}/edit`)} className="text-[10px] text-blue-400 cursor-pointer">
+                                Edit Hours
                             </button>
                         </div>
                         <div className="grid grid-cols-7 gap-1">

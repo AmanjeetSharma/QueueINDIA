@@ -79,6 +79,14 @@ const QueueManagement = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const handleChangeService = () => {
+        if (user.role === 'SUPER_ADMIN') {
+            navigate(`/department/${departmentId}/queue-services/`);
+        } else {
+            navigate(`/department/queue-services`);
+        }
+    };
+
     const fetchQueueData = useCallback(async () => {
         if (!serviceId || !date || !departmentId) return;
         try {
@@ -204,7 +212,7 @@ const QueueManagement = () => {
     const handleDateChange = (e) => {
         const newDate = e.target.value;
         if (newDate) {
-            navigate(`/officer-panel/queue-management/${departmentId}/${serviceId}?date=${newDate}`);
+            navigate(`/department/queue-management/${departmentId}/${serviceId}?date=${newDate}`);
             setShowDatePicker(false);
         }
     };
@@ -577,7 +585,7 @@ const QueueManagement = () => {
 
                             <div className="p-4 space-y-2">
                                 <button
-                                    onClick={() => navigate('/officer-panel/queue-services')}
+                                    onClick={handleChangeService}
                                     disabled={actionInProgress || isRefreshing}
                                     className="w-full text-left px-3 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors text-sm disabled:opacity-50 flex items-center justify-between"
                                 >
@@ -599,13 +607,33 @@ const QueueManagement = () => {
                                     </button>
 
                                     {showDatePicker && (
-                                        <div className="absolute z-20 mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-3">
-                                            <input
-                                                type="date"
-                                                defaultValue={date}
-                                                onChange={handleDateChange}
-                                                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            />
+                                        <div
+                                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                                            onClick={() => setShowDatePicker(false)}
+                                        >
+                                            <div
+                                                className="bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-4 w-[320px]"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <h3 className="text-white font-medium mb-3">Select Date</h3>
+                                                <input
+                                                    type="date"
+                                                    defaultValue={date}
+                                                    onChange={handleDateChange}
+                                                    className="w-full px-3 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    style={{
+                                                        colorScheme: 'dark'
+                                                    }}
+                                                />
+                                                <div className="flex justify-end gap-2 mt-4">
+                                                    <button
+                                                        onClick={() => setShowDatePicker(false)}
+                                                        className="px-3 py-1.5 text-sm text-slate-300 hover:text-white"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </div>

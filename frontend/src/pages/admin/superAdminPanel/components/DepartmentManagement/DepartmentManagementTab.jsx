@@ -243,7 +243,7 @@ const DepartmentManagementTab = () => {
       <div className="relative z-10 mb-4">
         <button
           onClick={() => navigate('/super-admin-panel')}
-          className="inline-flex bg-slate-700 px-4 py-1 rounded-sm items-center text-sm text-slate-400 hover:text-white mb-4 transition-colors group cursor-pointer"
+          className="inline-flex bg-slate-700 px-4 py-1 rounded-sm items-center text-sm text-white hover:text-slate-400 mb-4 transition-colors group cursor-pointer"
         >
           <FiArrowLeft className="w-4 h-4 mr-1.5 transform group-hover:-translate-x-1 transition-transform" />
           Back

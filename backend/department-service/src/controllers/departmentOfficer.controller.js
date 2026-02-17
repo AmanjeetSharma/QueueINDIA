@@ -18,7 +18,6 @@ import ServiceToken from "../models/serviceToken.model.js";
 
 const getDepartmentBookings = asyncHandler(async (req, res) => {
     let filter = {};
-    console.log("req.query:", req.query);
     
     // Role-based department logic
     if (req.user.role === "SUPER_ADMIN") {
@@ -36,7 +35,6 @@ const getDepartmentBookings = asyncHandler(async (req, res) => {
         
         filter.department = departmentId;
     }
-    console.log("filter:", filter);
     
     // Pagination
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
@@ -64,7 +62,7 @@ const getDepartmentBookings = asyncHandler(async (req, res) => {
     ]);
 
     console.log(
-        `[DEPT] Bookings fetched: ${bookings.length} | Total: ${total} | Page: ${page} | Limit: ${limit} | Role: ${req.user.role}`
+        `[DEPT] Bookings fetched: ${bookings.length} | Total: ${total} | Page: ${page} | Limit: ${limit} | Role: ${req.user.role} | DeptId: ${filter.department}`
     );
 
     return res.status(200).json(

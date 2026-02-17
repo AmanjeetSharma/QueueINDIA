@@ -172,6 +172,7 @@ const AppRoutes = () => {
 
         {/* Shared Admin/Staff Routes */}
         <Route path="/department/bookings" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><BookingsList /></AuthorizedRoles>} />
+        <Route path="/department/:departmentId/bookings" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><BookingsList /></AuthorizedRoles>} />
         <Route path="/department/bookings/:bookingId" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><BookingDetailsPage /></AuthorizedRoles>} />
 
         <Route path="/department/queue-services" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><QueueListServices /></AuthorizedRoles>} />

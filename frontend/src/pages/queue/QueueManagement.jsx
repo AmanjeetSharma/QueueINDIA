@@ -232,7 +232,7 @@ const QueueManagement = () => {
             'SENIOR_CITIZEN': 'Senior Citizen',
             'PREGNANT_WOMEN': 'Pregnant Women',
             'DIFFERENTLY_ABLED': 'Differently Abled',
-            'NONE': 'Normal'
+            'NONE': 'Regular'
         };
         return labels[priorityType] || 'Normal';
     };

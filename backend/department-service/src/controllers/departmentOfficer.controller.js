@@ -18,7 +18,8 @@ import ServiceToken from "../models/serviceToken.model.js";
 
 const getDepartmentBookings = asyncHandler(async (req, res) => {
     let filter = {};
-
+    console.log("req.query:", req.query);
+    
     // Role-based department logic
     if (req.user.role === "SUPER_ADMIN") {
         // Super admin can view all departments
@@ -28,14 +29,15 @@ const getDepartmentBookings = asyncHandler(async (req, res) => {
     } else {
         // Officer/Admin must belong to a department
         const departmentId = req.user.departmentId;
-
+        console.log(`[DEPT] User role: ${req.user.role} | Department ID from token: ${departmentId}`);
         if (!departmentId) {
             throw new ApiError(400, "User is not assigned to any department");
         }
-
+        
         filter.department = departmentId;
     }
-
+    console.log("filter:", filter);
+    
     // Pagination
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const limit = Math.min(parseInt(req.query.limit, 10) || 8, 50);

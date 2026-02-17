@@ -31,6 +31,7 @@ const BookingsList = () => {
   } = useDepartmentOfficer();
 
   const { user } = useAuth();
+  const { departmentId } = useParams();
 
   const [filters, setLocalFilters] = useState({
     status: '',
@@ -46,6 +47,7 @@ const BookingsList = () => {
 
   const fetchBookings = () => {
     getDepartmentBookings({
+      departmentId: departmentId,
       page: currentPage,
       limit,
       ...filters
@@ -75,6 +77,7 @@ const BookingsList = () => {
   const applyFilters = () => {
     setCurrentPage(1);
     getDepartmentBookings({
+      departmentId: departmentId,
       page: 1,
       limit,
       ...filters
@@ -89,7 +92,7 @@ const BookingsList = () => {
     });
     setSearchQuery('');
     setCurrentPage(1);
-    getDepartmentBookings({ page: 1, limit });
+    getDepartmentBookings({ departmentId: departmentId, page: 1, limit });
   };
 
   const getStatusBadge = (status) => {

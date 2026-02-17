@@ -9,6 +9,76 @@ import Department from "../models/department.model.js";
 
 
 
+
+const getAdminsByDepartment = asyncHandler(async (req, res) => {
+    const { deptId } = req.params;
+
+    if (!deptId) throw new ApiError(400, "Department ID is required");
+
+    const department = await Department.findById(deptId).select("admins name");
+
+    if (!department) throw new ApiError(404, "Department not found");
+
+    // If no admins assigned, return empty response safely
+    if (!department.admins || department.admins.length === 0) {
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                {
+                    departmentId: deptId,
+                    departmentName: department.name,
+                    admins: []
+                },
+                "No admins assigned to this department yet"
+            )
+        );
+    }
+
+    // Extracting token properly
+    const token =
+        req.headers.authorization ||
+        (req.cookies?.accessToken
+            ? `Bearer ${req.cookies.accessToken}`
+            : null);
+
+    if (!token) throw new ApiError(401, "Unauthorized — Token required");
+
+    // Bulk fetch admins from User Service
+    const { data } = await axios.post(
+        `${process.env.USER_SERVICE_URL}/api/v1/users-dept/bulk`,
+        { userIds: department.admins },
+        {
+            headers: {
+                Authorization: token
+            }
+        }
+    );
+
+    console.log(`✅ Fetched admins for department: ${department.name}`);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                departmentId: deptId,
+                departmentName: department.name,
+                admins: data?.data || []
+            },
+            "Admins fetched successfully"
+        )
+    );
+});
+
+
+
+
+
+
+
+
+
+
+
 const assignAdminToDepartment = asyncHandler(async (req, res) => {
     const { deptId } = req.params;
     const { adminEmail } = req.body;
@@ -159,76 +229,9 @@ const removeAdminBySuperAdmin = asyncHandler(async (req, res) => {
 
 
 
-
-
-const getAdminsByDepartment = asyncHandler(async (req, res) => {
-    const { deptId } = req.params;
-
-    if (!deptId) throw new ApiError(400, "Department ID is required");
-
-    const department = await Department.findById(deptId).select("admins name");
-
-    if (!department) throw new ApiError(404, "Department not found");
-
-    // If no admins assigned, return empty response safely
-    if (!department.admins || department.admins.length === 0) {
-        return res.status(200).json(
-            new ApiResponse(
-                200,
-                {
-                    departmentId: deptId,
-                    departmentName: department.name,
-                    admins: []
-                },
-                "No admins assigned to this department yet"
-            )
-        );
-    }
-
-    // Extracting token properly
-    const token =
-        req.headers.authorization ||
-        (req.cookies?.accessToken
-            ? `Bearer ${req.cookies.accessToken}`
-            : null);
-
-    if (!token) throw new ApiError(401, "Unauthorized — Token required");
-
-    // Bulk fetch admins from User Service
-    const { data } = await axios.post(
-        `${process.env.USER_SERVICE_URL}/api/v1/users-dept/bulk`,
-        { userIds: department.admins },
-        {
-            headers: {
-                Authorization: token
-            }
-        }
-    );
-
-    console.log(`✅ Fetched admins for department: ${department.name}`);
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            {
-                departmentId: deptId,
-                departmentName: department.name,
-                admins: data?.data || []
-            },
-            "Admins fetched successfully"
-        )
-    );
-});
-
-
-
-
-
-
-
 export {
+    getAdminsByDepartment,
     assignAdminToDepartment,
     removeSelfFromAdmins,
     removeAdminBySuperAdmin,
-    getAdminsByDepartment
 };

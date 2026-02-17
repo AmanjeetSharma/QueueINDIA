@@ -64,7 +64,7 @@ const ManageDepartmentWork = () => {
             bgColor: 'bg-blue-500/10',
             iconColor: 'text-blue-400',
             borderColor: 'border-blue-500/30',
-            path: `/department/bookings`,
+            path: `/department/${deptId}/bookings`,
             stats: '0',
             statLabel: 'Today'
         },
@@ -172,7 +172,7 @@ const ManageDepartmentWork = () => {
             {/* Main Content */}
             <div className="relative z-10 max-w-7xl mx-auto">
                 {/* Back Button */}
-                <button onClick={() => navigate('/super-admin-panel/departments')} className="inline-flex items-center text-xs text-slate-400 hover:text-white mb-3 transition-colors">
+                <button onClick={() => navigate('/super-admin-panel/departments')} className="inline-flex items-center text-xs text-white hover:text-slate-400 mb-3 transition-colors">
                     <FiArrowLeft className="w-3.5 h-3.5 mr-1" /> Back to Departments
                 </button>
 

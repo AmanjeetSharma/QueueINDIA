@@ -579,7 +579,6 @@ const cancelBooking = asyncHandler(async (req, res) => {
     if (booking.status === "CANCELLED") {
         throw new ApiError(400, "Booking is already cancelled");
     }
-
     if (booking.status === "COMPLETED") {
         throw new ApiError(400, "Cannot cancel a completed booking");
     }

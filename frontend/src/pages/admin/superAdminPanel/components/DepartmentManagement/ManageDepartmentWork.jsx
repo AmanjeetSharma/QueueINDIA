@@ -50,7 +50,7 @@ const ManageDepartmentWork = () => {
         if (!department) return {};
         return {
             totalServices: department.services?.length || 0,
-            totalStaff: (department.admins?.length || 0) + (department.departmentOfficers?.length || 0),
+            totalStaff: (department.staff?.length || 0) + (department.departmentOfficers?.length || 0),
             isSlotBookingEnabled: department.isSlotBookingEnabled || false,
             bookingWindowDays: department.bookingWindowDays || 0
         };
@@ -95,7 +95,7 @@ const ManageDepartmentWork = () => {
         },
         {
             id: 'admins',
-            title: 'Staff',
+            title: 'Manage Staff',
             description: 'Manage staff & permissions',
             icon: MdPeople,
             bgColor: 'bg-orange-500/15',
@@ -292,7 +292,7 @@ const ManageDepartmentWork = () => {
                                 {option.description}
                             </p>
                             <div className="flex items-center text-xs font-medium text-blue-400 group-hover:text-blue-300 transition-colors">
-                                <span>Manage</span>
+                                <span>Go</span>
                                 <FiArrowLeft className="w-3.5 h-3.5 ml-1 rotate-180 group-hover:translate-x-1 transition-transform" />
                             </div>
                         </motion.div>

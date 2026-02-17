@@ -54,7 +54,7 @@ import ManageDepartmentWork from "../pages/admin/superAdminPanel/components/Depa
 
 
 import AdminPanel from "../pages/admin/adminPanel/AdminPanel.jsx";
-import AdminsList from "../pages/manageAdmin/AdminsList.jsx";
+import StaffList from "../pages/manageStaff/StaffList.jsx";
 
 
 
@@ -155,8 +155,7 @@ const AppRoutes = () => {
 
         {/* Admin Routes */}
         <Route path="/admin-panel" element={<AuthorizedRoles allowedRoles={['ADMIN']}><AdminPanel /></AuthorizedRoles>} />
-
-
+        <Route path="/admin-panel/:deptId/edit" element={<AuthorizedRoles allowedRoles={['ADMIN']}><DepartmentEdit /></AuthorizedRoles>} />
 
 
 
@@ -181,7 +180,7 @@ const AppRoutes = () => {
         <Route path="/department/analytics" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><AnalyticsPage /></AuthorizedRoles>} />
         <Route path="/department/:departmentId/analytics" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><AnalyticsPage /></AuthorizedRoles>} />
 
-        <Route path="/department/:departmentId/admins" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN','ADMIN']}><AdminsList /></AuthorizedRoles>} />
+        <Route path="/department/:departmentId/admins" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN', 'ADMIN']}><StaffList /></AuthorizedRoles>} />
 
 
 

@@ -15,7 +15,6 @@ import {
     FiMail,
     FiPhone,
     FiInfo,
-    FiPrinter,
     FiDownload,
     FiCopy,
     FiX
@@ -297,15 +296,6 @@ const BookingDetailsPage = () => {
                                 </motion.button>
                             </div>
                         </div>
-
-                        <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => window.print()}
-                            className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors"
-                        >
-                            <FiPrinter className="w-5 h-5" />
-                        </motion.button>
                     </div>
                 </div>
             </motion.header>
@@ -718,15 +708,18 @@ const BookingDetailsPage = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center p-3 sm:p-4"
+                        className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+                        onClick={() => setShowRejectConfirm(false)}
                     >
                         <motion.div
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 20, opacity: 0 }}
-                            className="w-full sm:max-w-sm bg-gray-800 border border-gray-700 rounded-lg overflow-hidden"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                            className="w-full max-w-sm bg-gray-800 border border-gray-700 rounded-lg overflow-hidden shadow-xl"
+                            onClick={e => e.stopPropagation()}
                         >
-                            <div className="p-4 sm:p-5">
+                            <div className="p-5">
                                 <div className="flex items-start gap-3 mb-4">
                                     <div className="w-10 h-10 bg-red-900/30 border border-red-700 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <FiAlertCircle className="w-5 h-5 text-red-500" />

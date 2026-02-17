@@ -542,11 +542,7 @@ const getDepartmentServicesForQueue = asyncHandler(async (req, res) => {
         isDocumentUploadRequired: service.isDocumentUploadRequired ?? true
     }));
 
-    console.log("Department services fetched for queue:", {
-        departmentId,
-        departmentName: department.name,
-        services
-    });
+    console.log(`Fetched ${services.length} services for department ${department.name} (${departmentId}) for queue-services`);
 
     return res.status(200).json(
         new ApiResponse(

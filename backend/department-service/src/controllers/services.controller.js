@@ -180,7 +180,7 @@ const updateService = asyncHandler(async (req, res) => {
 
 
 const deleteService = asyncHandler(async (req, res) => {
-    const { deptId, serviceId } = req.params;
+    const { deptId, serviceId } = req.params;x
 
     const department = await Department.findById(deptId);
     if (!department) throw new ApiError(404, "Department not found");

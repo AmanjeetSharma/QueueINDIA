@@ -101,7 +101,7 @@ const ManageDepartmentWork = () => {
             bgColor: 'bg-orange-500/15',
             iconColor: 'text-orange-500',
             borderColor: 'border-orange-400/40',
-            path: `/super-admin-panel/departments/${deptId}/manage-work`,
+            path: `/department/${deptId}/admins`,
             stats: getDepartmentStats().totalStaff || 0,
             statLabel: 'Total'
         }

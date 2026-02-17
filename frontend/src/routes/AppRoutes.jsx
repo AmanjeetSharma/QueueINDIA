@@ -54,7 +54,7 @@ import ManageDepartmentWork from "../pages/admin/superAdminPanel/components/Depa
 
 
 import AdminPanel from "../pages/admin/adminPanel/AdminPanel.jsx";
-
+import AdminsList from "../pages/manageAdmin/AdminsList.jsx";
 
 
 
@@ -180,6 +180,8 @@ const AppRoutes = () => {
         <Route path="/department/queue-management/:departmentId/:serviceId" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><QueueManagement /></AuthorizedRoles>} />
         <Route path="/department/analytics" element={<AuthorizedRoles allowedRoles={['DEPARTMENT_OFFICER', 'ADMIN', 'SUPER_ADMIN']}><AnalyticsPage /></AuthorizedRoles>} />
         <Route path="/department/:departmentId/analytics" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><AnalyticsPage /></AuthorizedRoles>} />
+
+        <Route path="/department/:departmentId/admins" element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN','ADMIN']}><AdminsList /></AuthorizedRoles>} />
 
 
 

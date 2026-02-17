@@ -55,7 +55,7 @@ const register = asyncHandler(async (req, res) => {
     if (passwordBreachCheck.breached) {
         throw new ApiError(
             400,
-            `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
+            `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a secure password.`
         );
     }
 

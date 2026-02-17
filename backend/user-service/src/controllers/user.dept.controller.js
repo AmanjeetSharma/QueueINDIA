@@ -35,9 +35,10 @@ const bulkFetchUsers = asyncHandler(async (req, res) => {
 
     const users = await User.find(
         { _id: { $in: userIds } },
-        "_id name email role"
+        "_id name email role phone avatar"
     );
 
+    console.log(`Bulk staff fetched | Requested IDs: ${userIds.length} | Found Users: ${users.length} | users: ${users.map(u => u.email).join(", ")}`);
     return res.status(200).json(
         new ApiResponse(200, users, "Users fetched successfully")
     );

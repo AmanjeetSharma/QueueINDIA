@@ -122,7 +122,7 @@ const createDepartment = asyncHandler(async (req, res) => {
 
         status,
         createdBy: req.user._id,
-        admins: [],
+        staff: [],
         ratings: []
     });
 
@@ -170,8 +170,10 @@ const updateDepartment = asyncHandler(async (req, res) => {
     }
 
     if (req.user.role === "ADMIN") {
-        const isAssigned = department.admins.some(
-            adminId => adminId.toString() === req.user._id.toString()
+        const isAssigned = department.staff.some(
+            staffMember =>
+                staffMember.role === "ADMIN" &&
+                staffMember.userId.toString() === req.user._id.toString()
         );
 
         if (!isAssigned) {
@@ -373,7 +375,7 @@ const getDepartments = asyncHandler(async (req, res) => {
 
     // Fetch departments
     const departments = await Department.find(filter)
-        .select("name departmentCategory address.city address.state address.pincode contact.phone contact.email status services ratings admins")
+        .select("name departmentCategory address.city address.state address.pincode contact.phone contact.email status services ratings staff")
         .sort(sortOptions)
         .skip(skip)
         .limit(safeLimit)
@@ -389,11 +391,16 @@ const getDepartments = asyncHandler(async (req, res) => {
         // Count services
         const serviceCount = dep.services?.length || 0;
 
-        // Get service names
         const serviceNames = dep.services?.map(s => s.name).slice(0, 3) || [];
 
-        // Count active admins
-        const adminCount = dep.admins?.filter(admin => admin).length || 0;
+        const adminCount = dep.staff?.filter(
+            s => s.role === "ADMIN"
+        ).length || 0;
+
+        const officerCount = dep.staff?.filter(
+            s => s.role === "DEPARTMENT_OFFICER"
+        ).length || 0;
+
 
         return {
             _id: dep._id,
@@ -412,6 +419,7 @@ const getDepartments = asyncHandler(async (req, res) => {
             stats: {
                 totalServices: serviceCount,
                 totalAdmins: adminCount,
+                totalOfficers: officerCount,
                 totalRatings: dep.ratings?.length || 0,
                 averageRating: parseFloat(avgRating.toFixed(1))
             },

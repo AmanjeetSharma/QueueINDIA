@@ -20,7 +20,7 @@ const addressSchema = new Schema(
 // Rating Schema (per user review)
 const ratingSchema = new Schema(
     {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        user: { type: mongoose.Schema.Types.ObjectId, required: true },
         name: { type: String, required: true, trim: true },
         rating: { type: Number, required: true, min: 1, max: 5 },
         comment: { type: String, trim: true }
@@ -67,6 +67,31 @@ const workingHoursSchema = new Schema(
 
 
 
+const staffSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+    },
+    role: {
+        type: String,
+        enum: ["ADMIN", "DEPARTMENT_OFFICER"],
+        required: true
+    },
+    joinedAt: {
+        type: Date,
+        default: Date.now
+    },
+    assignedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+    }
+}, { _id: false });
+
+
+
+
+
+
+
 
 const departmentSchema = new Schema(
     {
@@ -99,7 +124,6 @@ const departmentSchema = new Schema(
 
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
             required: true // Super Admin
         },
 
@@ -122,23 +146,7 @@ const departmentSchema = new Schema(
 
 
         // all associated admins and officers (for easy querying) - can be used for notifications, access control, etc.
-        admins: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "User",
-                required: true, // Department Admin,
-                default: []
-            },
-        ],
-        departmentOfficers: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "User",
-                required: true, // Department Officer,
-                default: []
-            }
-        ],
-
+        staff: [staffSchema],
 
         departmentSlug: {
             type: String,
@@ -179,6 +187,6 @@ departmentSchema.pre("validate", async function (next) {
 });
 
 const Department =
-  mongoose.models.Department || mongoose.model("Department", departmentSchema);
+    mongoose.models.Department || mongoose.model("Department", departmentSchema);
 
 export default Department;

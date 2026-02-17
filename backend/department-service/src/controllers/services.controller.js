@@ -28,8 +28,8 @@ const addService = asyncHandler(async (req, res) => {
     if (!department) throw new ApiError(404, "Department not found");
 
     // Authorization
-    const isAssignedAdmin = department.admins.some(
-        id => id.toString() === req.user._id.toString()
+    const isAssignedAdmin = department.staff.some(
+        staffMember => staffMember.userId.toString() === req.user._id.toString()
     );
 
     if (req.user.role !== "SUPER_ADMIN" && !isAssignedAdmin) {
@@ -102,8 +102,8 @@ const updateService = asyncHandler(async (req, res) => {
     if (!department) throw new ApiError(404, "Department not found");
 
     // 🔐 Authorization: SUPER_ADMIN or assigned ADMIN only
-    const isAssignedAdmin = department.admins.some(
-        id => id.toString() === req.user._id.toString()
+    const isAssignedAdmin = department.staff.some(
+        staffMember => staffMember.userId.toString() === req.user._id.toString()
     );
     if (req.user.role !== "SUPER_ADMIN" && !isAssignedAdmin) {
         throw new ApiError(403, "Not authorized to update service");
@@ -185,8 +185,8 @@ const deleteService = asyncHandler(async (req, res) => {
     const department = await Department.findById(deptId);
     if (!department) throw new ApiError(404, "Department not found");
 
-    const isAssignedAdmin = department.admins.some(
-        id => id.toString() === req.user._id.toString()
+    const isAssignedAdmin = department.staff.some(
+        staffMember => staffMember.userId.toString() === req.user._id.toString()
     );
 
     if (req.user.role !== "SUPER_ADMIN" && !isAssignedAdmin) {

@@ -20,9 +20,15 @@ export const AdminProvider = ({ children }) => {
     const [error, setError] = useState(null);
     const { user } = useAuth();
 
+
+
+
+
+
     // Get admins for a department
-    const getDepartmentAdmins = async (deptId) => {
+    const getDepartmentStaff = async (deptId) => {
         try {
+            console.log(`REQ REACHED`);
             setLoading(true);
             setError(null);
             const response = await axiosInstance.get(`/departments/${deptId}/admins`);
@@ -37,6 +43,14 @@ export const AdminProvider = ({ children }) => {
             setLoading(false);
         }
     };
+
+
+
+
+
+
+
+
 
     // Assign admin to department
     const assignAdminToDepartment = async (deptId, adminEmail) => {
@@ -89,7 +103,7 @@ export const AdminProvider = ({ children }) => {
         admins,
         loading,
         error,
-        getDepartmentAdmins,
+        getDepartmentStaff,
         assignAdminToDepartment,
         removeAdminFromDepartment,
         clearError

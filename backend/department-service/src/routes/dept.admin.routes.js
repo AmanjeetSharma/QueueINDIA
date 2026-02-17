@@ -1,8 +1,11 @@
 import express from "express";
-import { assignAdminToDepartment, removeSelfFromAdmins, removeAdminBySuperAdmin, getAdminsByDepartment } from "../controllers/admins.controller.js";
+import { assignAdminToDepartment, removeSelfFromAdmins, removeAdminBySuperAdmin, getDepartmentStaff } from "../controllers/admins.controller.js";
 import { verifyToken, authorizeRoles } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
+
+// Get admins by department
+router.get("/:deptId/admins", verifyToken, authorizeRoles("SUPER_ADMIN", "ADMIN"), getDepartmentStaff);
 
 // Add admin to a department
 router.post("/:deptId/admins", verifyToken, authorizeRoles("SUPER_ADMIN", "ADMIN"), assignAdminToDepartment);
@@ -13,7 +16,5 @@ router.delete("/:deptId/admins/self", verifyToken, authorizeRoles("SUPER_ADMIN",
 // Remove admin by super admin
 router.delete("/:deptId/admins/:adminId", verifyToken, authorizeRoles("SUPER_ADMIN"), removeAdminBySuperAdmin);
 
-// Get admins by department
-router.get("/:deptId/admins", verifyToken, authorizeRoles("SUPER_ADMIN", "ADMIN"), getAdminsByDepartment);
 
 export default router;

@@ -184,7 +184,7 @@ export const showBackendStartupToast = (message = "Failed to connect. Backend is
             />
         ),
         {
-            duration: 60000,
+            duration: 60000, // Auto-dismiss after 60 seconds
             position: "top-center",
             // Better stacking behavior
             className: "!bg-transparent !shadow-none",
@@ -192,6 +192,10 @@ export const showBackendStartupToast = (message = "Failed to connect. Backend is
             id: 'backend-startup-toast',
         }
     );
+
+    setTimeout(() => {
+        toast.dismiss(toastId);
+    }, 60000);
 
     return toastId;
 };

@@ -10,64 +10,106 @@ import Department from "../models/department.model.js";
 
 
 
-const getAdminsByDepartment = asyncHandler(async (req, res) => {
+const getDepartmentStaff = asyncHandler(async (req, res) => {
     const { deptId } = req.params;
 
-    if (!deptId) throw new ApiError(400, "Department ID is required");
+    if (!deptId) {
+        throw new ApiError(400, "Department ID is required");
+    }
 
-    const department = await Department.findById(deptId).select("admins name");
+    let departmentIdToUse;
 
-    if (!department) throw new ApiError(404, "Department not found");
+    // SUPER_ADMIN → Can access any department
+    if (req.user.role === "SUPER_ADMIN") {
+        departmentIdToUse = deptId;
 
-    // If no admins assigned, return empty response safely
-    if (!department.admins || department.admins.length === 0) {
+        // ADMIN → Can only access their assigned department
+    } else {
+        if (!req.user.departmentId) {
+            throw new ApiError(403, "Admin not assigned to any department");
+        }
+
+        if (req.user.departmentId.toString() !== deptId) {
+            throw new ApiError(403, "Access denied to this department");
+        }
+
+        departmentIdToUse = req.user.departmentId;
+    }
+
+    const department = await Department.findById(departmentIdToUse)
+        .select("staff departmentOfficers name");
+
+    if (!department) {
+        throw new ApiError(404, "Department not found");
+    }
+
+    // Combine Admins + Officers
+    const userIds = [
+        ...(department.admins || []),
+        ...(department.departmentOfficers || [])
+    ];
+
+    if (!userIds.length) {
         return res.status(200).json(
             new ApiResponse(
                 200,
                 {
-                    departmentId: deptId,
+                    departmentId: departmentIdToUse,
                     departmentName: department.name,
-                    admins: []
+                    admins: [],
+                    officers: []
                 },
-                "No admins assigned to this department yet"
+                "No staff assigned to this department yet"
             )
         );
     }
 
-    // Extracting token properly
+    // Remove duplicate IDs (safety)
+    const uniqueUserIds = [...new Set(userIds.map(id => id.toString()))];
+
+    // Extract access token to forward to User Service
     const token =
         req.headers.authorization ||
         (req.cookies?.accessToken
             ? `Bearer ${req.cookies.accessToken}`
             : null);
 
-    if (!token) throw new ApiError(401, "Unauthorized — Token required");
+    if (!token) {
+        throw new ApiError(401, "Unauthorized — Token required");
+    }
 
-    // Bulk fetch admins from User Service
+    // Bulk fetch users from User Service
     const { data } = await axios.post(
         `${process.env.USER_SERVICE_URL}/api/v1/users-dept/bulk`,
-        { userIds: department.admins },
-        {
-            headers: {
-                Authorization: token
-            }
-        }
+        { userIds: uniqueUserIds },
+        { headers: { Authorization: token } }
     );
 
-    console.log(`✅ Fetched admins for department: ${department.name}`);
+    const users = data?.data || [];
+
+    // Separate roles
+    const admins = users.filter(user => user.role === "ADMIN");
+    const officers = users.filter(user => user.role === "DEPARTMENT_OFFICER");
+
+    console.log(
+        `Department Staff Fetched | Dept: ${department.name} | Admins: ${admins.length} | Officers: ${officers.length}`
+    );
 
     return res.status(200).json(
         new ApiResponse(
             200,
             {
-                departmentId: deptId,
+                departmentId: departmentIdToUse,
                 departmentName: department.name,
-                admins: data?.data || []
+                admins,
+                officers
             },
-            "Admins fetched successfully"
+            "Department staff fetched successfully"
         )
     );
 });
+
+
 
 
 
@@ -230,7 +272,7 @@ const removeAdminBySuperAdmin = asyncHandler(async (req, res) => {
 
 
 export {
-    getAdminsByDepartment,
+    getDepartmentStaff,
     assignAdminToDepartment,
     removeSelfFromAdmins,
     removeAdminBySuperAdmin,

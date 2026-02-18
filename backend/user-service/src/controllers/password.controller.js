@@ -103,7 +103,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     }
 
     const passwordBreachCheck = await isPasswordBreached(newPassword);
-    console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck);
+    // console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck); // debug log
     if (passwordBreachCheck.breached) {
         throw new ApiError(
             400,

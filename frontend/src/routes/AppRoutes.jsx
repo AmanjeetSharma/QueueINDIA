@@ -5,6 +5,7 @@ import Login from "../pages/auth/Login.jsx";
 import Register from "../pages/auth/Register.jsx";
 import Profile from "../pages/Profile/Profile.jsx";
 import Navbar from "../components/Navbar.jsx";
+import SetPassword from "../pages/Profile/SetPassword.jsx";
 
 // Route protection components
 import ProtectedRoute from "./ProtectedRoute.jsx";
@@ -112,6 +113,7 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/my-bookings" element={<ProtectedRoute><UserBookings /></ProtectedRoute>} />
         <Route path="/bookings/:bookingId" element={<ProtectedRoute><BookingDetails /></ProtectedRoute>} />
+        <Route path="/set-google-password" element={<ProtectedRoute><SetPassword /></ProtectedRoute>} />
 
 
 

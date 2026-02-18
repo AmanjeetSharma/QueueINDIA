@@ -1,7 +1,7 @@
 import { useAuth } from "../../context/AuthContext";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaUser, FaShieldAlt, FaUserSlash, FaCamera, FaEdit, FaCheck, FaGoogle } from "react-icons/fa";
+import { FaUser, FaShieldAlt, FaUserSlash, FaCamera, FaEdit, FaCheck } from "react-icons/fa";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +10,6 @@ import { useNavigate } from "react-router-dom";
 import ProfileTab from "../Profile/ProfileSub/ProfileTab";
 import SecurityTab from "../Profile/ProfileSub/SecurityTab";
 import DangerZoneTab from "../Profile/ProfileSub/DangerZoneTab";
-import GooglePasswordTab from "./ProfileSub/GooglePasswordTab";
 import Popup from "../Profile/ProfileSub/Popup";
 import { getDominantColor, createGradientFromColor, createSimpleGradient, getTextColorForBackground } from "../../utils/colorExtractor";
 
@@ -27,8 +26,7 @@ const Profile = () => {
         addSecondaryEmail,
         verifySecondaryEmail,
         sendPrimaryEmailVerification,
-        updateDOB,
-        setGoogleUserPassword
+        updateDOB
     } = useAuth();
 
     const navigate = useNavigate();
@@ -48,7 +46,6 @@ const Profile = () => {
     const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
     const [isUpdatingSecondaryEmail, setIsUpdatingSecondaryEmail] = useState(false);
     const [isUpdatingDOB, setIsUpdatingDOB] = useState(false);
-    const [isSettingGooglePassword, setIsSettingGooglePassword] = useState(false);
 
     // Popup states
     const [showLogoutPopup, setShowLogoutPopup] = useState(false);
@@ -68,11 +65,6 @@ const Profile = () => {
             zipCode: '',
             country: 'India'
         }
-    });
-
-    const [googlePasswordData, setGooglePasswordData] = useState({
-        newGooglePassword: '',
-        confirmGooglePassword: ''
     });
 
     const [phoneData, setPhoneData] = useState({
@@ -141,42 +133,11 @@ const Profile = () => {
         }
     }, [searchParams]);
 
-    // Handlers (keeping all your existing handlers)
+    // Handlers
     const handleSendPrimaryEmailVerification = async () => {
         try {
             await sendPrimaryEmailVerification();
         } catch (error) {}
-    };
-
-    const handleSetGooglePassword = async (e) => {
-        e?.preventDefault();
-
-        if (googlePasswordData.newGooglePassword !== googlePasswordData.confirmGooglePassword) {
-            toast.error("Passwords do not match");
-            return;
-        }
-
-        if (googlePasswordData.newGooglePassword.length < 8) {
-            toast.error("Password must be at least 8 characters");
-            return;
-        }
-
-        setIsSettingGooglePassword(true);
-        try {
-            await setGoogleUserPassword(
-                googlePasswordData.newGooglePassword,
-                googlePasswordData.confirmGooglePassword
-            );
-
-            setGooglePasswordData({
-                newGooglePassword: '',
-                confirmGooglePassword: ''
-            });
-            setActiveTab('security');
-        } catch (error) {
-        } finally {
-            setIsSettingGooglePassword(false);
-        }
     };
 
     const handleUpdateDOB = async () => {
@@ -382,14 +343,8 @@ const Profile = () => {
     const tabs = [
         { id: 'profile', label: 'Profile', icon: FaUser },
         { id: 'security', label: 'Security', icon: FaShieldAlt },
-        { id: 'google-password', label: 'Set Password', icon: FaGoogle },
         { id: 'danger', label: 'Danger Zone', icon: FaUserSlash }
-    ].filter(tab => {
-        if (tab.id === 'google-password') {
-            return user?.hasPassword === false;
-        }
-        return true;
-    });
+    ];
 
     return (
         <div className="min-h-screen bg-gray-50 py-4 sm:py-6">
@@ -577,16 +532,6 @@ const Profile = () => {
                                     passwordData={passwordData}
                                     setPasswordData={setPasswordData}
                                     onPasswordChange={handlePasswordChange}
-                                />
-                            )}
-
-                            {/* Google Password Tab */}
-                            {activeTab === 'google-password' && user?.hasPassword === false && (
-                                <GooglePasswordTab
-                                    googlePasswordData={googlePasswordData}
-                                    setGooglePasswordData={setGooglePasswordData}
-                                    onSetGooglePassword={handleSetGooglePassword}
-                                    isSettingGooglePassword={isSettingGooglePassword}
                                 />
                             )}
 

@@ -40,14 +40,14 @@ export const AuthProvider = ({ children }) => {
             });
             toast.success("Registration successful! Please login.", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
         } catch (err) {
             console.error("❌ Register error:", err);
             const msg = err?.response?.data?.message || "Registration failed. Please try again.";
             toast.error(msg, {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             throw err;
         }
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
 
             toast.success(`Welcome back! ${res.data?.data?.user.name || 'User'}`, {
                 duration: 5000,
-                position: "bottom-left",
+                position: "top-center",
             });
 
             return res.data;
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
             const msg = err?.response?.data?.message || "Login failed. Please check your credentials.";
             toast.error(msg, {
                 duration: 3000,
-                position: "bottom-left",
+                position: "top-center",
             });
 
             throw err;
@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem("backendReady", "true");
             toast.success(res.data.message || "Successfully logged in with Google!", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
         } catch (err) {
             handleError(err);
@@ -120,14 +120,14 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem("backendReady");
             toast.success("Logged out successfully", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
         } catch (err) {
             console.error("❌ Logout error:", err);
             const msg = err?.response?.data?.message || "Logout failed";
             toast.error(msg, {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             throw err;
         }
@@ -144,14 +144,14 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem("backendReady");
             toast.success("Logged out from all devices", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
         } catch (err) {
             console.error("❌ Logout all error:", err);
             const msg = err?.response?.data?.message || "Logout failed";
             toast.error(msg, {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             throw err;
         }
@@ -170,7 +170,7 @@ export const AuthProvider = ({ children }) => {
             setUser(res.data?.data || res.data?.user || null);
             toast.success(res.data.message || "Profile updated successfully!", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             return res.data;
         } catch (err) {
@@ -178,7 +178,7 @@ export const AuthProvider = ({ children }) => {
             const msg = err?.response?.data?.message || "Profile update failed";
             toast.error(msg, {
                 duration: 5000,
-                position: "bottom-left"
+                position: "top-center"
             });
             throw err;
         }
@@ -199,7 +199,7 @@ export const AuthProvider = ({ children }) => {
 
             toast.success("Password changed successfully. Please log in again.", {
                 duration: 5000,
-                position: "bottom-left"
+                position: "top-center"
             });
 
             // Just clear auth state — DO NOT REDIRECT HERE
@@ -211,7 +211,7 @@ export const AuthProvider = ({ children }) => {
             return res.data;
         } catch (err) {
             const msg = err?.response?.data?.message || "Password change failed";
-            toast.error(msg, { duration: 3000, position: "bottom-left" });
+            toast.error(msg, { duration: 3000, position: "top-center" });
             throw err;
         }
     };
@@ -226,7 +226,7 @@ export const AuthProvider = ({ children }) => {
             setUser(null);
             toast.success("Account deleted successfully!", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             return res.data;
         } catch (err) {
@@ -234,7 +234,7 @@ export const AuthProvider = ({ children }) => {
             const msg = err?.response?.data?.message || "Account deletion failed";
             toast.error(msg, {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             throw err;
         }
@@ -253,7 +253,7 @@ export const AuthProvider = ({ children }) => {
             const msg = err?.response?.data?.message || "Failed to fetch sessions";
             toast.error(msg, {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             throw err;
         }
@@ -270,13 +270,13 @@ export const AuthProvider = ({ children }) => {
             });
             toast.success(res.data.message + "\nValid for: 10 minutes", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             return res.data.data;
         } catch (error) {
             toast.error(error?.response?.data?.message || "Failed to send OTP. Please try again.", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             console.error("❌ Add phone error:", error);
             handleError(error);
@@ -294,14 +294,14 @@ export const AuthProvider = ({ children }) => {
             });
             toast.success("Phone verified successfully!", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             await fetchProfile(); // ✅ refresh user
             return res.data.data;
         } catch (error) {
             toast.error(error?.response?.data?.message || "Phone verification failed. Please try again.", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             console.error("❌ Verify phone error:", error);
             handleError(error);
@@ -320,13 +320,13 @@ export const AuthProvider = ({ children }) => {
             });
             toast.success("OTP sent to your email!", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             return res.data.data;
         } catch (error) {
             toast.error(error?.response?.data?.message || "Failed to send OTP. Please try again.", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             handleError(error);
         }
@@ -340,14 +340,14 @@ export const AuthProvider = ({ children }) => {
             });
             toast.success("Secondary email verified!", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             await fetchProfile(); // refresh user
             return res.data.data;
         } catch (error) {
             toast.error(error?.response?.data?.message || "Secondary email verification failed. Please try again.", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             console.error("❌ Verify secondary email error:", error);
             handleError(error);
@@ -369,7 +369,7 @@ export const AuthProvider = ({ children }) => {
                 </div>,
                 {
                     duration: 5000,
-                    position: "bottom-left",
+                    position: "top-center",
                     style: {
                         background: '#2563eb', // blue-600
                         color: 'white',
@@ -383,7 +383,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             toast.error(error?.response?.data?.message || "Failed to send verification email. Please try again.", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             handleError(error);
             throw error;
@@ -404,14 +404,14 @@ export const AuthProvider = ({ children }) => {
 
             toast.success(response.data.message || 'Password reset instructions sent to your email!', {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             return response.data;
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Failed to send reset email';
             toast.error(errorMessage, {
                 duration: 7000,
-                position: "bottom-left"
+                position: "top-center"
             });
             throw new Error(errorMessage);
         } finally {
@@ -430,14 +430,14 @@ export const AuthProvider = ({ children }) => {
 
             toast.success(response.data.message || 'Password reset successfully!', {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             return response.data;
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Password reset failed';
             toast.error(errorMessage, {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             throw new Error(errorMessage);
         } finally {
@@ -454,14 +454,14 @@ export const AuthProvider = ({ children }) => {
 
             toast.success(response.data.message || 'OTP sent to your phone!', {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             return response.data;
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Failed to send OTP';
             toast.error(errorMessage, {
                 duration: 7000,
-                position: "bottom-left"
+                position: "top-center"
             });
             throw new Error(errorMessage);
         } finally {
@@ -481,14 +481,14 @@ export const AuthProvider = ({ children }) => {
 
             toast.success(response.data.message || 'Password reset successfully!', {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             return response.data;
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Password reset failed';
             toast.error(errorMessage, {
                 duration: 5000,
-                position: "bottom-left"
+                position: "top-center"
             });
             throw new Error(errorMessage);
         } finally {
@@ -517,7 +517,7 @@ export const AuthProvider = ({ children }) => {
 
             toast.success(res.data.message || "Date of birth updated successfully!", {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             return res.data;
         } catch (err) {
@@ -525,7 +525,7 @@ export const AuthProvider = ({ children }) => {
             const msg = err?.response?.data?.message || "Date of birth update failed";
             toast.error(msg, {
                 duration: 5000,
-                position: "bottom-left"
+                position: "top-center"
             });
             throw err;
         }
@@ -543,7 +543,7 @@ export const AuthProvider = ({ children }) => {
             const msg = err?.response?.data?.message || "Failed to fetch users";
             toast.error(msg, {
                 duration: 3000,
-                position: "bottom-left"
+                position: "top-center"
             });
             throw err;
         }
@@ -648,7 +648,7 @@ export const AuthProvider = ({ children }) => {
 
     const setGoogleUserPassword = async (newPassword, confirmPassword) => {
         try {
-            console.log("Setting password for Google user...");
+            // console.log("Setting password for Google user...");
             const res = await axiosInstance.post(
                 "/users/google-user/set-password",
                 {
@@ -674,7 +674,7 @@ export const AuthProvider = ({ children }) => {
 
             toast.error(msg, {
                 duration: 3000,
-                position: "bottom-left",
+                position: "top-center",
             });
 
             throw err;

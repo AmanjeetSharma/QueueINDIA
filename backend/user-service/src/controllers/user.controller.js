@@ -331,11 +331,7 @@ const addPhone = asyncHandler(async (req, res) => {
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // ✅ DO NOT overwrite main phone yet
     user.pendingPhone = phone;
-
-    // Reset verification status (important)
-    user.isPhoneVerified = false;
 
     user.phoneVerificationCode = otp;
     user.phoneVerificationExpiry = Date.now() + 10 * 60 * 1000; // 10 mins

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -24,16 +24,76 @@ import {
   MdCheckCircle,
   MdOutlineAdminPanelSettings,
   MdArrowBack,
+  MdMoreVert,
 } from "react-icons/md";
 import { FaUsers, FaUserShield, FaUserTie, FaUser } from "react-icons/fa";
 
-// Import popup components
 import DeletePopup from './popups/DeletePopup';
 import LogoutPopup from './popups/LogoutPopup';
 import ResetPasswordPopup from './popups/ResetPasswordPopup';
 import ViewUserPopup from './popups/ViewUserPopup';
 import ChangeRolePopup from './popups/ChangeRolePopup';
 
+// ─── Mobile Action Menu (portal-style, fixed position) ───────────────────────
+const MobileMenu = ({ user, anchorRef, onClose, onView, onRole, onReset, onLogout, onDelete }) => {
+  const [pos, setPos] = useState({ top: 0, right: 0 });
+
+  useEffect(() => {
+    if (anchorRef?.current) {
+      const rect = anchorRef.current.getBoundingClientRect();
+      const menuHeight = 220; // approx
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const top = spaceBelow < menuHeight
+        ? rect.top - menuHeight + window.scrollY
+        : rect.bottom + window.scrollY + 4;
+
+      setPos({
+        top,
+        right: window.innerWidth - rect.right,
+      });
+    }
+
+    const handleClickOutside = (e) => {
+      if (anchorRef?.current && !anchorRef.current.contains(e.target)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: -6 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: -6 }}
+      transition={{ duration: 0.15 }}
+      style={{ position: 'fixed', top: pos.top, right: pos.right, zIndex: 9999 }}
+      className="w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden"
+    >
+      <div className="p-1">
+        {[
+          { label: 'View Details', icon: MdPerson, color: 'text-slate-300', action: onView },
+          { label: 'Change Role', icon: MdEdit, color: 'text-purple-300', action: onRole },
+          { label: 'Reset Password', icon: MdLockReset, color: 'text-blue-300', action: onReset },
+          { label: 'Force Logout', icon: MdLogout, color: 'text-amber-300', action: onLogout },
+          { label: 'Delete User', icon: MdDelete, color: 'text-red-300', action: onDelete },
+        ].map(({ label, icon: Icon, color, action }) => (
+          <button
+            key={label}
+            onClick={() => { action(); onClose(); }}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs ${color} hover:bg-slate-700/80 rounded-lg transition-colors`}
+          >
+            <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+            {label}
+          </button>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 const UserManagementTab = () => {
   const {
     getAllUsers: authGetAllUsers,
@@ -61,587 +121,218 @@ const UserManagementTab = () => {
     limit: 20
   });
 
-  // Popup states
   const [popupState, setPopupState] = useState({
-    showDelete: false,
-    showLogout: false,
-    showResetPassword: false,
-    showViewUser: false,
-    showChangeRole: false
+    showDelete: false, showLogout: false,
+    showResetPassword: false, showViewUser: false, showChangeRole: false
   });
-
   const [selectedUser, setSelectedUser] = useState(null);
   const [temporaryPassword, setTemporaryPassword] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(null);
+  const [mobileMenuUserId, setMobileMenuUserId] = useState(null);
 
-  // Fetch users
+  // Store refs per-user for anchor positioning
+  const mobileMenuRefs = useRef({});
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
-
       const response = await authGetAllUsers();
-
-      let allUsers = [];
-      if (response?.data?.users) {
-        allUsers = response.data.users;
-      } else if (response?.users) {
-        allUsers = response.users;
-      } else if (Array.isArray(response)) {
-        allUsers = response;
-      }
-
-      // Client-side filtering
-      let filteredUsers = [...allUsers];
+      let allUsers = response?.data?.users || response?.users || (Array.isArray(response) ? response : []);
+      let filtered = [...allUsers];
 
       if (searchTerm.trim()) {
-        const term = searchTerm.toLowerCase().trim();
-        filteredUsers = filteredUsers.filter(user =>
-          user.name?.toLowerCase().includes(term) ||
-          user.email?.toLowerCase().includes(term) ||
-          user.phone?.toLowerCase().includes(term)
+        const t = searchTerm.toLowerCase().trim();
+        filtered = filtered.filter(u =>
+          u.name?.toLowerCase().includes(t) ||
+          u.email?.toLowerCase().includes(t) ||
+          u.phone?.toLowerCase().includes(t)
         );
       }
+      if (filters.role !== 'ALL') filtered = filtered.filter(u => u.role === filters.role);
+      if (filters.emailVerified !== 'ALL')
+        filtered = filtered.filter(u => filters.emailVerified === 'VERIFIED' ? u.isEmailVerified : !u.isEmailVerified);
+      if (filters.phoneVerified !== 'ALL')
+        filtered = filtered.filter(u => filters.phoneVerified === 'VERIFIED' ? u.isPhoneVerified : !u.isPhoneVerified);
 
-      if (filters.role !== 'ALL') {
-        filteredUsers = filteredUsers.filter(user => user.role === filters.role);
-      }
-
-      if (filters.emailVerified !== 'ALL') {
-        filteredUsers = filteredUsers.filter(user =>
-          filters.emailVerified === 'VERIFIED' ? user.isEmailVerified : !user.isEmailVerified
-        );
-      }
-
-      if (filters.phoneVerified !== 'ALL') {
-        filteredUsers = filteredUsers.filter(user =>
-          filters.phoneVerified === 'VERIFIED' ? user.isPhoneVerified : !user.isPhoneVerified
-        );
-      }
-
-      // Sorting
-      filteredUsers.sort((a, b) => {
-        let aValue, bValue;
-
-        switch (filters.sortBy) {
-          case 'name':
-            aValue = a.name?.toLowerCase() || '';
-            bValue = b.name?.toLowerCase() || '';
-            break;
-          case 'email':
-            aValue = a.email?.toLowerCase() || '';
-            bValue = b.email?.toLowerCase() || '';
-            break;
-          case 'role':
-            aValue = a.role || '';
-            bValue = b.role || '';
-            break;
-          case 'createdAt':
-          default:
-            aValue = new Date(a.createdAt || 0).getTime();
-            bValue = new Date(b.createdAt || 0).getTime();
-        }
-
-        if (filters.sortOrder === 'asc') {
-          return aValue > bValue ? 1 : -1;
-        } else {
-          return aValue < bValue ? 1 : -1;
-        }
+      filtered.sort((a, b) => {
+        let av, bv;
+        if (filters.sortBy === 'name') { av = a.name?.toLowerCase() || ''; bv = b.name?.toLowerCase() || ''; }
+        else if (filters.sortBy === 'email') { av = a.email?.toLowerCase() || ''; bv = b.email?.toLowerCase() || ''; }
+        else if (filters.sortBy === 'role') { av = a.role || ''; bv = b.role || ''; }
+        else { av = new Date(a.createdAt || 0).getTime(); bv = new Date(b.createdAt || 0).getTime(); }
+        return filters.sortOrder === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
       });
 
-      const startIndex = (pagination.currentPage - 1) * pagination.limit;
-      const endIndex = startIndex + pagination.limit;
-      const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-
-      setUsers(paginatedUsers);
+      const start = (pagination.currentPage - 1) * pagination.limit;
+      setUsers(filtered.slice(start, start + pagination.limit));
       setPagination(prev => ({
         ...prev,
-        totalPages: Math.ceil(filteredUsers.length / pagination.limit),
-        totalUsers: filteredUsers.length
+        totalPages: Math.ceil(filtered.length / pagination.limit),
+        totalUsers: filtered.length
       }));
-
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
+    } catch {
       toast.error('Failed to load users');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, [pagination.currentPage]);
+  useEffect(() => { fetchUsers(); }, [pagination.currentPage]);
 
-  // Filter handlers
-  const handleApplyFilters = () => {
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-    fetchUsers();
-  };
-
+  const handleApplyFilters = () => { setPagination(p => ({ ...p, currentPage: 1 })); fetchUsers(); };
   const handleResetFilters = () => {
     setSearchTerm('');
-    setFilters({
-      role: 'ALL',
-      emailVerified: 'ALL',
-      phoneVerified: 'ALL',
-      sortBy: 'createdAt',
-      sortOrder: 'desc'
-    });
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
+    setFilters({ role: 'ALL', emailVerified: 'ALL', phoneVerified: 'ALL', sortBy: 'createdAt', sortOrder: 'desc' });
+    setPagination(p => ({ ...p, currentPage: 1 }));
     fetchUsers();
   };
 
-  const toggleSortOrder = () => {
-    setFilters(prev => ({
-      ...prev,
-      sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc'
-    }));
-  };
-
-  const changeSortField = (field) => {
-    setFilters(prev => ({
-      ...prev,
-      sortBy: field
-    }));
-  };
-
-  // Close all popups
   const closeAllPopups = () => {
-    setPopupState({
-      showDelete: false,
-      showLogout: false,
-      showResetPassword: false,
-      showViewUser: false,
-      showChangeRole: false
-    });
+    setPopupState({ showDelete: false, showLogout: false, showResetPassword: false, showViewUser: false, showChangeRole: false });
     setSelectedUser(null);
     setTemporaryPassword('');
   };
 
-  // Popup handlers
-  const openDeletePopup = (user) => {
-    setSelectedUser(user);
-    setPopupState(prev => ({ ...prev, showDelete: true }));
-    setShowMobileMenu(null);
-  };
+  const open = (type, user) => { setSelectedUser(user); setPopupState(p => ({ ...p, [type]: true })); };
 
-  const openLogoutPopup = (user) => {
-    setSelectedUser(user);
-    setPopupState(prev => ({ ...prev, showLogout: true }));
-    setShowMobileMenu(null);
-  };
-
-  const openResetPasswordPopup = (user) => {
-    setSelectedUser(user);
-    setPopupState(prev => ({ ...prev, showResetPassword: true }));
-    setShowMobileMenu(null);
-  };
-
-  const openViewUserPopup = (user) => {
-    setSelectedUser(user);
-    setPopupState(prev => ({ ...prev, showViewUser: true }));
-    setShowMobileMenu(null);
-  };
-
-  const openChangeRolePopup = (user) => {
-    setSelectedUser(user);
-    setPopupState(prev => ({ ...prev, showChangeRole: true }));
-    setShowMobileMenu(null);
-  };
-
-  // Action handlers
   const handleDeleteUser = async () => {
-    try {
-      setActionLoading(true);
-      await authDeleteUserByAdmin(selectedUser._id);
-      toast.success('User deleted successfully', { duration: 2000, position: 'top-center' });
-      closeAllPopups();
-      fetchUsers();
-    } catch (error) {
-      toast.error(error.message || 'Failed to delete user');
-    } finally {
-      setActionLoading(false);
-    }
+    try { setActionLoading(true); await authDeleteUserByAdmin(selectedUser._id); closeAllPopups(); fetchUsers(); }
+    catch (e) { }
+    finally { setActionLoading(false); }
   };
-
   const handleForceLogout = async () => {
-    try {
-      setActionLoading(true);
-      await authForceLogout(selectedUser._id);
-      toast.success('User logged out successfully', { duration: 2000, position: 'top-center' });
-      closeAllPopups();
-      fetchUsers();
-    } catch (error) {
-      toast.error(error.message || 'Failed to logout user');
-    } finally {
-      setActionLoading(false);
-    }
+    try { setActionLoading(true); await authForceLogout(selectedUser._id); closeAllPopups(); fetchUsers(); }
+    catch (e) { }
+    finally { setActionLoading(false); }
   };
-
   const handleResetPassword = async () => {
-    try {
-      setActionLoading(true);
-      const response = await authResetPassword(selectedUser._id);
-      setTemporaryPassword(response.data?.temporaryPassword || response.temporaryPassword);
-    } catch (error) {
-      toast.error(error.message || 'Failed to reset password');
-    } finally {
-      setActionLoading(false);
-    }
+    try { setActionLoading(true); const r = await authResetPassword(selectedUser._id); setTemporaryPassword(r.data?.temporaryPassword || r.temporaryPassword); }
+    catch (e) { }
+    finally { setActionLoading(false); }
   };
-
   const handleChangeRole = async (newRole) => {
-    try {
-      setActionLoading(true);
-      await authChangeRole(selectedUser._id, newRole);
-      toast.success(`Role updated to ${newRole.replace('_', ' ')}`, { duration: 2000, position: 'top-center' });
-      closeAllPopups();
-      fetchUsers();
-    } catch (error) {
-      toast.error(error.message || 'Failed to change role');
-    } finally {
-      setActionLoading(false);
-    }
+    try { setActionLoading(true); await authChangeRole(selectedUser._id, newRole); closeAllPopups(); fetchUsers(); }
+    catch (e) { }
+    finally { setActionLoading(false); }
   };
 
-  // Format date
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
+  const formatDate = (d) => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  const getRoleBadge = (role) => {
+    const map = {
+      SUPER_ADMIN: 'bg-red-500/10 text-red-400 border border-red-500/20',
+      ADMIN: 'bg-purple-500/10 text-purple-400 border border-purple-500/20',
+      DEPARTMENT_OFFICER: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+    };
+    return map[role] || 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
   };
 
-  // Get role badge color
-  const getRoleBadgeColor = (role) => {
-    switch (role) {
-      case 'SUPER_ADMIN':
-        return 'bg-red-500/20 text-red-300 border border-red-500/30';
-      case 'ADMIN':
-        return 'bg-purple-500/20 text-purple-300 border border-purple-500/30';
-      case 'DEPARTMENT_OFFICER':
-        return 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
-      default:
-        return 'bg-green-500/20 text-green-300 border border-green-500/30';
-    }
-  };
-
-  // Get role icon
   const getRoleIcon = (role) => {
-    switch (role) {
-      case 'SUPER_ADMIN':
-        return <MdShield className="text-red-400" />;
-      case 'ADMIN':
-        return <FaUserShield className="text-purple-400" />;
-      case 'DEPARTMENT_OFFICER':
-        return <FaUserTie className="text-blue-400" />;
-      default:
-        return <FaUser className="text-green-400" />;
-    }
+    if (role === 'SUPER_ADMIN') return <MdShield className="text-red-400" />;
+    if (role === 'ADMIN') return <FaUserShield className="text-purple-400" />;
+    if (role === 'DEPARTMENT_OFFICER') return <FaUserTie className="text-blue-400" />;
+    return <FaUser className="text-emerald-400" />;
   };
 
-  // Get stats
-  const getStats = () => {
-    const total = pagination.totalUsers;
-    const superAdmins = users.filter(u => u.role === 'SUPER_ADMIN').length;
-    const admins = users.filter(u => u.role === 'ADMIN').length;
-    const officers = users.filter(u => u.role === 'DEPARTMENT_OFFICER').length;
-    const regularUsers = users.filter(u => u.role === 'USER').length;
-    const verifiedUsers = users.filter(u => u.isEmailVerified && u.isPhoneVerified).length;
-
-    return { total, superAdmins, admins, officers, regularUsers, verifiedUsers };
-  };
-
-  const stats = getStats();
-
-  // Action buttons component
-  const ActionButtons = ({ user }) => {
-    return (
-      <>
-        {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-1.5">
-          <button
-            onClick={() => openViewUserPopup(user)}
-            className="px-2.5 py-1.5 text-xs bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors flex items-center gap-1.5"
-            title="View user details"
-          >
-            <MdPerson className="w-3.5 h-3.5" />
-            <span>View</span>
-          </button>
-
-          <button
-            onClick={() => openChangeRolePopup(user)}
-            className="px-2.5 py-1.5 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 rounded-lg transition-colors flex items-center gap-1.5"
-            title="Change user role"
-          >
-            <MdEdit className="w-3.5 h-3.5" />
-            <span>Role</span>
-          </button>
-
-          <button
-            onClick={() => openResetPasswordPopup(user)}
-            className="px-2.5 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-300 rounded-lg transition-colors flex items-center gap-1.5"
-            title="Reset user password"
-          >
-            <MdLockReset className="w-3.5 h-3.5" />
-            <span>Reset</span>
-          </button>
-
-          <button
-            onClick={() => openLogoutPopup(user)}
-            className="px-2.5 py-1.5 text-xs bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 rounded-lg transition-colors flex items-center gap-1.5"
-            title="Force logout from all sessions"
-          >
-            <MdLogout className="w-3.5 h-3.5" />
-            <span>Logout</span>
-          </button>
-
-          <button
-            onClick={() => openDeletePopup(user)}
-            className="px-2.5 py-1.5 text-xs bg-red-900/30 hover:bg-red-900/50 text-red-300 rounded-lg transition-colors flex items-center gap-1.5"
-            title="Delete user permanently"
-          >
-            <MdDelete className="w-3.5 h-3.5" />
-            <span>Delete</span>
-          </button>
-        </div>
-
-        {/* Mobile Actions - Menu Button */}
-        <div className="relative md:hidden">
-          <button
-            onClick={() => setShowMobileMenu(showMobileMenu === user._id ? null : user._id)}
-            className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors"
-          >
-            <MdOutlineAdminPanelSettings className="w-4 h-4 text-slate-300" />
-          </button>
-
-          <AnimatePresence>
-            {showMobileMenu === user._id && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50"
-              >
-                <div className="p-1.5">
-                  <button
-                    onClick={() => openViewUserPopup(user)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
-                  >
-                    <MdPerson className="w-3.5 h-3.5" />
-                    View Details
-                  </button>
-                  <button
-                    onClick={() => openChangeRolePopup(user)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-purple-300 hover:bg-slate-700 rounded-lg transition-colors"
-                  >
-                    <MdEdit className="w-3.5 h-3.5" />
-                    Change Role
-                  </button>
-                  <button
-                    onClick={() => openResetPasswordPopup(user)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-blue-300 hover:bg-slate-700 rounded-lg transition-colors"
-                  >
-                    <MdLockReset className="w-3.5 h-3.5" />
-                    Reset Password
-                  </button>
-                  <button
-                    onClick={() => openLogoutPopup(user)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-amber-300 hover:bg-slate-700 rounded-lg transition-colors"
-                  >
-                    <MdLogout className="w-3.5 h-3.5" />
-                    Force Logout
-                  </button>
-                  <button
-                    onClick={() => openDeletePopup(user)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-300 hover:bg-slate-700 rounded-lg transition-colors"
-                  >
-                    <MdDelete className="w-3.5 h-3.5" />
-                    Delete User
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </>
-    );
+  const stats = {
+    total: pagination.totalUsers,
+    superAdmins: users.filter(u => u.role === 'SUPER_ADMIN').length,
+    admins: users.filter(u => u.role === 'ADMIN').length,
+    officers: users.filter(u => u.role === 'DEPARTMENT_OFFICER').length,
+    regularUsers: users.filter(u => u.role === 'USER').length,
+    verifiedUsers: users.filter(u => u.isEmailVerified && u.isPhoneVerified).length,
   };
 
   if (loading && !actionLoading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-            <div className="w-8 h-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
+            <div className="w-6 h-6 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
           </div>
-          <p className="text-lg font-medium text-slate-300">Loading users...</p>
-          <p className="mt-2 text-sm text-slate-400">Please wait while we fetch the data</p>
+          <p className="text-sm font-medium text-slate-300">Loading users…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500 rounded-full blur-3xl opacity-5"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full blur-3xl opacity-5"></div>
-      </div>
+    <div className="min-h-screen bg-slate-900 text-white">
 
-      {/* Header */}
-      <div className="relative z-10 border-b border-slate-700/50 bg-slate-800/40 backdrop-blur-xl sticky top-0">
+      {/* ── Header ── */}
+      <div className="border-b border-slate-800 bg-slate-900 sticky top-0 z-30">
         <div className="px-4 sm:px-6 py-4">
           <button
             onClick={() => navigate('/super-admin-panel')}
-            className="inline-flex bg-slate-700 px-4 py-1 rounded-sm items-center text-sm text-white hover:text-slate-400 mb-4 transition-colors group cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white mb-4 transition-colors group"
           >
-            <MdArrowBack className="w-4 h-4 mr-1.5 transform group-hover:-translate-x-1 transition-transform" />
+            <MdArrowBack className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
             Back
           </button>
+
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                User Management
-              </h1>
-              <p className="mt-1 text-xs sm:text-sm text-slate-400">Manage and monitor all system users</p>
+              <h1 className="text-lg sm:text-xl font-bold text-white">User Management</h1>
+              <p className="mt-0.5 text-xs text-slate-500">Manage and monitor all system users</p>
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleResetFilters}
-                className="p-2 sm:px-3 sm:py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors flex items-center gap-1.5 text-xs sm:text-sm"
-              >
-                <MdRedo className="w-4 h-4" />
-                <span className="hidden sm:inline">Reset</span>
+              <button onClick={handleResetFilters} className="p-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors flex items-center gap-1.5 text-xs text-slate-300">
+                <MdRedo className="w-4 h-4" /><span className="hidden sm:inline">Reset</span>
               </button>
-
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="p-2 sm:px-3 sm:py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors flex items-center gap-1.5 text-xs sm:text-sm"
-              >
-                <MdFilterList className="w-4 h-4" />
-                <span className="hidden sm:inline">Filters</span>
+              <button onClick={() => setShowFilters(!showFilters)} className={`p-2 sm:px-3 sm:py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-xs ${showFilters ? 'bg-blue-600/20 border-blue-500/40 text-blue-300' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'}`}>
+                <MdFilterList className="w-4 h-4" /><span className="hidden sm:inline">Filters</span>
               </button>
-
-              <button
-                onClick={fetchUsers}
-                className="p-2 sm:px-3 sm:py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-lg transition-colors flex items-center gap-1.5 text-xs sm:text-sm"
-              >
-                <MdRefresh className="w-4 h-4" />
-                <span className="hidden sm:inline">Refresh</span>
+              <button onClick={fetchUsers} className="p-2 sm:px-3 sm:py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1.5 text-xs text-white">
+                <MdRefresh className="w-4 h-4" /><span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Stats Cards - Compact */}
-      <div className="relative z-10 px-4 sm:px-6 py-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-slate-400">Total</p>
-                <p className="text-lg font-bold text-white mt-0.5">{stats.total}</p>
-              </div>
-              <div className="p-1.5 rounded-lg bg-blue-500/20">
-                <FaUsers className="w-4 h-4 text-blue-400" />
-              </div>
-            </div>
-          </div>
+      <div className="px-4 sm:px-6 py-4 space-y-4">
 
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-slate-400">Super</p>
-                <p className="text-lg font-bold text-red-400 mt-0.5">{stats.superAdmins}</p>
+        {/* ── Stats ── */}
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          {[
+            { label: 'Total', val: stats.total, icon: FaUsers, color: 'text-slate-300', bg: 'bg-slate-800' },
+            { label: 'Super', val: stats.superAdmins, icon: MdShield, color: 'text-red-400', bg: 'bg-slate-800' },
+            { label: 'Admin', val: stats.admins, icon: FaUserShield, color: 'text-purple-400', bg: 'bg-slate-800' },
+            { label: 'Officer', val: stats.officers, icon: FaUserTie, color: 'text-blue-400', bg: 'bg-slate-800' },
+            { label: 'User', val: stats.regularUsers, icon: FaUser, color: 'text-emerald-400', bg: 'bg-slate-800' },
+            { label: 'Verified', val: stats.verifiedUsers, icon: MdCheckCircle, color: 'text-teal-400', bg: 'bg-slate-800' },
+          ].map(({ label, val, icon: Icon, color, bg }) => (
+            <div key={label} className={`${bg} border border-slate-800 rounded-xl p-3 flex flex-col gap-1`}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500">{label}</span>
+                <Icon className={`w-3.5 h-3.5 ${color}`} />
               </div>
-              <div className="p-1.5 rounded-lg bg-red-500/20">
-                <MdShield className="w-4 h-4 text-red-400" />
-              </div>
+              <span className={`text-xl font-bold ${color}`}>{val}</span>
             </div>
-          </div>
-
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-slate-400">Admin</p>
-                <p className="text-lg font-bold text-purple-400 mt-0.5">{stats.admins}</p>
-              </div>
-              <div className="p-1.5 rounded-lg bg-purple-500/20">
-                <FaUserShield className="w-4 h-4 text-purple-400" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-slate-400">Officer</p>
-                <p className="text-lg font-bold text-blue-400 mt-0.5">{stats.officers}</p>
-              </div>
-              <div className="p-1.5 rounded-lg bg-blue-500/20">
-                <FaUserTie className="w-4 h-4 text-blue-400" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-slate-400">User</p>
-                <p className="text-lg font-bold text-green-400 mt-0.5">{stats.regularUsers}</p>
-              </div>
-              <div className="p-1.5 rounded-lg bg-green-500/20">
-                <FaUser className="w-4 h-4 text-green-400" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-slate-400">Verified</p>
-                <p className="text-lg font-bold text-emerald-400 mt-0.5">{stats.verifiedUsers}</p>
-              </div>
-              <div className="p-1.5 rounded-lg bg-emerald-500/20">
-                <MdCheckCircle className="w-4 h-4 text-emerald-400" />
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
-      </div>
 
-      {/* Search and Filters */}
-      <div className="relative z-10 px-4 sm:px-6 py-2">
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
-          <div className="flex flex-col md:flex-row md:items-center gap-2">
-            {/* Search Bar */}
-            <div className="flex-1">
-              <div className="relative">
-                <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search users..."
-                  className="w-full pl-9 pr-4 py-2 bg-slate-700 border border-slate-600 text-white text-sm placeholder-slate-400 rounded-lg focus:border-blue-500 outline-none transition-colors"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleApplyFilters()}
-                />
-              </div>
+        {/* ── Search & Filters ── */}
+        <div className="bg-slate-800/60 border border-slate-800 rounded-xl p-3 space-y-3">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search by name, email or phone…"
+                className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 text-white text-sm placeholder-slate-500 rounded-lg focus:border-blue-500 outline-none transition-colors"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                onKeyPress={e => e.key === 'Enter' && handleApplyFilters()}
+              />
             </div>
-
-            {/* Quick Filters */}
             <div className="flex items-center gap-2">
               <select
-                className="text-sm bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:border-blue-500 outline-none transition-colors"
+                className="text-sm bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2 focus:border-blue-500 outline-none"
                 value={filters.role}
-                onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
+                onChange={e => setFilters(p => ({ ...p, role: e.target.value }))}
               >
                 <option value="ALL">All Roles</option>
                 <option value="SUPER_ADMIN">Super Admin</option>
@@ -649,200 +340,152 @@ const UserManagementTab = () => {
                 <option value="DEPARTMENT_OFFICER">Officer</option>
                 <option value="USER">User</option>
               </select>
-
               <button
-                onClick={toggleSortOrder}
-                className="p-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg transition-colors"
-                title={`Sort ${filters.sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
+                onClick={() => setFilters(p => ({ ...p, sortOrder: p.sortOrder === 'asc' ? 'desc' : 'asc' }))}
+                className="p-2 bg-slate-900 border border-slate-700 rounded-lg hover:border-blue-500 transition-colors"
               >
-                {filters.sortOrder === 'asc' ?
-                  <MdArrowUpward className="w-4 h-4 text-slate-300" /> :
-                  <MdArrowDownward className="w-4 h-4 text-slate-300" />
-                }
+                {filters.sortOrder === 'asc'
+                  ? <MdArrowUpward className="w-4 h-4 text-slate-400" />
+                  : <MdArrowDownward className="w-4 h-4 text-slate-400" />}
               </button>
-
-              <button
-                onClick={handleApplyFilters}
-                className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg font-medium transition-colors"
-              >
+              <button onClick={handleApplyFilters} className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
                 Apply
               </button>
             </div>
           </div>
 
-          {/* Advanced Filters */}
           <AnimatePresence>
             {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-700">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">
-                      Email Verification
-                    </label>
-                    <select
-                      className="w-full text-sm bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:border-blue-500 outline-none transition-colors"
-                      value={filters.emailVerified}
-                      onChange={(e) => setFilters(prev => ({ ...prev, emailVerified: e.target.value }))}
-                    >
-                      <option value="ALL">All Email Status</option>
-                      <option value="VERIFIED">Verified Only</option>
-                      <option value="UNVERIFIED">Unverified Only</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">
-                      Phone Verification
-                    </label>
-                    <select
-                      className="w-full text-sm bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:border-blue-500 outline-none transition-colors"
-                      value={filters.phoneVerified}
-                      onChange={(e) => setFilters(prev => ({ ...prev, phoneVerified: e.target.value }))}
-                    >
-                      <option value="ALL">All Phone Status</option>
-                      <option value="VERIFIED">Verified Only</option>
-                      <option value="UNVERIFIED">Unverified Only</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">
-                      Sort By
-                    </label>
-                    <select
-                      className="w-full text-sm bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:border-blue-500 outline-none transition-colors"
-                      value={filters.sortBy}
-                      onChange={(e) => changeSortField(e.target.value)}
-                    >
-                      <option value="createdAt">Join Date</option>
-                      <option value="name">Name</option>
-                      <option value="email">Email</option>
-                      <option value="role">Role</option>
-                    </select>
-                  </div>
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-slate-700/60">
+                  {[
+                    { label: 'Email Verification', key: 'emailVerified', opts: [['ALL', 'All Email Status'], ['VERIFIED', 'Verified'], ['UNVERIFIED', 'Unverified']] },
+                    { label: 'Phone Verification', key: 'phoneVerified', opts: [['ALL', 'All Phone Status'], ['VERIFIED', 'Verified'], ['UNVERIFIED', 'Unverified']] },
+                    { label: 'Sort By', key: 'sortBy', opts: [['createdAt', 'Join Date'], ['name', 'Name'], ['email', 'Email'], ['role', 'Role']] },
+                  ].map(({ label, key, opts }) => (
+                    <div key={key}>
+                      <label className="block text-xs text-slate-500 mb-1">{label}</label>
+                      <select
+                        className="w-full text-sm bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2 focus:border-blue-500 outline-none"
+                        value={filters[key]}
+                        onChange={e => setFilters(p => ({ ...p, [key]: e.target.value }))}
+                      >
+                        {opts.map(([val, lbl]) => <option key={val} value={val}>{lbl}</option>)}
+                      </select>
+                    </div>
+                  ))}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
-      </div>
 
-      {/* Users List */}
-      <div className="relative z-10 px-4 sm:px-6 py-4">
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
-          {/* List Header */}
-          <div className="px-4 py-3 border-b border-slate-700 bg-slate-800/80">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-white">All Users</h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Showing {Math.min(pagination.currentPage * pagination.limit, pagination.totalUsers)} of {pagination.totalUsers} users
-                </p>
-              </div>
+        {/* ── Users List ── */}
+        <div className="bg-slate-800/60 border border-slate-800 rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-white">All Users</h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Showing {Math.min(pagination.currentPage * pagination.limit, pagination.totalUsers)} of {pagination.totalUsers}
+              </p>
             </div>
           </div>
 
-          {/* Users List */}
-          <div className="divide-y divide-slate-700">
-            {users.length > 0 ? (
-              users.map((user, index) => (
-                <motion.div
-                  key={user._id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  className="p-4 hover:bg-slate-700/30 transition-colors"
-                >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    {/* User Info */}
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      {/* Avatar */}
-                      <div className="relative flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-slate-600">
-                          {user.avatar ? (
-                            <img
-                              src={user.avatar}
-                              alt={user.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-600 to-cyan-600 text-white font-bold text-sm">
-                              {user.name?.charAt(0).toUpperCase()}
-                            </div>
-                          )}
+          <div className="divide-y divide-slate-800">
+            {users.length > 0 ? users.map((user, index) => (
+              <motion.div
+                key={user._id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.02 }}
+                className="px-4 py-3 hover:bg-slate-800/80 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  {/* Avatar */}
+                  <div className="relative flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full overflow-hidden border border-slate-700">
+                      {user.avatar
+                        ? <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                        : <div className="w-full h-full flex items-center justify-center bg-blue-600/30 text-blue-300 font-bold text-sm">
+                          {user.name?.charAt(0).toUpperCase()}
                         </div>
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-slate-800 rounded-full border border-slate-600 flex items-center justify-center">
-                          {getRoleIcon(user.role)}
-                        </div>
-                      </div>
-
-                      {/* Details */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 mb-1.5">
-                          <h4 className="text-sm font-semibold text-white truncate">
-                            {user.name}
-                          </h4>
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)} w-fit`}>
-                            {getRoleIcon(user.role)}
-                            <span>{user.role.replace('_', ' ')}</span>
-                          </span>
-                        </div>
-
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 text-xs text-slate-300">
-                            <MdEmail className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
-                            <span className="truncate">{user.email}</span>
-                            {user.isEmailVerified ? (
-                              <MdVerified className="w-3.5 h-3.5 text-green-500 flex-shrink-0" title="Email Verified" />
-                            ) : (
-                              <MdWarning className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" title="Email Not Verified" />
-                            )}
-                          </div>
-
-                          {user.phone && (
-                            <div className="flex items-center gap-1.5 text-xs text-slate-300">
-                              <MdPhone className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
-                              <span>{user.phone}</span>
-                              {user.isPhoneVerified ? (
-                                <MdVerified className="w-3.5 h-3.5 text-green-500 flex-shrink-0" title="Phone Verified" />
-                              ) : (
-                                <MdWarning className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" title="Phone Not Verified" />
-                              )}
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                            <MdCalendarToday className="w-3.5 h-3.5 flex-shrink-0" />
-                            <span>Joined {formatDate(user.createdAt)}</span>
-                          </div>
-                        </div>
-                      </div>
+                      }
                     </div>
-
-                    {/* Action Buttons */}
-                    <ActionButtons user={user} />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-slate-900 rounded-full border border-slate-700 flex items-center justify-center text-[10px]">
+                      {getRoleIcon(user.role)}
+                    </div>
                   </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className="p-8 text-center">
-                <div className="mx-auto w-12 h-12 bg-slate-700/50 rounded-full flex items-center justify-center mb-3">
-                  <FaUsers className="w-6 h-6 text-slate-500" />
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                      <span className="text-sm font-medium text-white truncate">{user.name}</span>
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${getRoleBadge(user.role)}`}>
+                        {user.role.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                      <span className="flex items-center gap-1 text-xs text-slate-400 min-w-0">
+                        <MdEmail className="w-3 h-3 text-slate-600 flex-shrink-0" />
+                        <span className="truncate max-w-[160px]">{user.email}</span>
+                        {user.isEmailVerified
+                          ? <MdVerified className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                          : <MdWarning className="w-3 h-3 text-amber-500 flex-shrink-0" />}
+                      </span>
+                      {user.phone && (
+                        <span className="flex items-center gap-1 text-xs text-slate-400">
+                          <MdPhone className="w-3 h-3 text-slate-600" />
+                          {user.phone}
+                          {user.isPhoneVerified
+                            ? <MdVerified className="w-3 h-3 text-emerald-500" />
+                            : <MdWarning className="w-3 h-3 text-amber-500" />}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1 text-xs text-slate-600">
+                        <MdCalendarToday className="w-3 h-3" />
+                        {formatDate(user.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Desktop Actions */}
+                  <div className="hidden md:flex items-center gap-1 flex-shrink-0">
+                    {[
+                      { label: 'View', icon: MdPerson, cls: 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700', fn: () => open('showViewUser', user) },
+                      { label: 'Role', icon: MdEdit, cls: 'bg-purple-900/20 hover:bg-purple-900/40 text-purple-300 border border-purple-800/30', fn: () => open('showChangeRole', user) },
+                      { label: 'Reset', icon: MdLockReset, cls: 'bg-blue-900/20 hover:bg-blue-900/40 text-blue-300 border border-blue-800/30', fn: () => open('showResetPassword', user) },
+                      { label: 'Logout', icon: MdLogout, cls: 'bg-amber-900/20 hover:bg-amber-900/40 text-amber-300 border border-amber-800/30', fn: () => open('showLogout', user) },
+                      { label: 'Delete', icon: MdDelete, cls: 'bg-red-900/20 hover:bg-red-900/40 text-red-300 border border-red-800/30', fn: () => open('showDelete', user) },
+                    ].map(({ label, icon: Icon, cls, fn }) => (
+                      <button key={label} onClick={fn} className={`px-2.5 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${cls}`}>
+                        <Icon className="w-3.5 h-3.5" />{label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Mobile Menu Button */}
+                  <div className="relative md:hidden flex-shrink-0">
+                    <button
+                      ref={el => mobileMenuRefs.current[user._id] = el}
+                      onClick={() => setMobileMenuUserId(mobileMenuUserId === user._id ? null : user._id)}
+                      className="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors"
+                    >
+                      <MdMoreVert className="w-4 h-4 text-slate-400" />
+                    </button>
+                  </div>
                 </div>
-                <h3 className="text-base font-semibold text-white mb-1">No Users Found</h3>
-                <p className="text-xs text-slate-400 mb-4">
+              </motion.div>
+            )) : (
+              <div className="py-16 text-center">
+                <div className="mx-auto w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mb-3">
+                  <FaUsers className="w-5 h-5 text-slate-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-white mb-1">No Users Found</h3>
+                <p className="text-xs text-slate-500">
                   {searchTerm ? 'Try different search terms or filters' : 'No users in the system yet'}
                 </p>
                 {searchTerm && (
-                  <button
-                    onClick={handleResetFilters}
-                    className="px-4 py-2 text-xs bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg font-medium transition-colors"
-                  >
+                  <button onClick={handleResetFilters} className="mt-4 px-4 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
                     Clear Filters
                   </button>
                 )}
@@ -850,117 +493,70 @@ const UserManagementTab = () => {
             )}
           </div>
 
-          {/* Pagination - Compact */}
+          {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="px-4 py-3 border-t border-slate-700 bg-slate-800/80">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="text-xs text-slate-400">
-                  Page <span className="font-medium text-white">{pagination.currentPage}</span> of{' '}
-                  <span className="font-medium text-white">{pagination.totalPages}</span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <button
-                    disabled={pagination.currentPage === 1}
-                    onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
-                    className={`px-2.5 py-1.5 rounded text-xs font-medium ${pagination.currentPage === 1
-                      ? 'text-slate-600 cursor-not-allowed'
-                      : 'text-slate-300 hover:bg-slate-700'
-                      }`}
-                  >
-                    Previous
-                  </button>
-
-                  <div className="flex items-center gap-1">
-                    {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => {
-                      let pageNum;
-                      if (pagination.totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (pagination.currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (pagination.currentPage >= pagination.totalPages - 2) {
-                        pageNum = pagination.totalPages - 4 + i;
-                      } else {
-                        pageNum = pagination.currentPage - 2 + i;
-                      }
-
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => setPagination(prev => ({ ...prev, currentPage: pageNum }))}
-                          className={`w-7 h-7 rounded text-xs font-medium ${pagination.currentPage === pageNum
-                            ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
-                            : 'text-slate-400 hover:bg-slate-700'
-                            }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    disabled={pagination.currentPage === pagination.totalPages}
-                    onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
-                    className={`px-2.5 py-1.5 rounded text-xs font-medium ${pagination.currentPage === pagination.totalPages
-                      ? 'text-slate-600 cursor-not-allowed'
-                      : 'text-slate-300 hover:bg-slate-700'
-                      }`}
-                  >
-                    Next
-                  </button>
-                </div>
+            <div className="px-4 py-3 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span className="text-xs text-slate-500">
+                Page <span className="text-white font-medium">{pagination.currentPage}</span> of <span className="text-white font-medium">{pagination.totalPages}</span>
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  disabled={pagination.currentPage === 1}
+                  onClick={() => setPagination(p => ({ ...p, currentPage: p.currentPage - 1 }))}
+                  className="px-2.5 py-1.5 rounded text-xs text-slate-400 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >Previous</button>
+                {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => {
+                  let p;
+                  if (pagination.totalPages <= 5) p = i + 1;
+                  else if (pagination.currentPage <= 3) p = i + 1;
+                  else if (pagination.currentPage >= pagination.totalPages - 2) p = pagination.totalPages - 4 + i;
+                  else p = pagination.currentPage - 2 + i;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPagination(prev => ({ ...prev, currentPage: p }))}
+                      className={`w-7 h-7 rounded text-xs font-medium transition-colors ${pagination.currentPage === p ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-800'}`}
+                    >{p}</button>
+                  );
+                })}
+                <button
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  onClick={() => setPagination(p => ({ ...p, currentPage: p.currentPage + 1 }))}
+                  className="px-2.5 py-1.5 rounded text-xs text-slate-400 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >Next</button>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Popups */}
+      {/* ── Mobile Dropdown Portal ── */}
       <AnimatePresence>
-        {popupState.showDelete && (
-          <DeletePopup
-            user={selectedUser}
-            onConfirm={handleDeleteUser}
-            onCancel={closeAllPopups}
-            loading={actionLoading}
-          />
-        )}
+        {mobileMenuUserId && (() => {
+          const u = users.find(u => u._id === mobileMenuUserId);
+          if (!u) return null;
+          return (
+            <MobileMenu
+              key={mobileMenuUserId}
+              user={u}
+              anchorRef={{ current: mobileMenuRefs.current[mobileMenuUserId] }}
+              onClose={() => setMobileMenuUserId(null)}
+              onView={() => open('showViewUser', u)}
+              onRole={() => open('showChangeRole', u)}
+              onReset={() => open('showResetPassword', u)}
+              onLogout={() => open('showLogout', u)}
+              onDelete={() => open('showDelete', u)}
+            />
+          );
+        })()}
+      </AnimatePresence>
 
-        {popupState.showLogout && (
-          <LogoutPopup
-            user={selectedUser}
-            onConfirm={handleForceLogout}
-            onCancel={closeAllPopups}
-            loading={actionLoading}
-          />
-        )}
-
-        {popupState.showResetPassword && (
-          <ResetPasswordPopup
-            user={selectedUser}
-            onConfirm={handleResetPassword}
-            onCancel={closeAllPopups}
-            loading={actionLoading}
-            temporaryPassword={temporaryPassword}
-          />
-        )}
-
-        {popupState.showViewUser && (
-          <ViewUserPopup
-            user={selectedUser}
-            onClose={closeAllPopups}
-          />
-        )}
-
-        {popupState.showChangeRole && (
-          <ChangeRolePopup
-            user={selectedUser}
-            onConfirm={handleChangeRole}
-            onCancel={closeAllPopups}
-            loading={actionLoading}
-          />
-        )}
+      <AnimatePresence>
+        {popupState.showDelete && <DeletePopup user={selectedUser} onConfirm={handleDeleteUser} onCancel={closeAllPopups} loading={actionLoading} />}
+        {popupState.showLogout && <LogoutPopup user={selectedUser} onConfirm={handleForceLogout} onCancel={closeAllPopups} loading={actionLoading} />}
+        {popupState.showResetPassword && <ResetPasswordPopup user={selectedUser} onConfirm={handleResetPassword} onCancel={closeAllPopups} loading={actionLoading} temporaryPassword={temporaryPassword} />}
+        {popupState.showViewUser && <ViewUserPopup user={selectedUser} onClose={closeAllPopups} />}
+        {popupState.showChangeRole && <ChangeRolePopup user={selectedUser} onConfirm={handleChangeRole} onCancel={closeAllPopups} loading={actionLoading} />}
       </AnimatePresence>
     </div>
   );

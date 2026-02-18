@@ -604,7 +604,7 @@ export const AuthProvider = ({ children }) => {
     const changeUserRole = async (userId, newRole) => {
         try {
             const res = await axiosInstance.patch(`/users/admin/${userId}/change-role`, { role: newRole });
-            toast.success(res.data.message || "User role updated successfully.", {
+            toast.success(res.data.message || "User role updated", {
                 duration: 3000,
                 position: "center-top"
             });
@@ -613,7 +613,7 @@ export const AuthProvider = ({ children }) => {
             console.error("❌ Change user role error:", err);
             const msg = err?.response?.data?.message || "Failed to change user role";
             toast.error(msg, {
-                duration: 3000,
+                duration: 6000,
                 position: "center-top"
             });
             throw err;

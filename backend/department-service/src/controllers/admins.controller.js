@@ -508,6 +508,59 @@ const removeStaff = asyncHandler(async (req, res) => {
 
 
 
+const removeStaffByUserId = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+
+    if (!userId) {
+        throw new ApiError(400, "User ID is required");
+    }
+
+    // Find department where user exists in staff
+    const department = await Department.findOne({
+        "staff.userId": userId
+    });
+
+    // If not found → safe exit (idempotent behavior)
+    if (!department) {
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                {
+                    userId,
+                    removed: false
+                },
+                "User was not assigned to any department"
+            )
+        );
+    }
+
+    // Remove user from staff array
+    department.staff = department.staff.filter(
+        s => s.userId.toString() !== userId
+    );
+
+    await department.save();
+
+    console.log(
+        `🔄 Staff Auto-Removed | Dept: ${department.name} | User ID: ${userId} | Triggered By: ${req.user.email}`
+    );
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                departmentId: department._id,
+                userId,
+                removed: true
+            },
+            "User removed from department staff for role change b"
+        )
+    );
+});
+
+
+
+
 
 
 export {
@@ -515,4 +568,5 @@ export {
     assignStaffToDepartment,
     updateStaffRole,
     removeStaff,
+    removeStaffByUserId,
 };

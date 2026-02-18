@@ -1,5 +1,5 @@
 import express from "express";
-import { assignStaffToDepartment, removeStaff, getDepartmentStaff, updateStaffRole } from "../controllers/admins.controller.js";
+import { assignStaffToDepartment, removeStaff, getDepartmentStaff, updateStaffRole, removeStaffByUserId } from "../controllers/admins.controller.js";
 import { verifyToken, authorizeRoles } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -16,5 +16,7 @@ router.put("/:deptId/admins/:userId", verifyToken, authorizeRoles("SUPER_ADMIN",
 // Remove staff
 router.delete("/:deptId/admins/:userId", verifyToken, authorizeRoles("SUPER_ADMIN", "ADMIN"), removeStaff);
 
+// Remove staff by userId (user service will call this when a user's role is changed by SUPER_ADMIN)
+router.patch("/remove-staff-by-user/:userId", verifyToken, authorizeRoles("SUPER_ADMIN"), removeStaffByUserId);
 
 export default router;

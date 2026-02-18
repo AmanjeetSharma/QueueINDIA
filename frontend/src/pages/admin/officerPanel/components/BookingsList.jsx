@@ -61,8 +61,10 @@ const BookingsList = () => {
   const handleNavigateBack = () => {
     if (user?.role === 'SUPER_ADMIN') {
       navigate(`/super-admin-panel/departments`);
-    } else {
+    } else if (user?.role === 'DEPARTMENT_OFFICER') {
       navigate('/officer-panel');
+    } else {
+      navigate('/admin-panel');
     }
   };
 

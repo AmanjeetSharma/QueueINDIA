@@ -137,7 +137,7 @@ export const AdminProvider = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-            console.log(`REQ REACHED TO REMOVE STAFF | Dept ID: ${deptId} | User ID: ${userId}`); // Debug log
+            // console.log(`REQ REACHED TO REMOVE STAFF | Dept ID: ${deptId} | User ID: ${userId}`); // Debug log
             const response = await axiosInstance.delete(`/departments/${deptId}/admins/${userId}`);
 
             toast.success('Staff removed successfully!', {

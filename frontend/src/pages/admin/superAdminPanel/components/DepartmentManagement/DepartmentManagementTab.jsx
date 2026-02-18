@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDepartment } from '../../../../../context/DepartmentContext';
 import toast from 'react-hot-toast';
@@ -18,7 +18,9 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiList,
-  FiArrowLeft
+  FiArrowLeft,
+  FiSettings,
+  FiTool
 } from 'react-icons/fi';
 import {
   FaBuilding,
@@ -52,6 +54,19 @@ const DepartmentManagementTab = () => {
   });
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+  const [editMenuOpen, setEditMenuOpen] = useState(null);
+  const editMenuRef = useRef(null);
+
+  // Close edit menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (editMenuRef.current && !editMenuRef.current.contains(e.target)) {
+        setEditMenuOpen(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Initial fetch
   useEffect(() => {
@@ -106,6 +121,12 @@ const DepartmentManagementTab = () => {
 
   const handleEditDepartment = (deptId) => {
     navigate(`/super-admin-panel/departments/${deptId}/edit`);
+    setEditMenuOpen(null);
+  };
+
+  const handleEditServices = (deptId) => {
+    // Placeholder - navigation not yet implemented
+    setEditMenuOpen(null);
   };
 
   const handleManageDepartment = (deptId) => {
@@ -489,33 +510,33 @@ const DepartmentManagementTab = () => {
                         </div>
                       </div>
 
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         {/* Category & Location */}
                         <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                           <span className="inline-flex items-center gap-1 text-slate-300">
-                            <FaRegBuilding className="w-3 h-3" />
+                            <FaRegBuilding className="w-3 h-3 flex-shrink-0" />
                             <span className="truncate max-w-[100px]">{dept.category || 'General'}</span>
                           </span>
                           <span className="text-slate-600 hidden xs:inline">•</span>
                           <span className="inline-flex items-center gap-1 text-slate-300">
                             <FiMapPin className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate max-w-[120px]">{dept.location?.city}, {dept.location?.state}</span>
+                            <span className="truncate max-w-[120px]">{dept.location?.city}, {dept.location?.state} - {dept.location?.pincode}</span>
                           </span>
                         </div>
 
-                        {/* Contact - Hide on very small screens */}
+                        {/* Contact - Always visible */}
                         {(dept.contact?.phone || dept.contact?.email) && (
-                          <div className="hidden xs:flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-300">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-300">
                             {dept.contact?.phone && (
                               <span className="inline-flex items-center gap-1">
-                                <FiPhone className="w-3 h-3" />
+                                <FiPhone className="w-3 h-3 flex-shrink-0" />
                                 <span className="truncate max-w-[100px]">{dept.contact.phone}</span>
                               </span>
                             )}
                             {dept.contact?.email && (
                               <span className="inline-flex items-center gap-1 truncate">
-                                <FiMail className="w-3 h-3" />
-                                <span className="truncate max-w-[120px]">{dept.contact.email}</span>
+                                <FiMail className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate max-w-[150px] sm:max-w-[200px]">{dept.contact.email}</span>
                               </span>
                             )}
                           </div>
@@ -524,9 +545,8 @@ const DepartmentManagementTab = () => {
                     </div>
                   </div>
 
-                  {/* Action Buttons - Compact for Mobile, Full for Desktop */}
+                  {/* Action Buttons */}
                   <div className="flex items-center justify-end gap-1.5 ml-13 pl-13">
-                    {/* All buttons visible on all devices - compact on mobile */}
                     <button
                       onClick={() => handleManageDepartment(dept._id)}
                       className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/30 transition-colors cursor-pointer"
@@ -536,14 +556,57 @@ const DepartmentManagementTab = () => {
                       <span className="hidden md:inline">Manage</span>
                     </button>
 
-                    <button
-                      onClick={() => handleEditDepartment(dept._id)}
-                      className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg hover:bg-purple-500/30 transition-colors cursor-pointer"
-                      title="Edit Department"
-                    >
-                      <FiEdit className="w-3 h-3 md:mr-1.5" />
-                      <span className="hidden md:inline">Edit</span>
-                    </button>
+                    {/* Edit Button with Dropdown */}
+                    <div className="relative" ref={editMenuOpen === dept._id ? editMenuRef : null}>
+                      <button
+                        onClick={() => setEditMenuOpen(editMenuOpen === dept._id ? null : dept._id)}
+                        className="inline-flex items-center justify-center px-2 py-1.5 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg hover:bg-purple-500/30 transition-colors cursor-pointer"
+                        title="Edit Department"
+                      >
+                        <FiEdit className="w-3 h-3 md:mr-1.5" />
+                        <span className="hidden md:inline">Edit</span>
+                        <FiChevronDown className={`w-3 h-3 ml-0.5 transition-transform duration-200 ${editMenuOpen === dept._id ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      <AnimatePresence>
+                        {editMenuOpen === dept._id && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                            transition={{ duration: 0.1 }}
+                            className="absolute right-0 bottom-full mb-1.5 w-44 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-20 overflow-hidden"
+                          >
+                            <button
+                              onClick={() => handleEditDepartment(dept._id)}
+                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-200 hover:bg-purple-500/20 hover:text-purple-300 transition-colors text-left"
+                            >
+                              <FiSettings className="w-3.5 h-3.5 flex-shrink-0 text-purple-400" />
+                              <div>
+                                <div className="font-medium">Edit Department</div>
+                                <div className="text-[10px] text-slate-500">Info, status & details</div>
+                              </div>
+                            </button>
+                            <div className="h-px bg-slate-700" />
+                            <button
+                              onClick={() => handleEditServices(dept._id)}
+                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-400 hover:bg-slate-700/50 transition-colors text-left cursor-not-allowed opacity-60"
+                              title="Coming soon"
+                              disabled
+                            >
+                              <FiTool className="w-3.5 h-3.5 flex-shrink-0 text-slate-500" />
+                              <div>
+                                <div className="font-medium flex items-center gap-1.5">
+                                  Edit Services
+                                  <span className="text-[9px] bg-slate-700 text-slate-400 px-1 py-0.5 rounded">Soon</span>
+                                </div>
+                                <div className="text-[10px] text-slate-600">Manage service listings</div>
+                              </div>
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
 
                     <button
                       onClick={() => setDeleteConfirm(dept._id)}

@@ -9,8 +9,6 @@ import axios from "axios";
 
 
 const verifyToken = asyncHandler(async (req, res, next) => {
-    console.log("Incoming Authorization:", req.headers.authorization);
-    console.log("Incoming Cookie:", req.cookies);
     const token =
         req.cookies?.accessToken ||
         req.header("Authorization")?.replace("Bearer ", "");
@@ -28,7 +26,7 @@ const verifyToken = asyncHandler(async (req, res, next) => {
                 }
             }
         );
-        console.log("Token validation response from user-service:", data);
+        // console.log("Token validation response from user-service:", data); // debug log
 
         if (!data?.success || !data?.data?.isActive) {
             throw new ApiError(403, "User is inactive or unauthorized");

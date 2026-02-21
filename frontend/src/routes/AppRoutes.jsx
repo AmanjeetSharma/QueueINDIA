@@ -17,6 +17,8 @@ import HowThingsWork from "../pages/info/HowThingsWork.jsx";
 import Contact from "../pages/info/Contact.jsx";
 import Pricing from "../pages/info/Pricing.jsx";
 import AboutUs from "../pages/info/AboutUs.jsx";
+import PrivacyPolicy from "../pages/info/PrivacyPolicy.jsx";
+import Terms from "../pages/info/Terms.jsx";
 
 import ForgotPassword from "../pages/auth/ForgotPassword.jsx";
 import ResetPassword from "../pages/auth/ResetPassword.jsx";
@@ -92,6 +94,8 @@ const AppRoutes = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<AboutUs />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<Terms />} />
 
 
 

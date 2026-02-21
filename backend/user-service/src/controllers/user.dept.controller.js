@@ -21,11 +21,16 @@ const validateTokenForDepartment = asyncHandler(async (req, res) => {
         throw new ApiError(403, "User account is inactive");
     }
 
-    const minimalUserData = {
+    const UserData = {
         _id: req.user._id,
         role: req.user.role,
         departmentId: req.user.departmentId || null,
-        isActive: req.user.isActive ?? true
+        isActive: req.user.isActive ?? true,
+        name: req.user.name,
+        email: req.user.email,
+        isVerified: req.user.isEmailVerified ||
+            req.user.isPhoneVerified ||
+            req.user.secondaryEmailVerified || false
     };
 
     console.log(`Token Validated for Department-Service | User: ${req.user.email} | Role: ${req.user.role}`);
@@ -33,7 +38,7 @@ const validateTokenForDepartment = asyncHandler(async (req, res) => {
     return res.status(200).json(
         new ApiResponse(
             200,
-            minimalUserData,
+            UserData,
             `Token validated successfully | ${req.user._id}`
         )
     );

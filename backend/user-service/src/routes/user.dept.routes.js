@@ -1,8 +1,16 @@
 import express from "express";
 import { verifyToken, authorizeRoles } from "../middlewares/auth.middleware.js";
-import { findUserByEmail, bulkFetchUsers, assignDepartmentToUser, removeDepartmentFromUser, updateUserDepartmentRole } from "../controllers/user.dept.controller.js";
+import { validateTokenForDepartment, findUserByEmail, bulkFetchUsers, assignDepartmentToUser, removeDepartmentFromUser, updateUserDepartmentRole } from "../controllers/user.dept.controller.js";
 
 const router = express.Router();
+
+// Internal Validation Endpoint for department-service to verify and retrieve user info from token
+
+router.get(
+    "/validate-token-department",
+    verifyToken,
+    validateTokenForDepartment
+);
 
 // Find user by email
 router.get("/find-by-email", verifyToken, authorizeRoles("SUPER_ADMIN", "ADMIN"), findUserByEmail);

@@ -4,6 +4,51 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 
 
+
+
+
+
+
+
+
+const validateTokenForDepartment = asyncHandler(async (req, res) => {
+    console.log(`log reached validateTokenForDepartment controller------------ad-asd--------------------`);
+    if (!req.user) {
+        throw new ApiError(401, "Unauthorized — user context missing");
+    }
+
+    // Optional: block inactive users explicitly
+    if (req.user.isActive === false) {
+        throw new ApiError(403, "User account is inactive");
+    }
+
+    const minimalUserData = {
+        _id: req.user._id,
+        role: req.user.role,
+        departmentId: req.user.departmentId || null,
+        isActive: req.user.isActive ?? true
+    };
+
+    console.log(`| +:+ |   Token getting validated for department-service | User: ${req.user.email} | Role: ${req.user.role} | Department ID: ${minimalUserData.departmentId}`);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            minimalUserData,
+            `Token validated successfully | ${req.user._id}`
+        )
+    );
+});
+
+
+
+
+
+
+
+
+
+
 const findUserByEmail = asyncHandler(async (req, res) => {
     const email = req.query.email;
 
@@ -234,4 +279,11 @@ const updateUserDepartmentRole = asyncHandler(async (req, res) => {
 
 
 
-export { findUserByEmail, bulkFetchUsers, assignDepartmentToUser, removeDepartmentFromUser, updateUserDepartmentRole };
+export {
+    validateTokenForDepartment,
+    findUserByEmail,
+    bulkFetchUsers,
+    assignDepartmentToUser,
+    removeDepartmentFromUser,
+    updateUserDepartmentRole
+};

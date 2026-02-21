@@ -1,10 +1,16 @@
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import jwt from "jsonwebtoken";
+import axios from "axios";
+
+
+
+
 
 
 
 const verifyToken = asyncHandler(async (req, res, next) => {
+    console.log("Incoming Authorization:", req.headers.authorization);
+    console.log("Incoming Cookie:", req.cookies);
     const token =
         req.cookies?.accessToken ||
         req.header("Authorization")?.replace("Bearer ", "");
@@ -12,18 +18,34 @@ const verifyToken = asyncHandler(async (req, res, next) => {
     if (!token) {
         throw new ApiError(401, "Unauthorized — No access token provided");
     }
-
+    // rely on user-service to validate token
     try {
-        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const { data } = await axios.get(
+            `${process.env.USER_SERVICE_URL}/api/v1/users-dept/validate-token-department`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+        console.log("Token validation response from user-service:", data);
 
-        // No DB call — trust user-service issued token
-        req.user = decoded;
+        if (!data?.success || !data?.data?.isActive) {
+            throw new ApiError(403, "User is inactive or unauthorized");
+        }
+
+        // Attach fresh DB user
+        req.user = data.data;
 
         next();
-    } catch (err) {
+    } catch (error) {
         throw new ApiError(401, "Invalid or expired access token");
     }
 });
+
+
+
+
 
 
 

@@ -511,7 +511,7 @@ const DepartmentCard = ({ department, index, getCategoryIcon, getStatusBadge }) 
                   {getStatusBadge(department.status)}
                 </div>
                 <span className="text-xs text-slate-500 truncate">
-                  {department.departmentCategory}
+                  {department.category || 'Uncategorized'}
                 </span>
               </div>
             </div>

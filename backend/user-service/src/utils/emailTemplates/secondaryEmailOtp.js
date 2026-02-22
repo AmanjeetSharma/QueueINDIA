@@ -12,7 +12,6 @@ export const secondaryEmailOtpTemplate = (otp, userName = "there") => `
         
         <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0; background-color: #f8f9fa; border-radius: 8px; padding: 16px; border: 1px solid #e9ecef;">
           <div style="font-size: 28px; letter-spacing: 6px; font-weight: 700; color: #2c3e50; font-family: 'Courier New', monospace;">${otp}</div>
-          <button style="background-color: #4a6ee0; color: white; border: none; border-radius: 6px; padding: 10px 16px; font-size: 14px; cursor: pointer; transition: background-color 0.2s; font-weight: 600;" onclick="copyOTP()">Copy</button>
         </div>
         
         <div style="background-color: #e8f4fd; border-left: 4px solid #4a6ee0; padding: 12px 16px; margin: 20px 0; border-radius: 0 8px 8px 0;">
@@ -31,49 +30,4 @@ export const secondaryEmailOtpTemplate = (otp, userName = "there") => `
       </div>
     </div>
   </div>
-
-  <script>
-    function copyOTP() {
-      const otpText = '${otp}';
-      const copyBtn = document.querySelector("button");
-
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(otpText).then(() => {
-          copyBtn.innerText = 'Copied!';
-          setTimeout(() => {
-            copyBtn.innerText = 'Copy';
-          }, 2000);
-        }).catch(err => {
-          fallbackCopyText(otpText, copyBtn);
-        });
-      } else {
-        fallbackCopyText(otpText, copyBtn);
-      }
-    }
-    
-    function fallbackCopyText(text, button) {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      textArea.style.position = "fixed";
-      textArea.style.opacity = 0;
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      
-      try {
-        const successful = document.execCommand('copy');
-        if (successful) {
-          button.innerText = 'Copied!';
-          setTimeout(() => {
-            button.innerText = 'Copy';
-          }, 2000);
-        }
-      } catch (err) {
-        console.error('Fallback: Oops, unable to copy', err);
-        alert('Copy failed. Please manually select and copy the code.');
-      }
-      
-      document.body.removeChild(textArea);
-    }
-  </script>
 `;

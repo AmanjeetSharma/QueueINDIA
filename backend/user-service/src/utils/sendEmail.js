@@ -5,6 +5,11 @@ import axios from "axios";
  */
 const sendEmail = async (to, subject, content, isHtml = false) => {
     try {
+        console.log(process.env.BREVO_API_KEY ? "Brevo API key is set" : "Brevo API key is NOT set");
+        
+        console.log(process.env.BREVO_API_KEY);
+
+        console.log(process.env.EMAIL_SENDER_ADDRESS ? "Email sender address is set" : "Email sender address is NOT set");
         const response = await axios.post(
             "https://api.brevo.com/v3/smtp/email",
             {

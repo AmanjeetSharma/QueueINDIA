@@ -64,7 +64,7 @@ const intervalId = setInterval(pingAllServices, PING_INTERVAL);
 
 // Auto stop after 3 hours
 setTimeout(() => {
-    log("🛑 3 hours completed. Stopping bot automatically...");
+    log("🛑 2 hours completed. Stopping bot automatically...");
     log("👋 Thank you for your service!");
     clearInterval(intervalId);
     process.exit(0);

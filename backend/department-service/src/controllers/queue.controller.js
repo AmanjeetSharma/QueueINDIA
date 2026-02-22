@@ -128,6 +128,8 @@ const recallSkippedTokens = asyncHandler(async (req, res) => {
         }
     );
 
+    console.log(`Tokens recalled: ${result.modifiedCount} | Service: ${serviceId} | Date: ${date}`);    
+
     return res.status(200).json(
         new ApiResponse(
             200,

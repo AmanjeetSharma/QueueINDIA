@@ -33,7 +33,7 @@ const validateTokenForDepartment = asyncHandler(async (req, res) => {
             req.user.secondaryEmailVerified || false
     };
 
-    console.log(`Token Validated for Department-Service | User: ${req.user.email} | Role: ${req.user.role}`);
+    // console.log(`Token Validated for Department-Service | User: ${req.user.email} | Role: ${req.user.role}`);
 
     return res.status(200).json(
         new ApiResponse(

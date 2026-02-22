@@ -27,7 +27,7 @@ export const ServiceProvider = ({ children }) => {
 
 
 
-    // Get single service by ID (public)
+    // Get single service by ID
     const getServiceById = async (deptId, serviceId) => {
         try {
             setLoading(true);

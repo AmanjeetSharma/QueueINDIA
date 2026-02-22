@@ -4,13 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
-import { 
-  FaLock, 
-  FaEye, 
-  FaEyeSlash, 
-  FaShieldAlt, 
-    FaArrowLeft,
-  FaCheck, 
+import {
+  FaLock,
+  FaEye,
+  FaEyeSlash,
+  FaShieldAlt,
+  FaArrowLeft,
+  FaCheck,
   FaEnvelope,
   FaKey
 } from "react-icons/fa";
@@ -19,7 +19,7 @@ const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { resetPasswordEmail } = useAuth();
-  
+
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -34,7 +34,7 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const token = searchParams.get("token");
-    
+
     if (token) {
       setFormData(prev => ({ ...prev, token }));
     }
@@ -70,7 +70,7 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (formData.newPassword !== formData.confirmPassword) {
       toast.error("Passwords don't match");
       return;
@@ -90,12 +90,12 @@ const ResetPassword = () => {
         formData.confirmPassword
       );
       setSuccess(true);
-      
+
       setTimeout(() => {
-        navigate("/login", { 
+        navigate("/login", {
           state: { message: "Password reset successfully! Please login with your new password." }
         });
-      }, 3000);
+      }, 5000);
     } catch (error) {
       // Error handled in context
     } finally {
@@ -119,21 +119,21 @@ const ResetPassword = () => {
           >
             <FaCheck className="w-8 h-8 text-green-600" />
           </motion.div>
-          
+
           <h2 className="text-2xl font-bold text-slate-800 mb-3">
             Password Reset Successfully!
           </h2>
           <p className="text-slate-600 mb-6">
             Your password has been updated successfully. Redirecting to login...
           </p>
-          
+
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: "100%" }}
             transition={{ duration: 3 }}
             className="h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mb-6"
           />
-          
+
           <Link
             to="/login"
             className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-8 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg shadow-blue-200"
@@ -164,7 +164,7 @@ const ResetPassword = () => {
                 <FaKey className="text-white text-xl" />
               </div>
             </motion.div>
-            
+
             <h1 className="text-3xl font-bold text-slate-800 mb-2">
               Set New Password
             </h1>
@@ -234,10 +234,9 @@ const ResetPassword = () => {
                 >
                   <div className="flex justify-between text-xs text-slate-600">
                     <span>Password Strength</span>
-                    <span className={`font-semibold ${
-                      passwordStrength <= 2 ? "text-red-600" :
+                    <span className={`font-semibold ${passwordStrength <= 2 ? "text-red-600" :
                       passwordStrength <= 3 ? "text-yellow-600" : "text-green-600"
-                    }`}>
+                      }`}>
                       {getPasswordStrengthText(passwordStrength)}
                     </span>
                   </div>
@@ -284,11 +283,10 @@ const ResetPassword = () => {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                    formData.newPassword === formData.confirmPassword
-                      ? "bg-green-50 border-green-200 text-green-700"
-                      : "bg-red-50 border-red-200 text-red-700"
-                  }`}
+                  className={`p-4 rounded-xl border-2 transition-all duration-300 ${formData.newPassword === formData.confirmPassword
+                    ? "bg-green-50 border-green-200 text-green-700"
+                    : "bg-red-50 border-red-200 text-red-700"
+                    }`}
                 >
                   <div className="flex items-center space-x-2">
                     {formData.newPassword === formData.confirmPassword ? (

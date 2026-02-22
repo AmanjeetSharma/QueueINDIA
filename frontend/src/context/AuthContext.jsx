@@ -396,7 +396,7 @@ export const AuthProvider = ({ children }) => {
 
 
     const forgotPasswordEmail = async (email) => {
-        setLoading(true);
+        // setLoading(true);
         try {
             const response = await axiosInstance.post('/reset-password/forgot-password-email', {
                 email
@@ -415,12 +415,12 @@ export const AuthProvider = ({ children }) => {
             });
             throw new Error(errorMessage);
         } finally {
-            setLoading(false);
+            // setLoading(false);
         }
     };
 
     const resetPasswordEmail = async (token, newPassword, confirmPassword) => {
-        setLoading(true);
+        // setLoading(true);
         try {
             const response = await axiosInstance.post('/reset-password/reset-password-email', {
                 token,
@@ -441,12 +441,12 @@ export const AuthProvider = ({ children }) => {
             });
             throw new Error(errorMessage);
         } finally {
-            setLoading(false);
+            // setLoading(false);
         }
     };
 
     const forgotPasswordPhone = async (phone) => {
-        setLoading(true);
+        // setLoading(true);
         try {
             const response = await axiosInstance.post('/reset-password/forgot-password-phone', {
                 phone
@@ -465,12 +465,12 @@ export const AuthProvider = ({ children }) => {
             });
             throw new Error(errorMessage);
         } finally {
-            setLoading(false);
+            // setLoading(false);
         }
     };
 
     const resetPasswordPhone = async (phone, otp, newPassword, confirmPassword) => {
-        setLoading(true);
+        // setLoading(true);
         try {
             const response = await axiosInstance.post('/reset-password/reset-password-phone', {
                 phone,
@@ -492,7 +492,7 @@ export const AuthProvider = ({ children }) => {
             });
             throw new Error(errorMessage);
         } finally {
-            setLoading(false);
+            // setLoading(false);
         }
     };
 

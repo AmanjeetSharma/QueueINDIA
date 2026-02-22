@@ -102,14 +102,14 @@ const resetPassword = asyncHandler(async (req, res) => {
         );
     }
 
-    const passwordBreachCheck = await isPasswordBreached(newPassword);
-    // console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck); // debug log
-    if (passwordBreachCheck.breached) {
-        throw new ApiError(
-            400,
-            `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
-        );
-    }
+        // const passwordBreachCheck = await isPasswordBreached(newPassword);
+        // // console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck); // debug log
+        // if (passwordBreachCheck.breached) {
+        //     throw new ApiError(
+        //         400,
+        //         `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
+        //     );
+        // }
 
 
 
@@ -215,7 +215,7 @@ const requestPhonePasswordReset = asyncHandler(async (req, res) => {
 
 
 
-// ================= RESET PASSWORD VIA PHONE ===================
+// Reset password using phone OTP
 const resetPasswordWithPhone = asyncHandler(async (req, res) => {
     const { phone, otp, newPassword, confirmPassword } = req.body;
 
@@ -240,14 +240,14 @@ const resetPasswordWithPhone = asyncHandler(async (req, res) => {
             `Password is missing: ${passwordCheck.errors.join(", ")}.`
         );
     }
-    const passwordBreachCheck = await isPasswordBreached(newPassword);
-    console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck);
-    if (passwordBreachCheck.breached) {
-        throw new ApiError(
-            400,
-            `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
-        );
-    }
+    // const passwordBreachCheck = await isPasswordBreached(newPassword);
+    // console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck);
+    // if (passwordBreachCheck.breached) {
+    //     throw new ApiError(
+    //         400,
+    //         `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
+    //     );
+    // }
 
     if (!phoneValidator(phone)) {
         throw new ApiError(400, "Invalid phone number");
@@ -295,7 +295,7 @@ const resetPasswordWithPhone = asyncHandler(async (req, res) => {
 
 
 
-
+// Set password for accounts that were created via Google Sign-in and don't have a password yet
 const setPassword = asyncHandler(async (req, res) => {
     const { newPassword, confirmPassword } = req.body;
     const userId = req.user.id;

@@ -253,7 +253,7 @@ const logout = asyncHandler(async (req, res) => {
     try {
         decodedToken = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
     } catch (err) {
-        console.log("⚠️ Invalid or expired refresh token");
+        // console.log("⚠️ Invalid or expired refresh token");
         throw new ApiError(403, "Invalid or expired refresh token");
     }
 
@@ -312,7 +312,7 @@ const logoutAllDevices = asyncHandler(async (req, res) => {
     try {
         decodedToken = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
     } catch (err) {
-        console.log("⚠️ Invalid or expired refresh token");
+        // console.log("⚠️ Invalid or expired refresh token");
         throw new ApiError(403, "Invalid or expired refresh token");
     }
 
@@ -363,7 +363,7 @@ const refresh = asyncHandler(async (req, res) => {
     try {
         decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
     } catch (error) {
-        console.log("⚠️ Invalid or expired refresh token");
+        // console.log("⚠️ Invalid or expired refresh token");
         throw new ApiError(403, "Invalid or expired refresh token");
     }
 

@@ -22,6 +22,7 @@ import Terms from "../pages/info/Terms.jsx";
 
 import ForgotPassword from "../pages/auth/ForgotPassword.jsx";
 import ResetPassword from "../pages/auth/ResetPassword.jsx";
+import ResetPasswordPhone from "../pages/auth/ResetPasswordPhone.jsx";
 
 //Department related imports
 import Departments from "../pages/department/Department.jsx";
@@ -106,6 +107,7 @@ const AppRoutes = () => {
         <Route path="/register" element={<ProtectedAuthRoute><Register /></ProtectedAuthRoute>} />
         <Route path="/forgot-password" element={<ProtectedAuthRoute><ForgotPassword /></ProtectedAuthRoute>} />
         <Route path="/reset-password" element={<ProtectedAuthRoute><ResetPassword /></ProtectedAuthRoute>} />
+        <Route path="/reset-password-phone" element={<ProtectedAuthRoute><ResetPasswordPhone /></ProtectedAuthRoute>} />
 
 
 

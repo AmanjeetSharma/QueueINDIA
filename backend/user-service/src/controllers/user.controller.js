@@ -512,6 +512,7 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
 
     const emailContent = verificationEmail(token);
     await sendEmail(user.email, "Verify your email", emailContent, true);
+    console.log(`Primary Verification email sent to ${user.email}`) ;
 
     res.status(200).json(new ApiResponse(200, {}, "Verification email sent"));
 });
@@ -530,7 +531,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
     user.verificationToken = undefined;
     user.verificationTokenExpiry = undefined;
     await user.save();
-    console.log(`✅ Email verified for user: ${user.name}, Email: ${user.email}`);
+    console.log(`Primary Email verified for user: ${user.name}, Email: ${user.email}`);
     res.redirect(`${process.env.FRONTEND_URL}/profile?verified=true`);
 });
 

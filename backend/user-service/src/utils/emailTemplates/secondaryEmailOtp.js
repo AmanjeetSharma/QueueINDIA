@@ -1,33 +1,97 @@
 export const secondaryEmailOtpTemplate = (otp, userName = "there") => `
-  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f7f9fc;">
-    <div style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); overflow: hidden; margin-bottom: 20px;">
-      <div style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; padding: 24px; text-align: center;">
-        <div style="font-weight: 700; font-size: 20px; margin-bottom: 8px;">QueueIndia</div>
-        <h1 style="margin: 0; font-weight: 500;">Verify Your Secondary Email</h1>
-      </div>
-      
-      <div style="padding: 24px;">
-        <p>Hi <strong>${userName}</strong>,</p>
-        <p>To complete setting up your secondary email, please use the following one-time verification code:</p>
-        
-        <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0; background-color: #f8f9fa; border-radius: 8px; padding: 16px; border: 1px solid #e9ecef;">
-          <div style="font-size: 28px; letter-spacing: 6px; font-weight: 700; color: #2c3e50; font-family: 'Courier New', monospace;">${otp}</div>
-        </div>
-        
-        <div style="background-color: #e8f4fd; border-left: 4px solid #4a6ee0; padding: 12px 16px; margin: 20px 0; border-radius: 0 8px 8px 0;">
-          <p style="margin: 0;">This code is valid for <span style="color: #e74c3c; font-weight: 600;">10 minutes</span>. Do not share this code with anyone.</p>
-        </div>
-        
-        <p>If you didn't request this verification, you can safely ignore this email.</p>
-        
-        <div style="height: 1px; background: linear-gradient(to right, transparent, #e9ecef, transparent); margin: 24px 0;"></div>
-        
-      </div>
-      
-      <div style="font-size: 12px; color: #6c757d; text-align: center; padding: 16px; border-top: 1px solid #e9ecef; margin-top: 24px;">
-        <p style="margin: 0;">© 2023 QueueIndia • Do not reply to this automated email</p>
-        <p style="margin: 8px 0 0 0;">Jalandhar, Punjab, India</p>
-      </div>
-    </div>
+  <div style="margin:0;padding:0;background-color:#f4f6f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    
+    <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 15px;">
+      <tr>
+        <td align="center">
+
+          <!-- Main Container -->
+          <table width="600" cellpadding="0" cellspacing="0" 
+                 style="background:#ffffff;border-radius:12px;overflow:hidden;
+                 box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+
+            <!-- Header -->
+            <tr>
+              <td style="background:#111827;padding:28px;text-align:center;">
+                <div style="color:#ffffff;font-size:18px;font-weight:600;letter-spacing:1px;">
+                  QUEUEINDIA
+                </div>
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding:40px 35px;">
+
+                <h2 style="margin:0 0 20px 0;font-size:22px;color:#111827;font-weight:600;">
+                  Verify Your Secondary Email
+                </h2>
+
+                <p style="margin:0 0 15px 0;color:#374151;font-size:15px;line-height:1.7;">
+                  Hi <strong>${userName}</strong>,
+                </p>
+
+                <p style="margin:0 0 25px 0;color:#4b5563;font-size:15px;line-height:1.7;">
+                  Use the verification code below to complete setup of your secondary email address.
+                </p>
+
+                <!-- OTP Box -->
+                <div style="text-align:center;margin:30px 0;">
+                  <div style="
+                      display:inline-block;
+                      padding:18px 28px;
+                      background:#f9fafb;
+                      border:1px solid #e5e7eb;
+                      border-radius:10px;
+                      font-size:30px;
+                      letter-spacing:8px;
+                      font-weight:700;
+                      color:#111827;
+                      font-family: 'Courier New', monospace;">
+                    ${otp}
+                  </div>
+                </div>
+
+                <!-- Security Notice -->
+                <div style="
+                    background:#f3f4f6;
+                    border-left:4px solid #2563eb;
+                    padding:14px 16px;
+                    border-radius:6px;
+                    margin:25px 0;
+                    font-size:14px;
+                    color:#374151;
+                    line-height:1.6;">
+                  This code will expire in <strong>10 minutes</strong>. 
+                  For your security, do not share this code with anyone.
+                </div>
+
+                <p style="margin:20px 0 0 0;color:#6b7280;font-size:14px;line-height:1.6;">
+                  If you didn’t request this verification, you can safely ignore this email.
+                </p>
+
+              </td>
+            </tr>
+
+            <!-- Divider -->
+            <tr>
+              <td style="border-top:1px solid #e5e7eb;"></td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="padding:20px 35px;text-align:center;font-size:12px;color:#9ca3af;line-height:1.6;">
+                © 2026 QueueINDIA. All rights reserved.<br/>
+                Jalandhar, Punjab, India<br/><br/>
+                This is an automated message — please do not reply.
+              </td>
+            </tr>
+
+          </table>
+
+        </td>
+      </tr>
+    </table>
+
   </div>
 `;

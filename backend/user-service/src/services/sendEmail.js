@@ -26,8 +26,7 @@ const sendEmail = async (to, subject, content, isHtml = false) => {
             }
         );
 
-        // console.log(`Email sent to ${to}`);
-        // console.log("Brevo messageId:", response.data?.messageId);
+        console.log(`[sendEmail] Email sent to ${to} with message ID: ${response.data.messageId}`);
 
         return response.data;
 

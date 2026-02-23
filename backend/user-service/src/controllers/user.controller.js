@@ -8,7 +8,7 @@ import { User } from "../models/user.model.js";
 import { avatarValidator, phoneValidator, emailValidator } from "../utils/validators.js";
 import { v2 as cloudinary } from "cloudinary";
 import { generateOtp } from "../utils/token.js";
-import { sendEmail } from "../utils/sendEmail.js";
+import { sendEmail } from "../services/sendEmail.js";
 import { secondaryEmailOtpTemplate } from "../utils/emailTemplates/secondaryEmailOtp.js";
 import { generateVerificationToken } from "../utils/token.js";
 import { verificationEmail } from "../utils/emailTemplates/verificationEmail.js";

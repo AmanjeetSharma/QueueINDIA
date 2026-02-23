@@ -10,7 +10,8 @@ import { emailValidator, passwordValidator, avatarValidator } from "../utils/val
 import { generateAccessToken, generateRefreshToken, generateSessionId } from '../utils/token.js';
 import { getCookieOptions } from "../config/getCookieOptions.js";
 import { isPasswordBreached } from "../utils/passwordBreachCheck.js";
-
+import { sendEmail } from "../services/sendEmail.js";
+import WelcomeEmail from "../utils/emailTemplates/WelcomeEmail.js";
 
 
 
@@ -51,7 +52,7 @@ const register = asyncHandler(async (req, res) => {
     }
 
     const passwordBreachCheck = await isPasswordBreached(password);
-    console.log(`🔒 Password breach check for "${password}":`, passwordBreachCheck);
+    console.log(`Password breach check for "${password}":`, passwordBreachCheck);
     if (passwordBreachCheck.breached) {
         throw new ApiError(
             400,
@@ -121,10 +122,19 @@ const register = asyncHandler(async (req, res) => {
     if (!isUserCreated) {
         throw new ApiError(500, "Error while registering the user");
     }
-    console.log(`✅ New user registered: "${newUser.name}" (${newUser.email})`);
+
+    console.log(`New user registered: "${newUser.name}" (${newUser.email})`);
+
+    try {   // in try catch cauz some users might register with fake emails
+        const emailHTML = WelcomeEmail(newUser.name);
+        await sendEmail(newUser.email, "🎉 Welcome to QueueINDIA!", emailHTML, true);
+    } catch (emailError) {
+        console.error(`⚠️ Failed to send welcome email to ${newUser.email}:`, emailError.message);
+    }
+
     return res
         .status(201)
-        .send(new ApiResponse(201, isUserCreated, "✅ User registered successfully"));
+        .send(new ApiResponse(201, isUserCreated, "User registered successfully"));
 });
 
 
@@ -153,7 +163,6 @@ const login = asyncHandler(async (req, res) => {
 
     const { email, password, device } = req.body;
 
-    // Basic validation
     if (!email?.trim() || !password?.trim()) {
         throw new ApiError(400, "Email and password are required");
     }
@@ -209,7 +218,7 @@ const login = asyncHandler(async (req, res) => {
 
 
     console.log(
-        `✅ ${user.name} logged in successfully. Device: ${deviceName}`
+        `${user.name} logged in successfully. Device: ${deviceName}`
     );
 
     const cookieOptions = getCookieOptions();
@@ -224,7 +233,7 @@ const login = asyncHandler(async (req, res) => {
                 {
                     user: loggedInUser
                 },
-                "✅ User logged in successfully"
+                "User logged in successfully"
             )
         );
 });
@@ -245,7 +254,7 @@ const login = asyncHandler(async (req, res) => {
 const logout = asyncHandler(async (req, res) => {
     const token = req.cookies?.refreshToken;
     if (!token) {
-        console.log("🚫🔑 No token provided");
+        console.log("No token provided");
         throw new ApiError(401, "No token provided");
     }
 
@@ -259,7 +268,7 @@ const logout = asyncHandler(async (req, res) => {
 
     const user = await User.findById(decodedToken.id);
     if (!user) {
-        console.log("❌ User not found during logout");
+        console.log("User not found during logout");
         throw new ApiError(404, "User not found");
     }
 
@@ -276,7 +285,7 @@ const logout = asyncHandler(async (req, res) => {
 
     const cookieOptions = getCookieOptions();
 
-    console.log(`✅ ${user.name} logged out successfully from device: ${session?.device || "Unknown Device"}`);
+    console.log(`${user.name} logged out successfully from device: ${session?.device || "Unknown Device"}`);
     return res
         .status(200)
         .clearCookie("accessToken", cookieOptions)

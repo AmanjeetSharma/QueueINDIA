@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { sendEmail } from "../utils/sendEmail.js";
+import { sendEmail } from "../services/sendEmail.js";
 import resetPasswordHtml from "../utils/emailTemplates/resetPasswordHtml.js";
 import { phoneValidator, passwordValidator } from "../utils/validators.js";
 import { isPasswordBreached } from "../utils/passwordBreachCheck.js";
@@ -43,12 +43,6 @@ const forgotPassword = asyncHandler(async (req, res) => {
             "This account uses Google Sign-in. Please log in using Google first and set a password in profile if needed."
         );
     }
-
-
-    // OPTIONAL: block if email is not verified
-    // if (!user.isEmailVerified) {
-    //     throw new ApiError(403, "Email is not verified. Verify email before resetting password.");
-    // }
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex");

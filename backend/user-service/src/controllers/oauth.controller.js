@@ -5,6 +5,8 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { getCookieOptions } from '../config/getCookieOptions.js';
+import { sendEmail } from '../services/sendEmail.js';
+import WelcomeEmail from '../utils/emailTemplates/WelcomeEmail.js';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -24,6 +26,7 @@ export const googleLogin = asyncHandler(async (req, res) => {
     const { email, name, sub: googleId, picture } = payload;
 
     let user = await User.findOne({ googleId });
+    let isNewUser = false;
 
     // If user not found by googleId → check by email
     if (!user) {
@@ -34,9 +37,8 @@ export const googleLogin = asyncHandler(async (req, res) => {
             user.isEmailVerified = true;
             await user.save();
         } else {
-            // Generate a basic username-like identifier (optional)
+            isNewUser = true;
             const generatedName = name?.trim() || "User";
-            const generatedEmailName = email.split("@")[0];
 
             user = await User.create({
                 email: email.toLowerCase(),
@@ -79,6 +81,23 @@ export const googleLogin = asyncHandler(async (req, res) => {
     await user.save();
 
     const cookieOptions = getCookieOptions();
+
+    if (isNewUser) {
+        try {
+            const emailHTML = WelcomeEmail(user.name);
+
+            await sendEmail(user.email, "🎉 Welcome to QueueINDIA!", emailHTML, true);
+            console.log("📧 Welcome email sent to new Google user");
+        } catch (err) {
+            console.error("⚠️ Welcome email failed for Google signup:", err.message);
+        }
+    }
+
+    if (!isNewUser) {
+        console.log(`Existing user logged in via Google: ${user.email} (Device: ${deviceName})`);
+    } else {
+        console.log(`New user registered and logged in via Google: ${user.email} (Device: ${deviceName})`);
+    }
 
     return res
         .status(200)

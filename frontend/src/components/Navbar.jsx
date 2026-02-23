@@ -19,8 +19,10 @@ import {
   FaTachometerAlt,
   FaUserShield,
   FaUserTie,
-  FaUserCog
+  FaUserCog,
+  FaInfoCircle
 } from "react-icons/fa";
+import { FcAbout } from "react-icons/fc";
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -364,6 +366,17 @@ const Navbar = () => {
                         <span>Contact</span>
                       </Link>
 
+                      <Link
+                        to="/about"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors group"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                          <FcAbout  className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <span>About</span>
+                      </Link>
+
                       <div className="border-t border-gray-100 my-2"></div>
 
                       <button
@@ -410,6 +423,17 @@ const Navbar = () => {
                           <FaEnvelope className="w-4 h-4 text-blue-600" />
                         </div>
                         <span>Contact</span>
+                      </Link>
+
+                      <Link
+                        to="/about"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                          <FcAbout  className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <span>About</span>
                       </Link>
                     </>
                   )}
@@ -465,6 +489,15 @@ const Navbar = () => {
               >
                 <FaEnvelope className="w-5 h-5 text-gray-600" />
                 <span className="font-medium text-gray-700">Contact</span>
+              </Link>
+
+              <Link
+                to="/about"
+                className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-lg transition-colors"
+                onClick={closeMobileMenu}
+              >
+                <FaInfoCircle  className="w-5 h-5 text-gray-600" />
+                <span className="font-medium text-gray-700">About</span>
               </Link>
 
               <div className="border-t border-gray-200 pt-3 mt-2">

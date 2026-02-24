@@ -264,16 +264,6 @@ const DepartmentCreate = () => {
         try {
             setIsSubmitting(true);
             await createDepartment(formData);
-            toast.success("Department created successfully!", {
-                duration: 5000,
-                position: "top-center",
-                icon: "🎉",
-                style: {
-                    background: "#1e293b",
-                    color: "#fff",
-                    border: "1px solid #334155",
-                },
-            });
             navigate("/super-admin-panel/departments");
         } catch (error) {
             toast.error("Failed to create department", {

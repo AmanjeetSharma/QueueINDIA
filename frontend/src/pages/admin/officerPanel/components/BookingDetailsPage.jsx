@@ -580,60 +580,61 @@ const BookingDetailsPage = () => {
                             </div>
 
                             {/* Booking Actions */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="bg-gray-800 border border-gray-700 rounded-lg p-3 sm:p-4"
-                            >
-                                <h3 className="text-sm font-bold text-white mb-3">Booking Actions</h3>
-                                <div className="space-y-2">
-                                    {/* Complete & Cancel */}
-                                    <div className="flex gap-2">
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={handleCompleteBooking}
-                                            disabled={currentBooking?.status !== 'APPROVED' || !canApproveBooking}
-                                            className="flex-1 px-2.5 py-2 text-xs font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded flex items-center justify-center gap-1"
-                                        >
-                                            <FaClipboardCheck className="w-3.5 h-3.5" />
-                                            <span className="hidden sm:inline">Complete</span>
-                                        </motion.button>
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={handleCancelBooking}
-                                            disabled={currentBooking?.status === 'COMPLETED'}
-                                            className="flex-1 px-2.5 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded flex items-center justify-center gap-1"
-                                        >
-                                            <FaBan className="w-3.5 h-3.5" />
-                                            <span className="hidden sm:inline">Cancel</span>
-                                        </motion.button>
-                                    </div>
+                            {/* Booking Actions */}
+<motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.3 }}
+    className="bg-gray-800 border border-gray-700 rounded-lg p-3 sm:p-4"
+>
+    <h3 className="text-sm font-bold text-white mb-3">Booking Actions</h3>
+    <div className="space-y-2">
+        {/* Complete & Cancel */}
+        <div className="flex gap-2">
+            <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleCompleteBooking}
+                disabled={currentBooking?.status !== 'APPROVED' || !canApproveBooking}
+                className="flex-1 px-2.5 py-2 text-xs font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded flex items-center justify-center gap-1"
+            >
+                <FaClipboardCheck className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Complete</span>
+            </motion.button>
+            <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleCancelBooking}
+                disabled={currentBooking?.status === 'COMPLETED' || currentBooking?.status === 'CANCELLED'}
+                className="flex-1 px-2.5 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded flex items-center justify-center gap-1"
+            >
+                <FaBan className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Cancel</span>
+            </motion.button>
+        </div>
 
-                                    {/* Reject Booking */}
-                                    <div className="flex flex-col sm:flex-row gap-2">
-                                        <input
-                                            type="text"
-                                            placeholder="Rejection reason..."
-                                            value={rejectionReason}
-                                            onChange={(e) => setRejectionReason(e.target.value)}
-                                            className="flex-1 px-2.5 py-1.5 text-xs bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-red-500 outline-none"
-                                        />
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={() => setShowRejectConfirm(true)}
-                                            disabled={!rejectionReason.trim()}
-                                            className="px-2.5 py-1.5 text-xs font-medium text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed rounded whitespace-nowrap flex items-center justify-center gap-1"
-                                        >
-                                            <FaTimesCircle className="w-3 h-3" />
-                                            <span className="hidden sm:inline">Reject</span>
-                                        </motion.button>
-                                    </div>
-                                </div>
-                            </motion.div>
+        {/* Reject Booking */}
+        <div className="flex flex-col sm:flex-row gap-2">
+            <input
+                type="text"
+                placeholder="Rejection reason..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                className="flex-1 px-2.5 py-1.5 text-xs bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-red-500 outline-none"
+            />
+            <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowRejectConfirm(true)}
+                disabled={!rejectionReason.trim()}
+                className="px-2.5 py-1.5 text-xs font-medium text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed rounded whitespace-nowrap flex items-center justify-center gap-1"
+            >
+                <FaTimesCircle className="w-3 h-3" />
+                <span className="hidden sm:inline">Reject</span>
+            </motion.button>
+        </div>
+    </div>
+</motion.div>
                         </motion.div>
 
                         {/* Right - Status & Info */}
@@ -691,9 +692,7 @@ const BookingDetailsPage = () => {
                             </div>
 
                             {/* Department Info */}
-                            <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-3 sm:p-4">
-                                <h3 className="text-xs font-bold text-blue-300 mb-2">Department</h3>
-                                <p className="text-xs text-blue-200 truncate mb-2">{currentBooking?.department?.name}</p>
+                            <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-3 sm:p-4 text-center">
                                 <p className="text-xs text-blue-300">Officer: {user?.name?.split(' ')[0]}</p>
                             </div>
                         </motion.div>

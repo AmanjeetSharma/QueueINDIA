@@ -39,10 +39,11 @@ const UserBookings = () => {
     'PENDING_DOCS',
     'DOCS_SUBMITTED',
     'UNDER_REVIEW',
-    'APPROVED',
+
   ];
 
   const TERMINAL_STATUSES = [
+    'APPROVED',
     'REJECTED',
     'CANCELLED',
     'COMPLETED',
@@ -393,7 +394,7 @@ const UserBookings = () => {
                           View Details
                         </Link>
                       ) : ACTIVE_STATUSES.includes(booking.status) ? (
-                        // 🟢 Active → Upload + Cancel
+                        // Active → Upload + Cancel
                         <>
                           {/* Upload / Details button */}
                           <Link

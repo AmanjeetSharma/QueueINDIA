@@ -448,12 +448,7 @@ const getDepartments = asyncHandler(async (req, res) => {
         Object.entries(appliedFilters).filter(([_, v]) => v !== null && v !== undefined)
     );
 
-    console.log("📋 Fetched Departments List", {
-        page: safePage,
-        limit: safeLimit,
-        totalDepartments: total,
-        filtersApplied: usedFilters
-    });
+    console.log(`Departments fetched: ${total} | Filters: ${JSON.stringify(usedFilters)}`);
 
     return res.status(200).json(
         new ApiResponse(200, {

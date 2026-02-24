@@ -204,7 +204,6 @@ const BookingDetails = () => {
       const updatedBooking = await getBookingById(bookingId);
       setBooking(updatedBooking.data);
       setShowCancelModal(false);
-      toast.success('Booking cancelled successfully!');
     } catch (err) {
       console.error('Cancellation failed:', err);
       toast.error(err.message || 'Failed to cancel booking');
@@ -244,7 +243,10 @@ const BookingDetails = () => {
     return submittedDocs.length > 0 && submittedDocs.every(doc => doc.status === 'APPROVED');
   };
 
-  const canCancel = booking?.status === 'PENDING_DOCS' || booking?.status === 'DOCS_SUBMITTED';
+  const canCancel = booking?.status === 'PENDING_DOCS' ||
+    booking?.status === 'DOCS_SUBMITTED' ||
+    booking?.status === 'UNDER_REVIEW' ||
+    booking?.status === 'APPROVED';
 
   const canUploadDocument = (doc, currentBooking = booking) => {
     if (!currentBooking?.metadata?.isDocumentUploadRequired) return false;
@@ -279,7 +281,7 @@ const BookingDetails = () => {
         <div className="max-w-6xl mx-auto">
           <button
             onClick={handleBackToBookings}
-            className="flex items-center gap-2 text-slate-600 hover:text-blue-600 mb-4 transition-colors font-medium text-sm"
+            className="flex items-center gap-2 text-slate-600 hover:text-blue-600 mb-4 transition-colors font-medium text-sm cursor-pointer"
           >
             <ArrowLeft size={18} />
             Back to My Bookings
@@ -326,7 +328,7 @@ const BookingDetails = () => {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={handleBackToBookings}
-            className="flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm"
+            className="flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm cursor-pointer"
           >
             <ArrowLeft size={18} />
             <span className="hidden sm:inline">Back to Bookings</span>
@@ -356,7 +358,7 @@ const BookingDetails = () => {
                       <CheckCheck className="text-white" size={24} />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-base md:text-lg font-bold text-slate-900 mb-1">All Documents Approved! 🎉</h3>
+                      <h3 className="text-base md:text-lg font-bold text-slate-900 mb-1">All Documents Approved!</h3>
                       <p className="text-sm text-slate-700">
                         Your token number <span className="font-bold text-emerald-700"></span> has been sent to your registered email.
                       </p>
@@ -377,13 +379,13 @@ const BookingDetails = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle size={16} className="text-emerald-600" />
-                      <span className="text-xs text-slate-700">Documents: <span className="font-medium">{docCounts.approved}/{docCounts.total} Approved</span></span>
+                      <span className="text-xs text-slate-700">Documents Approved: <span className="font-medium">{docCounts.approved}/{docCounts.total}</span></span>
                     </div>
                   </div>
                   <div className="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
                     <p className="text-xs text-emerald-800 flex items-start gap-2">
                       <Info size={14} className="mt-0.5 flex-shrink-0" />
-                      <span>Please arrive 15 minutes before your appointment time with your token number and original documents for verification.</span>
+                      <span>Please arrive 15 minutes before your appointment time with your token number and original documents.</span>
                     </p>
                   </div>
                 </div>
@@ -438,14 +440,6 @@ const BookingDetails = () => {
 
                     <div className="bg-white/60 rounded-lg p-2.5 md:p-3">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <FileText className="text-blue-600" size={16} />
-                        <p className="text-xs text-slate-600">Token</p>
-                      </div>
-                      <p className="text-slate-900 font-medium text-xs md:text-sm">#{booking.tokenNumber}</p>
-                    </div>
-
-                    <div className="bg-white/60 rounded-lg p-2.5 md:p-3">
-                      <div className="flex items-center gap-1.5 mb-1">
                         <Clock className="text-amber-600" size={16} />
                         <p className="text-xs text-slate-600">Est. Time</p>
                       </div>
@@ -495,17 +489,6 @@ const BookingDetails = () => {
                     </div>
 
                     <div className="p-4 md:p-5">
-                      {/* All Approved Mini Banner */}
-                      {allDocsApproved && (
-                        <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="text-emerald-600" size={18} />
-                            <p className="text-sm text-emerald-800 font-medium">
-                              All documents have been approved! Your appointment is confirmed.
-                            </p>
-                          </div>
-                        </div>
-                      )}
 
                       <div className="space-y-4">
                         {submittedDocs.map((doc, idx) => {
@@ -754,10 +737,6 @@ const BookingDetails = () => {
                       <span>Arrive 15 minutes before appointment</span>
                     </li>
                     <li className="flex items-start gap-1.5 text-xs text-slate-700">
-                      <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1 flex-shrink-0"></div>
-                      <span>Bring token #{booking.tokenNumber}</span>
-                    </li>
-                    <li className="flex items-start gap-1.5 text-xs text-slate-700">
                       <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt=1 flex-shrink-0"></div>
                       <span>Upload docs before arrival date</span>
                     </li>
@@ -814,7 +793,7 @@ const BookingDetails = () => {
                       {allDocsApproved ? (
                         <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-center">
                           <p className="text-xs text-green-700 font-medium">
-                            🎉 All documents approved! Appointment confirmed.
+                            All documents approved! Appointment confirmed.
                           </p>
                         </div>
                       ) : docCounts.approved > 0 ? (
@@ -829,7 +808,8 @@ const BookingDetails = () => {
                 )}
 
                 {/* Quick Actions Card */}
-                {booking.status !== 'COMPLETED' && !allDocsApproved && (
+                {/* Quick Actions Card */}
+                {booking.status !== 'COMPLETED' && (
                   <div className="bg-white rounded-xl shadow border border-slate-200 p-4 md:p-5">
                     <h3 className="text-sm md:text-base font-bold text-slate-900 mb-3">Quick Actions</h3>
 
@@ -837,7 +817,7 @@ const BookingDetails = () => {
                       <button
                         onClick={() => setShowCancelModal(true)}
                         disabled={!canCancel || cancelling}
-                        className={`w-full py-2.5 px-4 rounded-lg transition-all font-medium text-sm flex items-center justify-center gap-2 ${!canCancel
+                        className={`w-full py-2.5 px-4 rounded-lg transition-all font-medium text-sm flex items-center justify-center gap-2 cursor-pointer ${!canCancel
                           ? 'bg-gray-400 text-white cursor-not-allowed'
                           : cancelling
                             ? 'bg-gray-300 text-gray-600 cursor-not-allowed'

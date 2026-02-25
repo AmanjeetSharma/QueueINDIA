@@ -28,13 +28,13 @@ const NotFound = () => {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(167,139,250,0.2),transparent)]" />
 
       {/* ── Animated ring 1 ── */}
-      <div className="pointer-events-none absolute left-1/2 top-[38%] h-[min(80vw,480px)] w-[min(80vw,480px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet-300/20 animate-ping [animation-duration:3s]" />
+      <div className="pointer-events-none absolute left-1/2 top-[48%] h-[min(80vw,480px)] w-[min(80vw,480px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-600/20 animate-ping [animation-duration:3s]" />
 
       {/* ── Animated ring 2 ── */}
-      <div className="pointer-events-none absolute left-1/2 top-[38%] h-[min(80vw,480px)] w-[min(80vw,480px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet-300/15 animate-ping [animation-duration:3s] [animation-delay:1s]" />
+      <div className="pointer-events-none absolute left-1/2 top-[48%] h-[min(80vw,480px)] w-[min(80vw,480px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-600/40 animate-ping [animation-duration:3s] [animation-delay:2s]" />
 
       {/* ── Animated ring 3 ── */}
-      <div className="pointer-events-none absolute left-1/2 top-[38%] h-[min(80vw,480px)] w-[min(80vw,480px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet-300/10 animate-ping [animation-duration:3s] [animation-delay:2s]" />
+      <div className="pointer-events-none absolute left-1/2 top-[48%] h-[min(80vw,480px)] w-[min(80vw,480px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-600/60 animate-ping [animation-duration:3s] [animation-delay:4s]" />
 
       {/* ── Floating particles ── */}
       <div className="pointer-events-none absolute left-[8%] top-[18%] h-2 w-2 rounded-full bg-violet-400/50 animate-bounce [animation-duration:3s]" />

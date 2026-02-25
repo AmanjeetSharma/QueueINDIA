@@ -115,7 +115,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     });
 
     if (!user) {
-        throw new ApiError(400, "Invalid or expired token");
+        throw new ApiError(400, "This password reset link/token is invalid or has expired");
     }
 
     // Update password

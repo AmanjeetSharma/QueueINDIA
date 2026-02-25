@@ -22,7 +22,7 @@ const NotFound = () => {
     <div className="relative flex min-h-[calc(100vh-64px)] w-full flex-col items-center justify-center overflow-hidden bg-slate-50 px-4 pb-12 pt-8 font-sans">
 
       {/* ── Dot grid background ── */}
-      <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(#c4b5fd_1px,transparent_1px)] [background-size:28px_28px] opacity-40" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#c4b5fd_1px,transparent_1px)] bg-size-[28px_28px] opacity-40" />
 
       {/* ── Soft gradient wash ── */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(167,139,250,0.2),transparent)]" />
@@ -60,7 +60,7 @@ const NotFound = () => {
       {/* ── 404 Number ── */}
       <div
         ref={numRef}
-        className="relative z-10 animate-bounce [animation-duration:4s] select-none text-[clamp(4.5rem,20vw,12rem)] font-black leading-none tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-violet-700 via-purple-500 to-fuchsia-500 drop-shadow-[0_6px_32px_rgba(139,92,246,0.25)] mb-2 sm:mb-4"
+        className="relative z-10 animate-bounce [animation-duration:4s] select-none text-[clamp(4.5rem,20vw,12rem)] font-black leading-none tracking-tighter text-transparent bg-clip-text bg-linear-to-br from-violet-700 via-purple-500 to-fuchsia-500 drop-shadow-[0_6px_32px_rgba(139,92,246,0.25)] mb-2 sm:mb-4"
       >
         404
       </div>
@@ -79,7 +79,7 @@ const NotFound = () => {
         </h2>
 
         {/* Divider */}
-        <div className="mx-auto mb-4 h-0.5 w-8 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500" />
+        <div className="mx-auto mb-4 h-0.5 w-8 rounded-full bg-linear-to-r from-violet-500 to-fuchsia-500" />
 
         <p className="mb-5 text-[clamp(0.78rem,2vw,0.9rem)] leading-relaxed text-slate-500">
           This page slipped out of the queue.
@@ -91,13 +91,13 @@ const NotFound = () => {
         <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
           <Link
             to="/"
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-500 px-5 py-2.5 text-[0.82rem] font-bold text-white shadow-[0_4px_14px_rgba(124,58,237,0.3)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(124,58,237,0.4)] active:translate-y-0"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-linear-to-r from-violet-600 to-purple-500 px-5 py-2.5 text-[0.82rem] font-bold text-white shadow-[0_4px_14px_rgba(124,58,237,0.3)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(124,58,237,0.4)] active:translate-y-0"
           >
             ⌂ Home
           </Link>
           <button
             onClick={() => window.history.back()}
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-violet-200 bg-white px-5 py-2.5 text-[0.82rem] font-bold text-violet-700 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-violet-400 hover:shadow-md active:translate-y-0"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-violet-200 bg-white px-5 py-2.5 text-[0.82rem] font-bold text-violet-700 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-violet-400 hover:shadow-md active:translate-y-0"
           >
             ← Go Back
           </button>
@@ -113,7 +113,7 @@ const NotFound = () => {
             <Link
               key={l.to}
               to={l.to}
-              className="min-h-[36px] inline-flex items-center rounded-lg px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-wider text-slate-400 transition-colors duration-150 hover:bg-violet-50 hover:text-violet-600"
+              className="min-h-9 inline-flex items-center rounded-lg px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-wider text-slate-400 transition-colors duration-150 hover:bg-violet-50 hover:text-violet-600"
             >
               {l.label}
             </Link>

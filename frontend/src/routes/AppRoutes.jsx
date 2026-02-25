@@ -6,10 +6,9 @@ import ProtectedRoute from "./ProtectedRoute.jsx";
 import ProtectedAuthRoute from "./ProtectedAuthRoute.jsx";
 import AuthorizedRoles from "./AuthorizedRoles.jsx";
 import ScrollToTop from "../components/ScrollToTop.jsx";
+import Loader from "../utils/loader/Loader.jsx";
 
-/* =======================
-   LAZY LOADED PAGES
-======================= */
+// --------- lazy components ---------
 
 // Public
 const Home = lazy(() => import("../pages/home/Home.jsx"));
@@ -70,13 +69,7 @@ const AnalyticsPage = lazy(() => import("../pages/admin/officerPanel/components/
 
 const NotFound = lazy(() => import("../pages/NotFound.jsx"));
 
-/* ======================= */
 
-const Loader = () => (
-  <div style={{ textAlign: "center", marginTop: "100px" }}>
-    Loading...
-  </div>
-);
 
 const AppRoutes = () => {
   return (

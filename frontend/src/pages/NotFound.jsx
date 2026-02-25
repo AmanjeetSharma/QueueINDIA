@@ -27,15 +27,6 @@ const NotFound = () => {
       {/* ── Soft gradient wash ── */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(167,139,250,0.2),transparent)]" />
 
-      {/* ── Animated ring 1 ── */}
-      <div className="pointer-events-none absolute left-1/2 top-[48%] h-[min(80vw,480px)] w-[min(80vw,480px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-600/20 animate-ping [animation-duration:3s]" />
-
-      {/* ── Animated ring 2 ── */}
-      <div className="pointer-events-none absolute left-1/2 top-[48%] h-[min(80vw,480px)] w-[min(80vw,480px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-600/40 animate-ping [animation-duration:3s] [animation-delay:2s]" />
-
-      {/* ── Animated ring 3 ── */}
-      <div className="pointer-events-none absolute left-1/2 top-[48%] h-[min(80vw,480px)] w-[min(80vw,480px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-600/60 animate-ping [animation-duration:3s] [animation-delay:4s]" />
-
       {/* ── Floating particles ── */}
       <div className="pointer-events-none absolute left-[8%] top-[18%] h-2 w-2 rounded-full bg-violet-400/50 animate-bounce [animation-duration:3s]" />
       <div className="pointer-events-none absolute right-[10%] top-[25%] h-1.5 w-1.5 rounded-full bg-fuchsia-400/45 animate-bounce [animation-duration:4s] [animation-delay:0.5s]" />
@@ -97,7 +88,7 @@ const NotFound = () => {
           </Link>
           <button
             onClick={() => window.history.back()}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-violet-200 bg-white px-5 py-2.5 text-[0.82rem] font-bold text-violet-700 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-violet-400 hover:shadow-md active:translate-y-0"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-violet-200 bg-white px-5 py-2.5 text-[0.82rem] font-bold text-violet-700 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-violet-400 hover:shadow-md active:translate-y-0 cursor-pointer"
           >
             ← Go Back
           </button>

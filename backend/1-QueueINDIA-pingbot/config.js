@@ -1,3 +1,5 @@
+// config.js
+
 export const SERVICES = [
     {
         name: "API Gateway",
@@ -16,8 +18,8 @@ export const SERVICES = [
 // Ping interval → every 10 minutes
 export const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes
 
-// Auto stop after → 3 hours
+// Auto stop after → 2 hours
 export const MAX_RUNTIME = 2 * 60 * 60 * 1000; // 2 hours
 
-// Timeout per request (security)
-export const REQUEST_TIMEOUT = 60000; // 60 seconds
+// Timeout per request
+export const REQUEST_TIMEOUT = 60 * 1000; // 60 seconds

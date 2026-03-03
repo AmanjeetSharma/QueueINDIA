@@ -1,4 +1,4 @@
-import fetch from "node-fetch";
+import axios from "axios";
 import {
     SERVICES,
     PING_INTERVAL,
@@ -6,20 +6,13 @@ import {
     REQUEST_TIMEOUT
 } from "./config.js";
 
-// Utility: Timeout wrapper
-const fetchWithTimeout = async (url) => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
-    try {
-        const res = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeout);
-        return res;
-    } catch (err) {
-        clearTimeout(timeout);
-        throw err;
-    }
-};
+
+
+// Axios instance (clean & reusable)
+const api = axios.create({
+    timeout: REQUEST_TIMEOUT,
+});
 
 // Logging helper
 const log = (msg) => {
@@ -28,49 +21,57 @@ const log = (msg) => {
 
 let pingCounter = 0;
 
-// Ping all services safely
+// Parallel Ping Function
 const pingAllServices = async () => {
     pingCounter++;
     log(`🔄 Pinging QueueINDIA services... | times: ${pingCounter}`);
 
-    for (const service of SERVICES) {
+    const startTime = Date.now();
+
+    const promises = SERVICES.map(async (service) => {
         try {
-            const res = await fetchWithTimeout(service.url);
+            const res = await api.get(service.url);
 
-            if (res.ok) {
-                log(`✅ ${service.name} is UP (${res.status})`);
-            } else {
-                log(`⚠️ ${service.name} responded (${res.status})`);
-            }
+            log(`✅ ${service.name} is UP (${res.status})`);
+
         } catch (err) {
-            log(`❌ ${service.name} ERROR: ${err.message}`);
+            if (err.code === "ECONNABORTED") {
+                log(`⏳ ${service.name} TIMEOUT`);
+            } else if (err.response) {
+                log(`⚠️ ${service.name} responded (${err.response.status})`);
+            } else {
+                log(`❌ ${service.name} ERROR: ${err.message}`);
+            }
         }
-    }
+    });
 
+    await Promise.allSettled(promises);
+
+    const duration = Date.now() - startTime;
+    log(`Ping cycle completed in ${duration / 1000} seconds`);
     console.log("────────────────────────────────────────");
 };
 
 // Start bot
-log("🚀 QueueINDIA Ping Bot Has Started...");
-log(`⏰ Interval: ${PING_INTERVAL / 60000} minutes...`);
-log(`🛑 Auto-stop after: ${MAX_RUNTIME / 60000} minutes (${MAX_RUNTIME / 3600000} hrs)`);
+log("🚀 QueueINDIA Parallel Ping Bot Started...");
+log(`⏰ Interval: ${PING_INTERVAL / 60000} minutes`);
+log(`🛑 Auto-stop after: ${MAX_RUNTIME / 60000} minutes`);
 console.log("────────────────────────────────────────");
 
-// Immediate ping once
+// Run immediately
 pingAllServices();
 
-// Repeat every 10 min
+// Run at interval
 const intervalId = setInterval(pingAllServices, PING_INTERVAL);
 
-// Auto stop after 3 hours
+// Auto stop
 setTimeout(() => {
-    log("🛑 2 hours completed. Stopping bot automatically...");
-    log("👋 Thank you for your service!");
+    log(`🛑 ${MAX_RUNTIME / (60 * 60 * 1000)} hours done, stopping bot...`);
     clearInterval(intervalId);
     process.exit(0);
 }, MAX_RUNTIME);
 
-// Graceful manual stop (Ctrl+C)
+// Graceful stop
 process.on("SIGINT", () => {
     log("🛑 Bot stopped manually (Ctrl+C). Goodbye!");
     clearInterval(intervalId);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import {
@@ -8,8 +8,11 @@ import {
   FaClock,
   FaExclamationTriangle,
   FaHome,
+  FaChevronDown,
+  FaCog,
+  FaServer,
 } from "react-icons/fa";
-import { FiCalendar, FiClock } from "react-icons/fi";
+import { FiCalendar, FiClock, FiSettings, FiTool } from "react-icons/fi";
 import { GiQueenCrown } from "react-icons/gi";
 import { MdQueue, MdAdminPanelSettings, MdOutlineManageAccounts } from "react-icons/md";
 import { BsFillCalendarCheckFill, BsGraphUp } from "react-icons/bs";
@@ -18,6 +21,7 @@ const AdminPanel = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [departmentMenuOpen, setDepartmentMenuOpen] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -68,6 +72,7 @@ const AdminPanel = () => {
       gradientFrom: "from-red-500",
       gradientTo: "to-red-700",
       emoji: "👑",
+      hasDropdown: true, // Flag to identify department card
     },
     {
       id: "analytics",
@@ -87,6 +92,16 @@ const AdminPanel = () => {
     if (hour < 12) return "Good Morning";
     if (hour < 18) return "Good Afternoon";
     return "Good Evening";
+  };
+
+  const handleEditDepartment = () => {
+    navigate(`/admin-panel/${user?.departmentId}/edit`);
+    setDepartmentMenuOpen(false);
+  };
+
+  const handleEditServices = () => {
+    navigate(`/manage/departments/${user?.departmentId}/services`);
+    setDepartmentMenuOpen(false);
   };
 
   const containerVariants = {
@@ -209,56 +224,140 @@ const AdminPanel = () => {
             </div>
 
             {/* Cards Grid */}
-            {/* Mobile: 2-col grid | sm: 2-col | lg: 3-col | xl: 5-col */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
               {adminCards.map((card, index) => (
                 <motion.div
                   key={card.id}
                   variants={itemVariants}
                   transition={{ delay: 0.2 + index * 0.05 }}
-                  whileHover={{ y: -3, scale: 1.02 }}
-                  className="group h-full"
+                  className="group h-full relative"
                 >
-                  <Link to={card.path} className="block h-full">
-                    <div className="bg-gray-800 border border-gray-700 hover:bg-slate-900 rounded-xl overflow-hidden shadow hover:shadow-xl transition-all p-3 sm:p-4 h-full flex flex-col cursor-pointer relative">
-                      {/* Gradient Overlay */}
-                      <div className={`absolute inset-0 bg-gradient-to-br ${card.gradientFrom} ${card.gradientTo} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-xl`} />
+                  {card.hasDropdown ? (
+                    // Department card with dropdown
+                    <div className="block h-full">
+                      <div 
+                        className="bg-gray-800 border border-gray-700 hover:bg-slate-900 rounded-xl overflow-hidden shadow hover:shadow-xl transition-all p-3 sm:p-4 h-full flex flex-col cursor-pointer relative"
+                        onClick={() => setDepartmentMenuOpen(!departmentMenuOpen)}
+                      >
+                        {/* Gradient Overlay */}
+                        <div className={`absolute inset-0 bg-gradient-to-br ${card.gradientFrom} ${card.gradientTo} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-xl`} />
 
-                      {/* Icon Row */}
-                      <div className="flex items-center justify-between mb-2.5">
-                        <div className={`w-8 h-8 sm:w-10 sm:h-10 ${card.bgColor} rounded-lg flex items-center justify-center shadow text-white group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
-                          {card.icon}
+                        {/* Icon Row */}
+                        <div className="flex items-center justify-between mb-2.5">
+                          <div className={`w-8 h-8 sm:w-10 sm:h-10 ${card.bgColor} rounded-lg flex items-center justify-center shadow text-white group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
+                            {card.icon}
+                          </div>
+                          <span className="text-base sm:text-lg opacity-40 group-hover:opacity-90 transition-opacity">
+                            {card.emoji}
+                          </span>
                         </div>
-                        <span className="text-base sm:text-lg opacity-40 group-hover:opacity-90 transition-opacity">
-                          {card.emoji}
-                        </span>
+
+                        {/* Title with dropdown indicator */}
+                        <div className="flex items-center justify-between gap-1">
+                          <h3 className="text-xs sm:text-sm font-bold text-white mb-1 leading-tight">
+                            {card.title}
+                          </h3>
+                          <FaChevronDown className={`w-3 h-3 text-purple-400 transition-transform duration-200 ${departmentMenuOpen ? 'rotate-180' : ''}`} />
+                        </div>
+
+                        {/* Description — hide on smallest screens */}
+                        <p className="hidden sm:block text-xs text-gray-400 mb-3 leading-relaxed flex-1">
+                          {card.description}
+                        </p>
+
+                        {/* CTA */}
+                        <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-700/50">
+                          <span className="text-[10px] sm:text-xs font-medium text-purple-400 group-hover:text-purple-300 truncate pr-1">
+                            Manage
+                          </span>
+                          <motion.div
+                            animate={{ x: [0, 2, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                            className="text-purple-400 group-hover:text-purple-300 flex-shrink-0"
+                          >
+                            <FaArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                          </motion.div>
+                        </div>
                       </div>
 
-                      {/* Title */}
-                      <h3 className="text-xs sm:text-sm font-bold text-white mb-1 leading-tight">
-                        {card.title}
-                      </h3>
-
-                      {/* Description — hide on smallest screens */}
-                      <p className="hidden sm:block text-xs text-gray-400 mb-3 leading-relaxed flex-1">
-                        {card.description}
-                      </p>
-
-                      {/* CTA */}
-                      <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-700/50">
-                        <span className="text-[10px] sm:text-xs font-medium text-purple-400 group-hover:text-purple-300 truncate pr-1">
-                          Open
-                        </span>
-                        <motion.div
-                          animate={{ x: [0, 2, 0] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                          className="text-purple-400 group-hover:text-purple-300 flex-shrink-0"
-                        >
-                          <FaArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                        </motion.div>
-                      </div>
+                      {/* Dropdown Menu */}
+                      <AnimatePresence>
+                        {departmentMenuOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                            transition={{ duration: 0.1 }}
+                            className="absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-30 overflow-hidden"
+                          >
+                            <button
+                              onClick={handleEditDepartment}
+                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-200 hover:bg-purple-500/20 hover:text-purple-300 transition-colors text-left"
+                            >
+                              <FiSettings className="w-3.5 h-3.5 flex-shrink-0 text-purple-400" />
+                              <div>
+                                <div className="font-medium">Edit Department</div>
+                                <div className="text-[10px] text-slate-500">Info, status & details</div>
+                              </div>
+                            </button>
+                            <div className="h-px bg-slate-700" />
+                            <button
+                              onClick={handleEditServices}
+                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-200 hover:bg-blue-500/20 hover:text-blue-300 transition-colors text-left"
+                            >
+                              <FiTool className="w-3.5 h-3.5 flex-shrink-0 text-blue-400" />
+                              <div>
+                                <div className="font-medium">Edit Services</div>
+                                <div className="text-[10px] text-slate-500">Manage service listings</div>
+                              </div>
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                  </Link>
+                  ) : (
+                    // Regular card with link
+                    <Link to={card.path} className="block h-full">
+                      <div className="bg-gray-800 border border-gray-700 hover:bg-slate-900 rounded-xl overflow-hidden shadow hover:shadow-xl transition-all p-3 sm:p-4 h-full flex flex-col cursor-pointer relative">
+                        {/* Gradient Overlay */}
+                        <div className={`absolute inset-0 bg-gradient-to-br ${card.gradientFrom} ${card.gradientTo} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-xl`} />
+
+                        {/* Icon Row */}
+                        <div className="flex items-center justify-between mb-2.5">
+                          <div className={`w-8 h-8 sm:w-10 sm:h-10 ${card.bgColor} rounded-lg flex items-center justify-center shadow text-white group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
+                            {card.icon}
+                          </div>
+                          <span className="text-base sm:text-lg opacity-40 group-hover:opacity-90 transition-opacity">
+                            {card.emoji}
+                          </span>
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="text-xs sm:text-sm font-bold text-white mb-1 leading-tight">
+                          {card.title}
+                        </h3>
+
+                        {/* Description — hide on smallest screens */}
+                        <p className="hidden sm:block text-xs text-gray-400 mb-3 leading-relaxed flex-1">
+                          {card.description}
+                        </p>
+
+                        {/* CTA */}
+                        <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-700/50">
+                          <span className="text-[10px] sm:text-xs font-medium text-purple-400 group-hover:text-purple-300 truncate pr-1">
+                            Open
+                          </span>
+                          <motion.div
+                            animate={{ x: [0, 2, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                            className="text-purple-400 group-hover:text-purple-300 flex-shrink-0"
+                          >
+                            <FaArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                          </motion.div>
+                        </div>
+                      </div>
+                    </Link>
+                  )}
                 </motion.div>
               ))}
             </div>

@@ -3,7 +3,18 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useService } from '../../../../../context/ServiceContext';
 import { useDepartment } from '../../../../../context/DepartmentContext';
-import { FiChevronLeft, FiPlus, FiTrash2, FiSave, FiAlertCircle } from 'react-icons/fi';
+import { 
+  FiChevronLeft, 
+  FiPlus, 
+  FiTrash2, 
+  FiSave, 
+  FiAlertCircle,
+  FiClock,
+  FiFileText,
+  FiSettings,
+  FiTag,
+  FiCheckCircle
+} from 'react-icons/fi';
 
 const ServiceForm = () => {
   const { deptId, serviceId } = useParams();
@@ -45,6 +56,7 @@ const ServiceForm = () => {
 
   const [errors, setErrors] = useState({});
   const [slotWindowError, setSlotWindowError] = useState('');
+  const [touched, setTouched] = useState({});
 
   useEffect(() => {
     fetchDepartmentData();
@@ -134,33 +146,31 @@ const ServiceForm = () => {
     const { start, end, maxTokens } = slotWindow;
     
     if (!start || !end || !maxTokens) {
-      setSlotWindowError('All fields are required');
+      setSlotWindowError('⚠️ All fields are required');
       return false;
     }
 
     if (!isValidTimeRange(start, end)) {
-      setSlotWindowError('End time must be after start time');
+      setSlotWindowError('⏰ End time must be after start time');
       return false;
     }
 
     const tokenValue = parseInt(maxTokens);
     if (isNaN(tokenValue) || tokenValue <= 0) {
-      setSlotWindowError('Max tokens must be a positive number');
+      setSlotWindowError('🔢 Max tokens must be a positive number');
       return false;
     }
 
-    // Check if within global hours
     if (!isWithinGlobalHours(start, end, formData.tokenManagement.slotStartTime, formData.tokenManagement.slotEndTime)) {
-      setSlotWindowError('Slot window must be within global operating hours');
+      setSlotWindowError('📅 Slot must be within ' + formData.tokenManagement.slotStartTime + ' - ' + formData.tokenManagement.slotEndTime);
       return false;
     }
 
-    // Check for overlap with existing windows
     const newWindow = { start, end, maxTokens: tokenValue };
     const existingWindows = [...formData.tokenManagement.slotWindows, newWindow];
     
     if (doSlotsOverlap(existingWindows)) {
-      setSlotWindowError('Slot windows cannot overlap');
+      setSlotWindowError('🔄 Slot windows cannot overlap');
       return false;
     }
 
@@ -217,6 +227,10 @@ const ServiceForm = () => {
     }));
   };
 
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
   // Numeric input handler with immediate conversion
   const handleNumericChange = (e) => {
     const { name, value } = e.target;
@@ -242,7 +256,6 @@ const ServiceForm = () => {
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     
-    // Handle checkbox
     if (type === 'checkbox') {
       if (name.includes('.')) {
         const [parent, child] = name.split('.');
@@ -262,7 +275,6 @@ const ServiceForm = () => {
       return;
     }
 
-    // Handle numeric inputs
     if (name.includes('maxDailyServiceTokens') || 
         name.includes('maxTokensPerSlot') || 
         name.includes('timeBtwEverySlot')) {
@@ -270,7 +282,6 @@ const ServiceForm = () => {
       return;
     }
 
-    // Handle other inputs
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
       setFormData(prev => ({
@@ -292,7 +303,6 @@ const ServiceForm = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    // Required fields
     if (!formData.name.trim()) {
       newErrors.name = 'Service name is required';
     }
@@ -301,41 +311,37 @@ const ServiceForm = () => {
       newErrors.serviceCode = 'Service code is required';
     }
 
-    // Time validation
     if (!isValidTimeRange(formData.tokenManagement.slotStartTime, formData.tokenManagement.slotEndTime)) {
       newErrors.timeRange = 'End time must be after start time';
     }
 
-    // Numeric validations
     if (formData.tokenManagement.maxDailyServiceTokens !== '') {
       const maxDaily = parseInt(formData.tokenManagement.maxDailyServiceTokens);
       if (isNaN(maxDaily) || maxDaily < 0) {
-        newErrors.maxDailyServiceTokens = 'Must be a positive number or empty';
+        newErrors.maxDailyServiceTokens = 'Must be 0 or more';
       }
     }
 
     const maxPerSlot = parseInt(formData.tokenManagement.maxTokensPerSlot);
     if (isNaN(maxPerSlot) || maxPerSlot <= 0) {
-      newErrors.maxTokensPerSlot = 'Must be a positive number';
+      newErrors.maxTokensPerSlot = 'Must be at least 1';
     }
 
     const timeBetween = parseInt(formData.tokenManagement.timeBtwEverySlot);
     if (isNaN(timeBetween) || timeBetween <= 0) {
-      newErrors.timeBtwEverySlot = 'Must be a positive number';
+      newErrors.timeBtwEverySlot = 'Must be at least 1 minute';
     }
 
-    // Slot windows validation
     if (formData.tokenManagement.slotWindows.length > 0) {
       if (doSlotsOverlap(formData.tokenManagement.slotWindows)) {
         newErrors.slotWindows = 'Slot windows cannot overlap';
       }
 
-      // Check each window is within global hours
       const invalidWindows = formData.tokenManagement.slotWindows.filter(
         w => !isWithinGlobalHours(w.start, w.end, formData.tokenManagement.slotStartTime, formData.tokenManagement.slotEndTime)
       );
       if (invalidWindows.length > 0) {
-        newErrors.slotWindows = 'All slot windows must be within operating hours';
+        newErrors.slotWindows = 'All slots must be within operating hours';
       }
     }
 
@@ -347,15 +353,13 @@ const ServiceForm = () => {
     e.preventDefault();
 
     if (!validateForm()) {
-      // Scroll to first error
-      const firstError = document.querySelector('.border-red-500');
+      const firstError = document.querySelector('[data-error="true"]');
       if (firstError) {
         firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       return;
     }
 
-    // Prepare data with proper numeric types
     const submitData = {
       ...formData,
       serviceCode: formData.serviceCode.toUpperCase().trim(),
@@ -386,149 +390,195 @@ const ServiceForm = () => {
   };
 
   const getInputClassName = (fieldName) => {
-    const baseClass = "w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500";
-    return errors[fieldName] 
-      ? `${baseClass} border-red-500 focus:ring-red-500` 
-      : `${baseClass} border-gray-300`;
+    const baseClass = "w-full px-3 py-2 bg-slate-800/50 border rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 transition-all";
+    const hasError = errors[fieldName] && touched[fieldName];
+    const isValid = !errors[fieldName] && touched[fieldName] && formData[fieldName];
+    
+    if (hasError) {
+      return `${baseClass} border-red-500/50 focus:ring-red-500/50 focus:border-red-500`;
+    }
+    if (isValid) {
+      return `${baseClass} border-emerald-500/30 focus:ring-emerald-500/50 focus:border-emerald-500`;
+    }
+    return `${baseClass} border-slate-700 focus:ring-blue-500/50 focus:border-blue-500`;
   };
 
   if (loading && isEditMode) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="relative h-11 w-11">
+          <div className="absolute inset-0 rounded-full border-2 border-slate-700" />
+          <div className="absolute inset-0 rounded-full border-t-2 border-blue-500 animate-spin" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => navigate(`/manage/departments/${deptId}/services`)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <FiChevronLeft className="w-5 h-5" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {isEditMode ? 'Edit Service' : 'Create New Service'}
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {currentDepartment?.name || 'Department'}
-              </p>
+    <div className="min-h-screen bg-slate-900 text-slate-100">
+
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-30 bg-slate-900/80 backdrop-blur border-b border-slate-800">
+        <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16 gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <button
+                onClick={() => navigate(`/manage/departments/${deptId}/services`)}
+                className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+                aria-label="Back"
+              >
+                <FiChevronLeft className="w-5 h-5" />
+              </button>
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-lg font-semibold text-slate-100 truncate leading-tight">
+                  {isEditMode ? 'Edit Service' : 'New Service'}
+                </h1>
+                <p className="text-xs text-slate-500 truncate">
+                  {currentDepartment?.name || 'Department'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Form */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Form */}
+      <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+        
+        {/* Error Summary - Mobile Friendly */}
         {Object.keys(errors).length > 0 && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center text-red-800 mb-2">
-              <FiAlertCircle className="w-5 h-5 mr-2" />
-              <span className="font-medium">Please fix the following errors:</span>
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+            <div className="flex items-center gap-2 text-red-400 mb-2">
+              <FiAlertCircle className="w-4 h-4 shrink-0" />
+              <span className="text-xs font-medium">Please fix the following:</span>
             </div>
-            <ul className="list-disc list-inside text-sm text-red-700">
-              {Object.values(errors).map((error, index) => (
-                <li key={index}>{error}</li>
+            <ul className="space-y-1">
+              {Object.entries(errors).map(([key, error]) => (
+                <li key={key} className="text-xs text-red-400/90 flex items-start gap-2">
+                  <span className="w-1 h-1 rounded-full bg-red-400/50 mt-1.5 shrink-0" />
+                  <span>{error}</span>
+                </li>
               ))}
             </ul>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+
+          {/* Basic Info Section */}
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+            <h2 className="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+              <FiSettings className="w-4 h-4 text-blue-400" />
+              Basic Information
+            </h2>
+            
+            <div className="space-y-3">
+              {/* Service Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Service Name *
+                <label className="block text-xs text-slate-400 mb-1">
+                  Service Name <span className="text-blue-400">*</span>
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
+                  onBlur={() => handleBlur('name')}
                   className={getInputClassName('name')}
-                  required
+                  placeholder="e.g., Birth Certificate"
+                  data-error={errors.name && touched.name}
                 />
-                {errors.name && (
-                  <p className="mt-1 text-xs text-red-600">{errors.name}</p>
+                {errors.name && touched.name && (
+                  <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
+                    <FiAlertCircle className="w-3 h-3" />
+                    {errors.name}
+                  </p>
                 )}
               </div>
+
+              {/* Service Code */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Service Code *
+                <label className="block text-xs text-slate-400 mb-1">
+                  Service Code <span className="text-blue-400">*</span>
                 </label>
                 <input
                   type="text"
                   name="serviceCode"
                   value={formData.serviceCode}
                   onChange={handleInputChange}
+                  onBlur={() => handleBlur('serviceCode')}
                   className={getInputClassName('serviceCode') + " uppercase"}
-                  required
+                  placeholder="e.g., BCI001"
+                  data-error={errors.serviceCode && touched.serviceCode}
                 />
-                {errors.serviceCode && (
-                  <p className="mt-1 text-xs text-red-600">{errors.serviceCode}</p>
+                {errors.serviceCode && touched.serviceCode && (
+                  <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
+                    <FiAlertCircle className="w-3 h-3" />
+                    {errors.serviceCode}
+                  </p>
                 )}
               </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+
+              {/* Description */}
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">
                   Description
                 </label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="2"
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  placeholder="Brief description of the service..."
                 />
               </div>
             </div>
           </div>
 
           {/* Service Settings */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Service Settings</h2>
-            <div className="space-y-4">
-              <div className="flex items-center">
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+            <h2 className="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+              <FiCheckCircle className="w-4 h-4 text-blue-400" />
+              Service Settings
+            </h2>
+            
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 p-2 rounded-lg bg-slate-800/30">
                 <input
                   type="checkbox"
                   name="priorityAllowed"
                   checked={formData.priorityAllowed}
                   onChange={handleInputChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500/50"
                 />
-                <label className="ml-2 block text-sm text-gray-900">
-                  Allow Priority Tokens
-                </label>
-              </div>
-              <div className="flex items-center">
+                <span className="text-sm text-slate-300">Allow Priority Tokens</span>
+              </label>
+              
+              <label className="flex items-center gap-3 p-2 rounded-lg bg-slate-800/30">
                 <input
                   type="checkbox"
                   name="isDocumentUploadRequired"
                   checked={formData.isDocumentUploadRequired}
                   onChange={handleInputChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500/50"
                 />
-                <label className="ml-2 block text-sm text-gray-900">
-                  Require Document Upload
-                </label>
-              </div>
+                <span className="text-sm text-slate-300">Require Document Upload</span>
+              </label>
             </div>
           </div>
 
           {/* Token Management */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Token Management</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+            <h2 className="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+              <FiClock className="w-4 h-4 text-blue-400" />
+              Token Management
+            </h2>
+            
+            <div className="space-y-3">
+              {/* Max Daily Tokens */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs text-slate-400 mb-1">
                   Max Daily Tokens
                 </label>
                 <input
@@ -536,151 +586,185 @@ const ServiceForm = () => {
                   name="tokenManagement.maxDailyServiceTokens"
                   value={formData.tokenManagement.maxDailyServiceTokens}
                   onChange={handleInputChange}
+                  onBlur={() => handleBlur('maxDailyServiceTokens')}
                   min="0"
                   className={getInputClassName('maxDailyServiceTokens')}
                   placeholder="Leave empty for unlimited"
                 />
-                {errors.maxDailyServiceTokens && (
-                  <p className="mt-1 text-xs text-red-600">{errors.maxDailyServiceTokens}</p>
+                {errors.maxDailyServiceTokens && touched.maxDailyServiceTokens && (
+                  <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
+                    <FiAlertCircle className="w-3 h-3" />
+                    {errors.maxDailyServiceTokens}
+                  </p>
                 )}
               </div>
+
+              {/* Max Tokens Per Slot */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Tokens Per Slot *
+                <label className="block text-xs text-slate-400 mb-1">
+                  Max Tokens Per Slot <span className="text-blue-400">*</span>
                 </label>
                 <input
                   type="number"
                   name="tokenManagement.maxTokensPerSlot"
                   value={formData.tokenManagement.maxTokensPerSlot}
                   onChange={handleInputChange}
+                  onBlur={() => handleBlur('maxTokensPerSlot')}
                   min="1"
                   className={getInputClassName('maxTokensPerSlot')}
-                  required
                 />
-                {errors.maxTokensPerSlot && (
-                  <p className="mt-1 text-xs text-red-600">{errors.maxTokensPerSlot}</p>
+                {errors.maxTokensPerSlot && touched.maxTokensPerSlot && (
+                  <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
+                    <FiAlertCircle className="w-3 h-3" />
+                    {errors.maxTokensPerSlot}
+                  </p>
                 )}
               </div>
+
+              {/* Queue Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs text-slate-400 mb-1">
                   Queue Type
                 </label>
                 <select
                   name="tokenManagement.queueType"
                   value={formData.tokenManagement.queueType}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 >
-                  <option value="Token">Online</option>
-                  <option value="Slot">Offline</option>
-                  <option value="Hybrid">Hybrid</option>
+                  <option value="Token" className="bg-slate-800">Online</option>
+                  <option value="Slot" className="bg-slate-800">Offline</option>
+                  <option value="Hybrid" className="bg-slate-800">Hybrid</option>
                 </select>
               </div>
+
+              {/* Time Between Slots */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Time Between Slots (minutes) *
+                <label className="block text-xs text-slate-400 mb-1">
+                  Time Between Slots (minutes) <span className="text-blue-400">*</span>
                 </label>
                 <input
                   type="number"
                   name="tokenManagement.timeBtwEverySlot"
                   value={formData.tokenManagement.timeBtwEverySlot}
                   onChange={handleInputChange}
+                  onBlur={() => handleBlur('timeBtwEverySlot')}
                   min="1"
                   className={getInputClassName('timeBtwEverySlot')}
-                  required
                 />
-                {errors.timeBtwEverySlot && (
-                  <p className="mt-1 text-xs text-red-600">{errors.timeBtwEverySlot}</p>
+                {errors.timeBtwEverySlot && touched.timeBtwEverySlot && (
+                  <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
+                    <FiAlertCircle className="w-3 h-3" />
+                    {errors.timeBtwEverySlot}
+                  </p>
                 )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Slot Start Time *
-                </label>
-                <input
-                  type="time"
-                  name="tokenManagement.slotStartTime"
-                  value={formData.tokenManagement.slotStartTime}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+
+              {/* Operating Hours */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">
+                    Start Time <span className="text-blue-400">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    name="tokenManagement.slotStartTime"
+                    value={formData.tokenManagement.slotStartTime}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">
+                    End Time <span className="text-blue-400">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    name="tokenManagement.slotEndTime"
+                    value={formData.tokenManagement.slotEndTime}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Slot End Time *
-                </label>
-                <input
-                  type="time"
-                  name="tokenManagement.slotEndTime"
-                  value={formData.tokenManagement.slotEndTime}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-                {errors.timeRange && (
-                  <p className="mt-1 text-xs text-red-600">{errors.timeRange}</p>
-                )}
-              </div>
+              {errors.timeRange && (
+                <p className="text-xs text-red-400 flex items-center gap-1">
+                  <FiAlertCircle className="w-3 h-3" />
+                  {errors.timeRange}
+                </p>
+              )}
             </div>
 
             {/* Slot Windows */}
-            <div className="mt-6">
-              <h3 className="text-md font-medium text-gray-900 mb-4">Slot Windows</h3>
+            <div className="mt-4">
+              <h3 className="text-xs font-medium text-slate-300 mb-3">Slot Windows</h3>
+              
               {errors.slotWindows && (
-                <p className="mb-2 text-xs text-red-600">{errors.slotWindows}</p>
+                <p className="mb-2 text-xs text-red-400 flex items-center gap-1">
+                  <FiAlertCircle className="w-3 h-3" />
+                  {errors.slotWindows}
+                </p>
               )}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <input
-                  type="time"
-                  placeholder="Start Time"
-                  value={slotWindow.start}
-                  onChange={(e) => setSlotWindow(prev => ({ ...prev, start: e.target.value }))}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="time"
-                  placeholder="End Time"
-                  value={slotWindow.end}
-                  onChange={(e) => setSlotWindow(prev => ({ ...prev, end: e.target.value }))}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="number"
-                  placeholder="Max Tokens"
-                  value={slotWindow.maxTokens}
-                  onChange={(e) => setSlotWindow(prev => ({ ...prev, maxTokens: e.target.value }))}
-                  min="1"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+
+              {/* Add Slot Window */}
+              <div className="space-y-2 mb-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <input
+                    type="time"
+                    value={slotWindow.start}
+                    onChange={(e) => setSlotWindow(prev => ({ ...prev, start: e.target.value }))}
+                    className="px-2 py-1.5 bg-slate-800/50 border border-slate-700 rounded-lg text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    placeholder="Start"
+                  />
+                  <input
+                    type="time"
+                    value={slotWindow.end}
+                    onChange={(e) => setSlotWindow(prev => ({ ...prev, end: e.target.value }))}
+                    className="px-2 py-1.5 bg-slate-800/50 border border-slate-700 rounded-lg text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    placeholder="End"
+                  />
+                  <input
+                    type="number"
+                    value={slotWindow.maxTokens}
+                    onChange={(e) => setSlotWindow(prev => ({ ...prev, maxTokens: e.target.value }))}
+                    min="1"
+                    className="px-2 py-1.5 bg-slate-800/50 border border-slate-700 rounded-lg text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    placeholder="Max"
+                  />
+                </div>
+                
                 <button
                   type="button"
                   onClick={handleAddSlotWindow}
-                  className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 transition-colors"
                 >
-                  <FiPlus className="w-4 h-4 mr-2" />
-                  Add Window
+                  <FiPlus className="w-3.5 h-3.5" />
+                  Add Slot Window
                 </button>
+                
+                {slotWindowError && (
+                  <p className="text-xs text-red-400 flex items-center gap-1">
+                    <FiAlertCircle className="w-3 h-3" />
+                    {slotWindowError}
+                  </p>
+                )}
               </div>
-              {slotWindowError && (
-                <p className="mb-2 text-xs text-red-600">{slotWindowError}</p>
-              )}
 
               {/* Slot Windows List */}
               {formData.tokenManagement.slotWindows.length > 0 && (
                 <div className="space-y-2">
                   {formData.tokenManagement.slotWindows.map((window, index) => (
-                    <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
-                      <div className="flex items-center space-x-4">
-                        <span className="text-sm font-medium">{window.start} - {window.end}</span>
-                        <span className="text-sm text-gray-600">Max: {window.maxTokens}</span>
+                    <div key={index} className="flex items-center justify-between bg-slate-800/30 border border-slate-700/50 rounded-lg p-2">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-mono text-slate-300">{window.start} - {window.end}</span>
+                        <span className="text-xs text-slate-500">max {window.maxTokens}</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleRemoveSlotWindow(index)}
-                        className="text-red-600 hover:text-red-800"
+                        className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded"
                       >
-                        <FiTrash2 className="w-4 h-4" />
+                        <FiTrash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ))}
@@ -690,63 +774,77 @@ const ServiceForm = () => {
           </div>
 
           {/* Required Documents */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Required Documents</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              <input
-                type="text"
-                placeholder="Document Name"
-                value={requiredDoc.name}
-                onChange={(e) => setRequiredDoc(prev => ({ ...prev, name: e.target.value }))}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <input
-                type="text"
-                placeholder="Description"
-                value={requiredDoc.description}
-                onChange={(e) => setRequiredDoc(prev => ({ ...prev, description: e.target.value }))}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 md:col-span-2"
-              />
-              <div className="flex items-center space-x-2">
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+            <h2 className="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+              <FiFileText className="w-4 h-4 text-blue-400" />
+              Required Documents
+            </h2>
+
+            {/* Add Document */}
+            <div className="space-y-2 mb-3">
+              <div className="grid grid-cols-1 gap-2">
                 <input
-                  type="checkbox"
-                  checked={requiredDoc.isMandatory}
-                  onChange={(e) => setRequiredDoc(prev => ({ ...prev, isMandatory: e.target.checked }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  type="text"
+                  value={requiredDoc.name}
+                  onChange={(e) => setRequiredDoc(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  placeholder="Document name (e.g., Aadhaar Card)"
                 />
-                <label className="text-sm text-gray-700">Mandatory</label>
+                <input
+                  type="text"
+                  value={requiredDoc.description}
+                  onChange={(e) => setRequiredDoc(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  placeholder="Description (optional)"
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={requiredDoc.isMandatory}
+                    onChange={(e) => setRequiredDoc(prev => ({ ...prev, isMandatory: e.target.checked }))}
+                    className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500/50"
+                  />
+                  <span className="text-xs text-slate-400">Mandatory</span>
+                </label>
+                
                 <button
                   type="button"
                   onClick={handleAddRequiredDoc}
-                  className="ml-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 transition-colors"
                 >
-                  <FiPlus className="w-4 h-4" />
+                  <FiPlus className="w-3.5 h-3.5" />
+                  Add Document
                 </button>
               </div>
             </div>
 
-            {/* Required Docs List */}
+            {/* Documents List */}
             {formData.requiredDocs.length > 0 && (
               <div className="space-y-2">
                 {formData.requiredDocs.map((doc, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
-                    <div>
-                      <span className="text-sm font-medium">{doc.name}</span>
+                  <div key={index} className="flex items-center justify-between bg-slate-800/30 border border-slate-700/50 rounded-lg p-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-slate-300 truncate">{doc.name}</span>
+                        {doc.isMandatory && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-medium bg-red-500/20 text-red-400 rounded-full">
+                            Required
+                          </span>
+                        )}
+                      </div>
                       {doc.description && (
-                        <span className="text-sm text-gray-600 ml-2">- {doc.description}</span>
-                      )}
-                      {doc.isMandatory && (
-                        <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">
-                          Mandatory
-                        </span>
+                        <p className="text-xs text-slate-500 truncate">{doc.description}</p>
                       )}
                     </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveRequiredDoc(index)}
-                      className="text-red-600 hover:text-red-800"
+                      className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded ml-2"
                     >
-                      <FiTrash2 className="w-4 h-4" />
+                      <FiTrash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
@@ -754,22 +852,22 @@ const ServiceForm = () => {
             )}
           </div>
 
-          {/* Submit Buttons */}
-          <div className="flex justify-end space-x-4">
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={() => navigate(`/manage/departments/${deptId}/services`)}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg border border-slate-700 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FiSave className="w-4 h-4 mr-2" />
-              {loading ? 'Saving...' : (isEditMode ? 'Update Service' : 'Create Service')}
+              <FiSave className="w-4 h-4" />
+              {loading ? 'Saving...' : (isEditMode ? 'Update' : 'Create')}
             </button>
           </div>
         </form>

@@ -54,6 +54,8 @@ const DepartmentCreate = lazy(() => import("../pages/admin/superAdminPanel/compo
 const DashboardTab = lazy(() => import("../pages/admin/superAdminPanel/components/DashboardTab.jsx"));
 const DepartmentEdit = lazy(() => import("../pages/admin/superAdminPanel/components/DepartmentManagement/DepartmentEdit.jsx"));
 const ManageDepartmentWork = lazy(() => import("../pages/admin/superAdminPanel/components/DepartmentManagement/ManageDepartmentWork.jsx"));
+const ServiceList = lazy(() => import("../pages/admin/superAdminPanel/components/DepartmentManagement/ServiceList.jsx"));
+const ServiceForm = lazy(() => import("../pages/admin/superAdminPanel/components/DepartmentManagement/ServiceForm.jsx"));
 
 // Admin
 const AdminPanel = lazy(() => import("../pages/admin/adminPanel/AdminPanel.jsx"));
@@ -168,6 +170,16 @@ const AppRoutes = () => {
           />
           <Route path="/super-admin-panel/departments/:deptId/manage-work/bookings/:bookingId"
             element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><BookingDetailsPage /></AuthorizedRoles>}
+          />
+
+          <Route path="manage/departments/:deptId/services"
+            element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN', 'ADMIN']}><ServiceList /></AuthorizedRoles>}
+          />
+          <Route path="manage/departments/:deptId/services/create"
+            element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN', 'ADMIN']}><ServiceForm /></AuthorizedRoles>}
+          />
+          <Route path="manage/departments/:deptId/services/:serviceId/edit"
+            element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN', 'ADMIN']}><ServiceForm /></AuthorizedRoles>}
           />
 
 

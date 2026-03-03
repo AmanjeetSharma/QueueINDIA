@@ -112,7 +112,7 @@ const updateService = asyncHandler(async (req, res) => {
     const service = department.services.id(serviceId);
     if (!service) throw new ApiError(404, "Service not found");
 
-    // 🔁 Prevent duplicate serviceCode if changed
+    // Prevent duplicate serviceCode if changed
     if (updateData.serviceCode) {
         const uppercaseServiceCode = updateData.serviceCode.toUpperCase();
         if (uppercaseServiceCode !== service.serviceCode &&
@@ -124,7 +124,7 @@ const updateService = asyncHandler(async (req, res) => {
         updateData.serviceCode = uppercaseServiceCode;
     }
 
-    // 📄 Validate and normalize requiredDocs if included
+    // Validate and normalize requiredDocs if included
     if (updateData.requiredDocs) {
         if (!Array.isArray(updateData.requiredDocs)) {
             throw new ApiError(400, "requiredDocs must be an array");
@@ -136,7 +136,7 @@ const updateService = asyncHandler(async (req, res) => {
         }));
     }
 
-    // 🔄 Validate and normalize tokenManagement if included
+    // Validate and normalize tokenManagement if included
     if (updateData.tokenManagement) {
         // Preserve existing values for missing fields
         const tokenMgmt = service.tokenManagement || {};
@@ -151,7 +151,7 @@ const updateService = asyncHandler(async (req, res) => {
         };
     }
 
-    // 🟩 Apply the updates safely
+    // Apply the updates safely
     Object.assign(service, {
         name: updateData.name ?? service.name,
         serviceCode: updateData.serviceCode ?? service.serviceCode,
@@ -164,7 +164,7 @@ const updateService = asyncHandler(async (req, res) => {
 
     await department.save();
 
-    console.log(`📝 Service Updated: ${service.name} (${service.serviceCode}) in ${department.name}`);
+    console.log(`Service Updated: ${service.name} (${service.serviceCode}) in ${department.name}`);
 
     return res.status(200).json(
         new ApiResponse(200, service, "Service updated successfully")

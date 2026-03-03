@@ -125,7 +125,7 @@ const DepartmentManagementTab = () => {
   };
 
   const handleEditServices = (deptId) => {
-    // Placeholder - navigation not yet implemented
+    navigate(`/manage/departments/${deptId}/services`);
     setEditMenuOpen(null);
   };
 
@@ -579,7 +579,7 @@ const DepartmentManagementTab = () => {
                           >
                             <button
                               onClick={() => handleEditDepartment(dept._id)}
-                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-200 hover:bg-purple-500/20 hover:text-purple-300 transition-colors text-left"
+                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-200 hover:bg-purple-500/20 hover:text-purple-300 transition-colors text-left cursor-pointer"
                             >
                               <FiSettings className="w-3.5 h-3.5 flex-shrink-0 text-purple-400" />
                               <div>
@@ -590,17 +590,12 @@ const DepartmentManagementTab = () => {
                             <div className="h-px bg-slate-700" />
                             <button
                               onClick={() => handleEditServices(dept._id)}
-                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-400 hover:bg-slate-700/50 transition-colors text-left cursor-not-allowed opacity-60"
-                              title="Coming soon"
-                              disabled
+                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-200 hover:bg-purple-500/20 hover:text-purple-300 transition-colors text-left cursor-pointer"
                             >
-                              <FiTool className="w-3.5 h-3.5 flex-shrink-0 text-slate-500" />
+                              <FiTool className="w-3.5 h-3.5 flex-shrink-0 text-purple-400" />
                               <div>
-                                <div className="font-medium flex items-center gap-1.5">
-                                  Edit Services
-                                  <span className="text-[9px] bg-slate-700 text-slate-400 px-1 py-0.5 rounded">Soon</span>
-                                </div>
-                                <div className="text-[10px] text-slate-600">Manage service listings</div>
+                                <div className="font-medium">Edit Services</div>
+                                <div className="text-[10px] text-slate-500">Manage service listings</div>
                               </div>
                             </button>
                           </motion.div>

@@ -120,7 +120,7 @@ const DepartmentManagementTab = () => {
   };
 
   const handleEditDepartment = (deptId) => {
-    navigate(`/super-admin-panel/departments/${deptId}/edit`);
+    navigate(`/manage/departments/${deptId}/edit`);
     setEditMenuOpen(null);
   };
 

@@ -159,7 +159,7 @@ const AppRoutes = () => {
           <Route path="/super-admin-panel/departments/create"
             element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><DepartmentCreate /></AuthorizedRoles>}
           />
-          <Route path="/super-admin-panel/departments/:deptId/edit"
+          <Route path="/manage/departments/:deptId/edit"
             element={<AuthorizedRoles allowedRoles={['SUPER_ADMIN']}><DepartmentEdit /></AuthorizedRoles>}
           />
           <Route path="/super-admin-panel/departments/:deptId/manage-work"

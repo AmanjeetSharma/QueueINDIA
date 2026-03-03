@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useService } from '../../../../../context/ServiceContext';
 import { useDepartment } from '../../../../../context/DepartmentContext';
-import { FiChevronLeft, FiPlus, FiTrash2, FiSave } from 'react-icons/fi';
+import { FiChevronLeft, FiPlus, FiTrash2, FiSave, FiAlertCircle } from 'react-icons/fi';
 
 const ServiceForm = () => {
   const { deptId, serviceId } = useParams();
@@ -43,6 +43,9 @@ const ServiceForm = () => {
     isMandatory: true
   });
 
+  const [errors, setErrors] = useState({});
+  const [slotWindowError, setSlotWindowError] = useState('');
+
   useEffect(() => {
     fetchDepartmentData();
     if (isEditMode) {
@@ -78,53 +81,109 @@ const ServiceForm = () => {
     }
   };
 
-//   console.log(`Fetching service data for deptId: ${deptId}, serviceId: ${serviceId}`);
   const fetchServiceData = async () => {
     try {
       await getServiceById(deptId, serviceId);
     } catch (error) {
       console.error('Error fetching service:', error);
-      navigate(`/departments/${deptId}/services`);
+      navigate(`/manage/departments/${deptId}/services`);
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: type === 'checkbox' ? checked : value
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value
-      }));
+  // Helper function to convert time string to minutes for comparison
+  const timeToMinutes = (time) => {
+    if (!time) return 0;
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Validate time range
+  const isValidTimeRange = (start, end) => {
+    if (!start || !end) return false;
+    return timeToMinutes(end) > timeToMinutes(start);
+  };
+
+  // Check if slot windows overlap
+  const doSlotsOverlap = (windows) => {
+    if (windows.length < 2) return false;
+    
+    const sorted = [...windows].sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+    
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const current = sorted[i];
+      const next = sorted[i + 1];
+      if (timeToMinutes(current.end) > timeToMinutes(next.start)) {
+        return true;
+      }
     }
+    return false;
+  };
+
+  // Check if slot window is within global slot hours
+  const isWithinGlobalHours = (start, end, globalStart, globalEnd) => {
+    const startMin = timeToMinutes(start);
+    const endMin = timeToMinutes(end);
+    const globalStartMin = timeToMinutes(globalStart);
+    const globalEndMin = timeToMinutes(globalEnd);
+    
+    return startMin >= globalStartMin && endMin <= globalEndMin;
+  };
+
+  // Validate slot window before adding
+  const validateSlotWindow = () => {
+    const { start, end, maxTokens } = slotWindow;
+    
+    if (!start || !end || !maxTokens) {
+      setSlotWindowError('All fields are required');
+      return false;
+    }
+
+    if (!isValidTimeRange(start, end)) {
+      setSlotWindowError('End time must be after start time');
+      return false;
+    }
+
+    const tokenValue = parseInt(maxTokens);
+    if (isNaN(tokenValue) || tokenValue <= 0) {
+      setSlotWindowError('Max tokens must be a positive number');
+      return false;
+    }
+
+    // Check if within global hours
+    if (!isWithinGlobalHours(start, end, formData.tokenManagement.slotStartTime, formData.tokenManagement.slotEndTime)) {
+      setSlotWindowError('Slot window must be within global operating hours');
+      return false;
+    }
+
+    // Check for overlap with existing windows
+    const newWindow = { start, end, maxTokens: tokenValue };
+    const existingWindows = [...formData.tokenManagement.slotWindows, newWindow];
+    
+    if (doSlotsOverlap(existingWindows)) {
+      setSlotWindowError('Slot windows cannot overlap');
+      return false;
+    }
+
+    setSlotWindowError('');
+    return true;
   };
 
   const handleAddSlotWindow = () => {
-    if (!slotWindow.start || !slotWindow.end || !slotWindow.maxTokens) {
-      alert('Please fill all slot window fields');
-      return;
+    if (validateSlotWindow()) {
+      const tokenValue = parseInt(slotWindow.maxTokens);
+      setFormData(prev => ({
+        ...prev,
+        tokenManagement: {
+          ...prev.tokenManagement,
+          slotWindows: [
+            ...prev.tokenManagement.slotWindows,
+            { ...slotWindow, maxTokens: tokenValue }
+          ]
+        }
+      }));
+
+      setSlotWindow({ start: '', end: '', maxTokens: '' });
     }
-
-    setFormData(prev => ({
-      ...prev,
-      tokenManagement: {
-        ...prev.tokenManagement,
-        slotWindows: [
-          ...prev.tokenManagement.slotWindows,
-          { ...slotWindow, maxTokens: parseInt(slotWindow.maxTokens) }
-        ]
-      }
-    }));
-
-    setSlotWindow({ start: '', end: '', maxTokens: '' });
   };
 
   const handleRemoveSlotWindow = (index) => {
@@ -158,26 +217,159 @@ const ServiceForm = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Numeric input handler with immediate conversion
+  const handleNumericChange = (e) => {
+    const { name, value } = e.target;
+    const numValue = value === '' ? '' : parseInt(value, 10);
+    
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: numValue
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: numValue
+      }));
+    }
+  };
 
-    // Validate required fields
-    if (!formData.name || !formData.serviceCode) {
-      alert('Name and Service Code are required');
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    
+    // Handle checkbox
+    if (type === 'checkbox') {
+      if (name.includes('.')) {
+        const [parent, child] = name.split('.');
+        setFormData(prev => ({
+          ...prev,
+          [parent]: {
+            ...prev[parent],
+            [child]: checked
+          }
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: checked
+        }));
+      }
       return;
     }
 
-    // Prepare data
+    // Handle numeric inputs
+    if (name.includes('maxDailyServiceTokens') || 
+        name.includes('maxTokensPerSlot') || 
+        name.includes('timeBtwEverySlot')) {
+      handleNumericChange(e);
+      return;
+    }
+
+    // Handle other inputs
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  // Validate entire form
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Required fields
+    if (!formData.name.trim()) {
+      newErrors.name = 'Service name is required';
+    }
+
+    if (!formData.serviceCode.trim()) {
+      newErrors.serviceCode = 'Service code is required';
+    }
+
+    // Time validation
+    if (!isValidTimeRange(formData.tokenManagement.slotStartTime, formData.tokenManagement.slotEndTime)) {
+      newErrors.timeRange = 'End time must be after start time';
+    }
+
+    // Numeric validations
+    if (formData.tokenManagement.maxDailyServiceTokens !== '') {
+      const maxDaily = parseInt(formData.tokenManagement.maxDailyServiceTokens);
+      if (isNaN(maxDaily) || maxDaily < 0) {
+        newErrors.maxDailyServiceTokens = 'Must be a positive number or empty';
+      }
+    }
+
+    const maxPerSlot = parseInt(formData.tokenManagement.maxTokensPerSlot);
+    if (isNaN(maxPerSlot) || maxPerSlot <= 0) {
+      newErrors.maxTokensPerSlot = 'Must be a positive number';
+    }
+
+    const timeBetween = parseInt(formData.tokenManagement.timeBtwEverySlot);
+    if (isNaN(timeBetween) || timeBetween <= 0) {
+      newErrors.timeBtwEverySlot = 'Must be a positive number';
+    }
+
+    // Slot windows validation
+    if (formData.tokenManagement.slotWindows.length > 0) {
+      if (doSlotsOverlap(formData.tokenManagement.slotWindows)) {
+        newErrors.slotWindows = 'Slot windows cannot overlap';
+      }
+
+      // Check each window is within global hours
+      const invalidWindows = formData.tokenManagement.slotWindows.filter(
+        w => !isWithinGlobalHours(w.start, w.end, formData.tokenManagement.slotStartTime, formData.tokenManagement.slotEndTime)
+      );
+      if (invalidWindows.length > 0) {
+        newErrors.slotWindows = 'All slot windows must be within operating hours';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      // Scroll to first error
+      const firstError = document.querySelector('.border-red-500');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
+    // Prepare data with proper numeric types
     const submitData = {
       ...formData,
-      serviceCode: formData.serviceCode.toUpperCase(),
+      serviceCode: formData.serviceCode.toUpperCase().trim(),
       tokenManagement: {
         ...formData.tokenManagement,
         maxDailyServiceTokens: formData.tokenManagement.maxDailyServiceTokens 
           ? parseInt(formData.tokenManagement.maxDailyServiceTokens) 
           : null,
         maxTokensPerSlot: parseInt(formData.tokenManagement.maxTokensPerSlot),
-        timeBtwEverySlot: parseInt(formData.tokenManagement.timeBtwEverySlot)
+        timeBtwEverySlot: parseInt(formData.tokenManagement.timeBtwEverySlot),
+        slotWindows: formData.tokenManagement.slotWindows.map(window => ({
+          ...window,
+          maxTokens: parseInt(window.maxTokens)
+        }))
       }
     };
 
@@ -187,10 +379,17 @@ const ServiceForm = () => {
       } else {
         await addService(deptId, submitData);
       }
-      navigate(`/departments/${deptId}/services`);
+      navigate(`/manage/departments/${deptId}/services`);
     } catch (error) {
       console.error('Error saving service:', error);
     }
+  };
+
+  const getInputClassName = (fieldName) => {
+    const baseClass = "w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500";
+    return errors[fieldName] 
+      ? `${baseClass} border-red-500 focus:ring-red-500` 
+      : `${baseClass} border-gray-300`;
   };
 
   if (loading && isEditMode) {
@@ -227,6 +426,20 @@ const ServiceForm = () => {
 
       {/* Form */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {Object.keys(errors).length > 0 && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center text-red-800 mb-2">
+              <FiAlertCircle className="w-5 h-5 mr-2" />
+              <span className="font-medium">Please fix the following errors:</span>
+            </div>
+            <ul className="list-disc list-inside text-sm text-red-700">
+              {Object.values(errors).map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div className="bg-white rounded-lg shadow-sm p-6">
@@ -241,9 +454,12 @@ const ServiceForm = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={getInputClassName('name')}
                   required
                 />
+                {errors.name && (
+                  <p className="mt-1 text-xs text-red-600">{errors.name}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -254,9 +470,12 @@ const ServiceForm = () => {
                   name="serviceCode"
                   value={formData.serviceCode}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                  className={getInputClassName('serviceCode') + " uppercase"}
                   required
                 />
+                {errors.serviceCode && (
+                  <p className="mt-1 text-xs text-red-600">{errors.serviceCode}</p>
+                )}
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -317,23 +536,30 @@ const ServiceForm = () => {
                   name="tokenManagement.maxDailyServiceTokens"
                   value={formData.tokenManagement.maxDailyServiceTokens}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="0"
+                  className={getInputClassName('maxDailyServiceTokens')}
                   placeholder="Leave empty for unlimited"
                 />
+                {errors.maxDailyServiceTokens && (
+                  <p className="mt-1 text-xs text-red-600">{errors.maxDailyServiceTokens}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Tokens Per Slot
+                  Max Tokens Per Slot *
                 </label>
                 <input
                   type="number"
                   name="tokenManagement.maxTokensPerSlot"
                   value={formData.tokenManagement.maxTokensPerSlot}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="1"
+                  className={getInputClassName('maxTokensPerSlot')}
                   required
                 />
+                {errors.maxTokensPerSlot && (
+                  <p className="mt-1 text-xs text-red-600">{errors.maxTokensPerSlot}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -352,21 +578,24 @@ const ServiceForm = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Time Between Slots (minutes)
+                  Time Between Slots (minutes) *
                 </label>
                 <input
                   type="number"
                   name="tokenManagement.timeBtwEverySlot"
                   value={formData.tokenManagement.timeBtwEverySlot}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="1"
+                  className={getInputClassName('timeBtwEverySlot')}
                   required
                 />
+                {errors.timeBtwEverySlot && (
+                  <p className="mt-1 text-xs text-red-600">{errors.timeBtwEverySlot}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Slot Start Time
+                  Slot Start Time *
                 </label>
                 <input
                   type="time"
@@ -379,7 +608,7 @@ const ServiceForm = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Slot End Time
+                  Slot End Time *
                 </label>
                 <input
                   type="time"
@@ -389,12 +618,18 @@ const ServiceForm = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
+                {errors.timeRange && (
+                  <p className="mt-1 text-xs text-red-600">{errors.timeRange}</p>
+                )}
               </div>
             </div>
 
             {/* Slot Windows */}
             <div className="mt-6">
               <h3 className="text-md font-medium text-gray-900 mb-4">Slot Windows</h3>
+              {errors.slotWindows && (
+                <p className="mb-2 text-xs text-red-600">{errors.slotWindows}</p>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <input
                   type="time"
@@ -415,6 +650,7 @@ const ServiceForm = () => {
                   placeholder="Max Tokens"
                   value={slotWindow.maxTokens}
                   onChange={(e) => setSlotWindow(prev => ({ ...prev, maxTokens: e.target.value }))}
+                  min="1"
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
@@ -426,6 +662,9 @@ const ServiceForm = () => {
                   Add Window
                 </button>
               </div>
+              {slotWindowError && (
+                <p className="mb-2 text-xs text-red-600">{slotWindowError}</p>
+              )}
 
               {/* Slot Windows List */}
               {formData.tokenManagement.slotWindows.length > 0 && (
@@ -519,7 +758,7 @@ const ServiceForm = () => {
           <div className="flex justify-end space-x-4">
             <button
               type="button"
-              onClick={() => navigate(`/departments/${deptId}/services`)}
+              onClick={() => navigate(`/manage/departments/${deptId}/services`)}
               className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
             >
               Cancel

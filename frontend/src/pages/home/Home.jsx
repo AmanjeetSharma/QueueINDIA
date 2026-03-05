@@ -78,7 +78,7 @@ const Home = () => {
         {
             number: 1,
             title: "Select Department",
-            description: "Choose from various government departments",
+            description: "Choose from various departments",
             icon: FaBuilding
         },
         {
@@ -127,12 +127,12 @@ const Home = () => {
                             </div>
 
                             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-                                Book Government Services
+                                Book Services
                                 <span className="block text-blue-200">In Just Minutes</span>
                             </h1>
 
                             <p className="text-lg text-blue-100 mb-8 max-w-lg">
-                                Skip the long queues. Book appointments for government services online.
+                                Skip the long queues. Book appointments for services online.
                                 Fast, convenient, and hassle-free experience for all citizens.
                             </p>
 
@@ -231,7 +231,7 @@ const Home = () => {
                 <div className="text-center mb-12">
                     <h2 className="text-3xl font-bold text-slate-900 mb-4">Why Choose Our Platform?</h2>
                     <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                        We make government service booking simple, transparent, and accessible for everyone
+                        We make services booking simple, transparent, and accessible for everyone
                     </p>
                 </div>
 
@@ -298,7 +298,7 @@ const Home = () => {
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h2 className="text-3xl font-bold text-slate-900">Popular Departments</h2>
-                        <p className="text-slate-600 mt-2">Most frequently booked government departments</p>
+                        <p className="text-slate-600 mt-2">Most frequently booked departments</p>
                     </div>
                     <Link
                         to="/departments"
@@ -372,7 +372,7 @@ const Home = () => {
                     <div className="text-center mb-12">
                         <h2 className="text-3xl font-bold mb-4">What Citizens Say</h2>
                         <p className="text-blue-200 max-w-2xl mx-auto">
-                            Hear from people who have used our platform to book government services
+                            Hear from people who have used our platform to book services
                         </p>
                     </div>
 
@@ -428,7 +428,7 @@ const Home = () => {
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 md:p-12 text-center text-white">
                     <h2 className="text-3xl font-bold mb-4">Ready to Book Your Appointment?</h2>
                     <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
-                        Join thousands of satisfied citizens who have simplified their government service bookings
+                        Join thousands of satisfied citizens who have simplified their service bookings
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -498,29 +498,7 @@ const Home = () => {
                 </div>
             </div>
 
-            {/* Footer Stats */}
-            <div className="bg-slate-900 text-white py-8">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-                        <div>
-                            <div className="text-2xl font-bold mb-1">{stats.totalDepartments}+</div>
-                            <div className="text-slate-400 text-sm">Government Departments</div>
-                        </div>
-                        <div>
-                            <div className="text-2xl font-bold mb-1">{stats.totalServices}+</div>
-                            <div className="text-slate-400 text-sm">Services Available</div>
-                        </div>
-                        <div>
-                            <div className="text-2xl font-bold mb-1">10K+</div>
-                            <div className="text-slate-400 text-sm">Appointments Booked</div>
-                        </div>
-                        <div>
-                            <div className="text-2xl font-bold mb-1">99%</div>
-                            <div className="text-slate-400 text-sm">Satisfaction Rate</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+           
         </div>
     );
 };

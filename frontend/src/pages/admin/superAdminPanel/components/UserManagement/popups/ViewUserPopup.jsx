@@ -1,12 +1,34 @@
 import { motion } from 'framer-motion';
-import { Calendar, Mail, Phone, Shield, Globe, User, Building } from 'lucide-react';
+import {
+  MdPerson, MdEmail, MdPhone, MdCalendarToday,
+  MdShield, MdVerified, MdWarning, MdClose, MdBadge, MdCopyAll,
+  MdInfo, MdOutlineEmail, MdOutlinePhone, MdOutlineCalendarToday,
+  MdOutlineAccountCircle, MdOutlineVerified, MdOutlineWarning
+} from 'react-icons/md';
+import { FaUserShield, FaUserTie, FaUser } from 'react-icons/fa';
 
 const ViewUserPopup = ({ user, onClose }) => {
+  const getRoleIcon = (role) => {
+    if (role === 'SUPER_ADMIN') return <MdShield className="text-red-400" size={20} />;
+    if (role === 'ADMIN') return <FaUserShield className="text-purple-400" size={20} />;
+    if (role === 'DEPARTMENT_OFFICER') return <FaUserTie className="text-blue-400" size={20} />;
+    return <FaUser className="text-emerald-400" size={20} />;
+  };
+
+  const getRoleBadge = (role) => {
+    const map = {
+      SUPER_ADMIN: 'bg-red-500/10 text-red-400 border border-red-500/20',
+      ADMIN: 'bg-purple-500/10 text-purple-400 border border-purple-500/20',
+      DEPARTMENT_OFFICER: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+      USER: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+    };
+    return map[role] || 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+  };
+
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      weekday: 'short',
-      day: 'numeric',
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: '2-digit',
       month: 'short',
       year: 'numeric',
       hour: '2-digit',
@@ -14,194 +36,231 @@ const ViewUserPopup = ({ user, onClose }) => {
     });
   };
 
-  const getRoleBadge = (role) => {
-    const roleConfig = {
-      'SUPER_ADMIN': { color: 'bg-red-100 text-red-800', icon: '👑' },
-      'ADMIN': { color: 'bg-purple-100 text-purple-800', icon: '🛡️' },
-      'DEPARTMENT_OFFICER': { color: 'bg-blue-100 text-blue-800', icon: '👨‍💼' },
-      'USER': { color: 'bg-green-100 text-green-800', icon: '👤' }
-    };
-    
-    const config = roleConfig[role] || roleConfig.USER;
-    return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.color}`}>
-        <span className="mr-2">{config.icon}</span>
-        {role.replace('_', ' ')}
-      </span>
-    );
+  const formatId = (id) => {
+    if (!id) return 'N/A';
+    return `${id.substring(0, 8)}...${id.substring(id.length - 4)}`;
   };
 
-  const getVerificationBadge = (isVerified, type) => (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-      isVerified 
-        ? 'bg-green-100 text-green-800' 
-        : 'bg-gray-100 text-gray-800'
-    }`}>
-      <span className={`w-2 h-2 rounded-full mr-1 ${isVerified ? 'bg-green-500' : 'bg-gray-500'}`}></span>
-      {type}: {isVerified ? 'Verified' : 'Not Verified'}
-    </span>
-  );
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: "spring", duration: 0.3 }}
+        className="bg-slate-800/90 border border-slate-700 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto backdrop-blur-sm"
       >
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">User Details</h2>
-              <p className="text-sm text-gray-600">Complete user information and statistics</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
-            >
-              ✕
-            </button>
+        {/* Header - Sticky */}
+        <div className="sticky top-0 bg-slate-800/90 backdrop-blur-sm border-b border-slate-700 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between z-10">
+          <div className="flex items-center gap-2">
+            <MdInfo className="w-5 h-5 text-blue-400" />
+            <h3 className="text-base sm:text-lg font-semibold text-white">User Details</h3>
           </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 sm:p-2 hover:bg-slate-700/50 rounded-lg transition-colors"
+          >
+            <MdClose className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+          </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Profile Section */}
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Avatar */}
-            <div className="shrink-0">
-              <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 border-4 border-white shadow-lg">
-                {user.avatar ? (
-                  <img 
-                    src={user.avatar} 
-                    alt={user.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-red-500 to-pink-600 text-white text-4xl font-bold">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+          {/* Avatar and Basic Info */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex justify-center sm:justify-start">
+              <div className="relative inline-block">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-slate-700">
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center bg-blue-600/30 text-blue-300 font-bold text-2xl">${user.name?.charAt(0).toUpperCase()}</div>`;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-blue-600/30 text-blue-300 font-bold text-2xl">
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-8 sm:h-8 bg-slate-800 rounded-full border-2 border-slate-700 flex items-center justify-center">
+                  {getRoleIcon(user?.role)}
+                </div>
               </div>
             </div>
 
-            {/* User Info */}
-            <div className="flex-1">
-              <div className="mb-4">
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">{user.name}</h3>
-                <div className="flex flex-wrap items-center gap-2 mb-3">
-                  {getRoleBadge(user.role)}
-                  {getVerificationBadge(user.isEmailVerified, 'Email')}
-                  {getVerificationBadge(user.isPhoneVerified, 'Phone')}
-                </div>
-                <p className="text-gray-600">User ID: <code className="text-sm bg-gray-100 px-2 py-1 rounded">{user._id}</code></p>
+            <div className="flex-1 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                <span className="text-lg sm:text-xl font-medium text-white break-words">{user?.name}</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadge(user?.role)} inline-flex items-center justify-center sm:justify-start`}>
+                  {user?.role?.replace('_', ' ')}
+                </span>
               </div>
 
-              {/* Contact Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3">
-                  <Mail className="text-gray-400" size={18} />
-                  <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p className="font-medium">{user.email}</p>
-                  </div>
+              <div className="flex items-center justify-center sm:justify-start gap-2 text-xs">
+                <MdBadge className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-lg px-2 py-1">
+                  <span className="font-mono text-slate-300 text-xs break-all max-w-[180px] sm:max-w-[250px]">
+                    {user?._id}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(user?._id);
+                      // Optional: Add toast notification here
+                      toast.success('ID copied to clipboard');
+                    }}
+                    className="p-1 hover:bg-slate-700 rounded transition-colors flex-shrink-0"
+                    title="Copy ID"
+                  >
+                    <MdCopyAll className="w-3.5 h-3.5 text-slate-400 hover:text-blue-400" />
+                  </button>
                 </div>
-                {user.phone && (
-                  <div className="flex items-center gap-3">
-                    <Phone className="text-gray-400" size={18} />
-                    <div>
-                      <p className="text-sm text-gray-500">Phone</p>
-                      <p className="font-medium">{user.phone}</p>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center gap-3">
-                  <Calendar className="text-gray-400" size={18} />
-                  <div>
-                    <p className="text-sm text-gray-500">Joined</p>
-                    <p className="font-medium">{formatDate(user.createdAt)}</p>
-                  </div>
-                </div>
-                {user.departmentId && (
-                  <div className="flex items-center gap-3">
-                    <Building className="text-gray-400" size={18} />
-                    <div>
-                      <p className="text-sm text-gray-500">Department</p>
-                      <p className="font-medium">ID: {user.departmentId}</p>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <p className="text-sm text-gray-600 mb-1">Active Sessions</p>
-              <p className="text-2xl font-bold text-gray-900">{user.sessions?.length || 0}</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <p className="text-sm text-gray-600 mb-1">Account Age</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24))} days
-              </p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <p className="text-sm text-gray-600 mb-1">Last Login</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {user.lastLogin ? 'Recently' : 'Never'}
-              </p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <p className="text-sm text-gray-600 mb-1">Security Score</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {(user.isEmailVerified ? 40 : 0) + (user.isPhoneVerified ? 40 : 0) + 20}/100
-              </p>
-            </div>
-          </div>
+          {/* Details Grid */}
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
+            {/* Contact Information */}
+            <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4">
+              <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <MdOutlineEmail className="w-4 h-4" />
+                Contact Information
+              </h4>
+              <div className="space-y-3">
+                {/* Email */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2 min-w-[100px]">
+                    <MdEmail className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <span className="text-xs text-slate-400">Email:</span>
+                  </div>
+                  <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span className="text-sm text-white break-all">{user?.email}</span>
+                    {user?.isEmailVerified ? (
+                      <span className="flex items-center gap-1 text-xs text-emerald-400 whitespace-nowrap">
+                        <MdVerified className="w-3.5 h-3.5" /> Verified
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-xs text-amber-400 whitespace-nowrap">
+                        <MdWarning className="w-3.5 h-3.5" /> Unverified
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-          {/* Recent Activity (Optional - you can add this later) */}
-          <div className="border-t border-gray-200 pt-6">
-            <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">User Permissions</h4>
-            <div className="space-y-2">
-              {user.role === 'SUPER_ADMIN' && (
-                <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                  <span className="text-sm font-medium text-red-800">Full System Access</span>
-                  <Shield className="text-red-600" size={18} />
+                {/* Phone */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2 min-w-[100px]">
+                    <MdPhone className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <span className="text-xs text-slate-400">Phone:</span>
+                  </div>
+                  <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
+                    {user?.phone ? (
+                      <>
+                        <span className="text-sm text-white">{user.phone}</span>
+                        {user?.isPhoneVerified ? (
+                          <span className="flex items-center gap-1 text-xs text-emerald-400 whitespace-nowrap">
+                            <MdVerified className="w-3.5 h-3.5" /> Verified
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-xs text-amber-400 whitespace-nowrap">
+                            <MdWarning className="w-3.5 h-3.5" /> Unverified
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-sm text-slate-500 italic">Not provided</span>
+                    )}
+                  </div>
                 </div>
-              )}
-              {user.role === 'ADMIN' && (
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <span className="text-sm font-medium text-purple-800">Department Management Access</span>
-                  <Globe className="text-purple-600" size={18} />
+              </div>
+            </div>
+
+            {/* Account Information */}
+            <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4">
+              <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <MdOutlineAccountCircle className="w-4 h-4" />
+                Account Information
+              </h4>
+              <div className="space-y-3">
+                {/* Department */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2 min-w-[100px]">
+                    <MdShield className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <span className="text-xs text-slate-400">Department:</span>
+                  </div>
+                  <span className="text-sm text-white">
+                    {user?.departmentId ? user.departmentId : <span className="text-slate-500 italic">Not assigned</span>}
+                  </span>
                 </div>
-              )}
-              {user.role === 'DEPARTMENT_OFFICER' && (
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <span className="text-sm font-medium text-blue-800">Service Queue Management</span>
-                  <User className="text-blue-600" size={18} />
+
+                {/* Joined Date */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2 min-w-[100px]">
+                    <MdCalendarToday className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <span className="text-xs text-slate-400">Joined:</span>
+                  </div>
+                  <span className="text-sm text-white">{formatDate(user?.createdAt)}</span>
                 </div>
-              )}
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                <span className="text-sm font-medium text-green-800">Basic User Operations</span>
-                <span className="text-green-600">✓</span>
+              </div>
+            </div>
+
+            {/* Verification Status Summary */}
+            <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4">
+              <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <MdOutlineVerified className="w-4 h-4" />
+                Verification Status
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <div className={`p-1.5 rounded-lg ${user?.isEmailVerified ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
+                    {user?.isEmailVerified ? (
+                      <MdVerified className="w-4 h-4 text-emerald-400" />
+                    ) : (
+                      <MdOutlineWarning className="w-4 h-4 text-amber-400" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Email</p>
+                    <p className={`text-xs font-medium ${user?.isEmailVerified ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {user?.isEmailVerified ? 'Verified' : 'Unverified'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className={`p-1.5 rounded-lg ${user?.isPhoneVerified ? 'bg-emerald-500/20' : 'bg-slate-700/50'}`}>
+                    {user?.isPhoneVerified ? (
+                      <MdVerified className="w-4 h-4 text-emerald-400" />
+                    ) : (
+                      <MdOutlinePhone className="w-4 h-4 text-slate-400" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Phone</p>
+                    <p className={`text-xs font-medium ${user?.isPhoneVerified ? 'text-emerald-400' : 'text-slate-400'}`}>
+                      {user?.isPhoneVerified ? 'Verified' : user?.phone ? 'Unverified' : 'Not provided'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4">
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Close
-            </button>
-          </div>
+        <div className="sticky bottom-0 bg-slate-800/90 backdrop-blur-sm border-t border-slate-700 px-4 sm:px-6 py-3 sm:py-4 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 sm:px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors text-sm font-medium"
+          >
+            Close
+          </button>
         </div>
       </motion.div>
     </div>

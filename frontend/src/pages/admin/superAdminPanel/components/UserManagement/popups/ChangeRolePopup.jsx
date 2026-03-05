@@ -3,13 +3,41 @@ import { motion } from 'framer-motion';
 import { Shield, User, Building, Crown } from 'lucide-react';
 
 const ChangeRolePopup = ({ user, onConfirm, onCancel, loading }) => {
-  const [selectedRole, setSelectedRole] = useState(user.role);
+  const [selectedRole, setSelectedRole] = useState(user?.role || 'USER');
 
   const roles = [
-    { value: 'USER', label: 'Regular User', icon: <User size={16} />, color: 'text-green-600 bg-green-50' },
-    { value: 'DEPARTMENT_OFFICER', label: 'Department Officer', icon: <Building size={16} />, color: 'text-blue-600 bg-blue-50' },
-    { value: 'ADMIN', label: 'Admin', icon: <Shield size={16} />, color: 'text-purple-600 bg-purple-50' },
-    { value: 'SUPER_ADMIN', label: 'Super Admin', icon: <Crown size={16} />, color: 'text-red-600 bg-red-50' },
+    { 
+      value: 'USER', 
+      label: 'Regular User', 
+      icon: <User size={16} />, 
+      bg: 'bg-emerald-500/20', 
+      color: 'text-emerald-400',
+      border: 'border-emerald-500/30'
+    },
+    { 
+      value: 'DEPARTMENT_OFFICER', 
+      label: 'Department Officer', 
+      icon: <Building size={16} />, 
+      bg: 'bg-blue-500/20', 
+      color: 'text-blue-400',
+      border: 'border-blue-500/30'
+    },
+    { 
+      value: 'ADMIN', 
+      label: 'Admin', 
+      icon: <Shield size={16} />, 
+      bg: 'bg-purple-500/20', 
+      color: 'text-purple-400',
+      border: 'border-purple-500/30'
+    },
+    { 
+      value: 'SUPER_ADMIN', 
+      label: 'Super Admin', 
+      icon: <Crown size={16} />, 
+      bg: 'bg-red-500/20', 
+      color: 'text-red-400',
+      border: 'border-red-500/30'
+    },
   ];
 
   const getRolePermissions = (role) => {
@@ -22,23 +50,35 @@ const ChangeRolePopup = ({ user, onConfirm, onCancel, loading }) => {
     return permissions[role] || permissions.USER;
   };
 
+  const getRoleBadge = (role) => {
+    const map = {
+      SUPER_ADMIN: 'bg-red-500/10 text-red-400 border border-red-500/20',
+      ADMIN: 'bg-purple-500/10 text-purple-400 border border-purple-500/20',
+      DEPARTMENT_OFFICER: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+      USER: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+    };
+    return map[role] || 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-xl shadow-lg max-w-md w-full p-6"
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: "spring", duration: 0.3 }}
+        className="bg-slate-800/90 border border-slate-700 rounded-2xl shadow-2xl max-w-md w-full p-6 backdrop-blur-sm"
       >
         <div className="text-center">
-          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Shield className="text-purple-600" size={24} />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center">
+            <Shield className="text-purple-400" size={24} />
           </div>
           
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Change User Role</h3>
+          <h3 className="text-lg font-semibold text-white mb-2">Change User Role</h3>
           
           <div className="mb-6">
-            <p className="text-gray-600 mb-4">
-              Change role for <span className="font-semibold">{user?.name}</span>
+            <p className="text-sm text-slate-400 mb-4">
+              Change role for <span className="font-semibold text-white">{user?.name}</span>
             </p>
 
             {/* Role Selection */}
@@ -46,26 +86,26 @@ const ChangeRolePopup = ({ user, onConfirm, onCancel, loading }) => {
               {roles.map((role) => (
                 <div
                   key={role.value}
-                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
                     selectedRole === role.value
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? `border-${role.color.split('-')[1]}-500 bg-${role.color.split('-')[1]}-500/10`
+                      : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
                   }`}
                   onClick={() => setSelectedRole(role.value)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded ${role.color}`}>
+                    <div className={`p-2 rounded-lg ${role.bg} ${role.color}`}>
                       {role.icon}
                     </div>
                     <div className="flex-1 text-left">
-                      <p className="font-medium text-gray-900">{role.label}</p>
-                      <p className="text-xs text-gray-500">
-                        {role.value === user.role ? 'Current Role' : ''}
+                      <p className="font-medium text-white">{role.label}</p>
+                      <p className="text-xs text-slate-500">
+                        {role.value === user?.role ? 'Current Role' : ''}
                       </p>
                     </div>
                     {selectedRole === role.value && (
-                      <div className="w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center">
-                        <span className="text-white text-xs">✓</span>
+                      <div className={`w-5 h-5 rounded-full ${role.bg} border ${role.border} flex items-center justify-center`}>
+                        <span className={`text-xs ${role.color}`}>✓</span>
                       </div>
                     )}
                   </div>
@@ -74,14 +114,14 @@ const ChangeRolePopup = ({ user, onConfirm, onCancel, loading }) => {
             </div>
 
             {/* Permissions Preview */}
-            <div className="bg-gray-50 rounded-lg p-3 text-left">
-              <p className="text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-left">
+              <p className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">
                 {roles.find(r => r.value === selectedRole)?.label} Permissions:
               </p>
-              <ul className="text-xs text-gray-600 space-y-1">
+              <ul className="text-xs text-slate-300 space-y-1.5">
                 {getRolePermissions(selectedRole).map((permission, idx) => (
                   <li key={idx} className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
+                    <span className="text-emerald-500">✓</span>
                     {permission}
                   </li>
                 ))}
@@ -93,14 +133,14 @@ const ChangeRolePopup = ({ user, onConfirm, onCancel, loading }) => {
             <button
               onClick={onCancel}
               disabled={loading}
-              className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-5 py-2 border border-slate-700 text-slate-300 rounded-xl hover:bg-slate-700/50 transition-colors disabled:opacity-50 text-sm font-medium"
             >
               Cancel
             </button>
             <button
               onClick={() => onConfirm(selectedRole)}
-              disabled={loading || selectedRole === user.role}
-              className="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              disabled={loading || selectedRole === user?.role}
+              className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium"
             >
               {loading ? (
                 <>

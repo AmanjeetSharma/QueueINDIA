@@ -22,9 +22,7 @@ import {
   MdLogout,
   MdDelete,
   MdCheckCircle,
-  MdOutlineAdminPanelSettings,
   MdArrowBack,
-  MdMoreVert,
 } from "react-icons/md";
 import { FaUsers, FaUserShield, FaUserTie, FaUser } from "react-icons/fa";
 
@@ -33,65 +31,6 @@ import LogoutPopup from './popups/LogoutPopup';
 import ResetPasswordPopup from './popups/ResetPasswordPopup';
 import ViewUserPopup from './popups/ViewUserPopup';
 import ChangeRolePopup from './popups/ChangeRolePopup';
-
-// ─── Mobile Action Menu (portal-style, fixed position) ───────────────────────
-const MobileMenu = ({ user, anchorRef, onClose, onView, onRole, onReset, onLogout, onDelete }) => {
-  const [pos, setPos] = useState({ top: 0, right: 0 });
-
-  useEffect(() => {
-    if (anchorRef?.current) {
-      const rect = anchorRef.current.getBoundingClientRect();
-      const menuHeight = 220; // approx
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const top = spaceBelow < menuHeight
-        ? rect.top - menuHeight + window.scrollY
-        : rect.bottom + window.scrollY + 4;
-
-      setPos({
-        top,
-        right: window.innerWidth - rect.right,
-      });
-    }
-
-    const handleClickOutside = (e) => {
-      if (anchorRef?.current && !anchorRef.current.contains(e.target)) {
-        onClose();
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: -6 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: -6 }}
-      transition={{ duration: 0.15 }}
-      style={{ position: 'fixed', top: pos.top, right: pos.right, zIndex: 9999 }}
-      className="w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden"
-    >
-      <div className="p-1">
-        {[
-          { label: 'View Details', icon: MdPerson, color: 'text-slate-300', action: onView },
-          { label: 'Change Role', icon: MdEdit, color: 'text-purple-300', action: onRole },
-          { label: 'Reset Password', icon: MdLockReset, color: 'text-blue-300', action: onReset },
-          { label: 'Force Logout', icon: MdLogout, color: 'text-amber-300', action: onLogout },
-          { label: 'Delete User', icon: MdDelete, color: 'text-red-300', action: onDelete },
-        ].map(({ label, icon: Icon, color, action }) => (
-          <button
-            key={label}
-            onClick={() => { action(); onClose(); }}
-            className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs ${color} hover:bg-slate-700/80 rounded-lg transition-colors`}
-          >
-            <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-            {label}
-          </button>
-        ))}
-      </div>
-    </motion.div>
-  );
-};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const UserManagementTab = () => {
@@ -129,10 +68,6 @@ const UserManagementTab = () => {
   const [temporaryPassword, setTemporaryPassword] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [mobileMenuUserId, setMobileMenuUserId] = useState(null);
-
-  // Store refs per-user for anchor positioning
-  const mobileMenuRefs = useRef({});
 
   const fetchUsers = async () => {
     try {
@@ -257,6 +192,15 @@ const UserManagementTab = () => {
     );
   }
 
+  // Shared action button definitions — used for both desktop (with label) and mobile (icon only)
+  const getActionButtons = (user) => [
+    { label: 'View',   icon: MdPerson,    cls: 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700',         fn: () => open('showViewUser', user) },
+    { label: 'Role',   icon: MdEdit,      cls: 'bg-purple-900/20 hover:bg-purple-900/40 text-purple-300 border border-purple-800/30', fn: () => open('showChangeRole', user) },
+    { label: 'Reset',  icon: MdLockReset, cls: 'bg-blue-900/20 hover:bg-blue-900/40 text-blue-300 border border-blue-800/30',     fn: () => open('showResetPassword', user) },
+    { label: 'Logout', icon: MdLogout,    cls: 'bg-amber-900/20 hover:bg-amber-900/40 text-amber-300 border border-amber-800/30', fn: () => open('showLogout', user) },
+    { label: 'Delete', icon: MdDelete,    cls: 'bg-red-900/20 hover:bg-red-900/40 text-red-300 border border-red-800/30',         fn: () => open('showDelete', user) },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-900 text-white">
 
@@ -297,12 +241,12 @@ const UserManagementTab = () => {
         {/* ── Stats ── */}
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {[
-            { label: 'Total', val: stats.total, icon: FaUsers, color: 'text-slate-300', bg: 'bg-slate-800' },
-            { label: 'Super', val: stats.superAdmins, icon: MdShield, color: 'text-red-400', bg: 'bg-slate-800' },
-            { label: 'Admin', val: stats.admins, icon: FaUserShield, color: 'text-purple-400', bg: 'bg-slate-800' },
-            { label: 'Officer', val: stats.officers, icon: FaUserTie, color: 'text-blue-400', bg: 'bg-slate-800' },
-            { label: 'User', val: stats.regularUsers, icon: FaUser, color: 'text-emerald-400', bg: 'bg-slate-800' },
-            { label: 'Verified', val: stats.verifiedUsers, icon: MdCheckCircle, color: 'text-teal-400', bg: 'bg-slate-800' },
+            { label: 'Total',   val: stats.total,        icon: FaUsers,      color: 'text-slate-300',  bg: 'bg-slate-800' },
+            { label: 'Super',   val: stats.superAdmins,  icon: MdShield,     color: 'text-red-400',    bg: 'bg-slate-800' },
+            { label: 'Admin',   val: stats.admins,       icon: FaUserShield, color: 'text-purple-400', bg: 'bg-slate-800' },
+            { label: 'Officer', val: stats.officers,     icon: FaUserTie,    color: 'text-blue-400',   bg: 'bg-slate-800' },
+            { label: 'User',    val: stats.regularUsers, icon: FaUser,       color: 'text-emerald-400',bg: 'bg-slate-800' },
+            { label: 'Verified',val: stats.verifiedUsers,icon: MdCheckCircle,color: 'text-teal-400',   bg: 'bg-slate-800' },
           ].map(({ label, val, icon: Icon, color, bg }) => (
             <div key={label} className={`${bg} border border-slate-800 rounded-xl p-3 flex flex-col gap-1`}>
               <div className="flex items-center justify-between">
@@ -400,6 +344,7 @@ const UserManagementTab = () => {
                 transition={{ delay: index * 0.02 }}
                 className="px-4 py-3 hover:bg-slate-800/80 transition-colors"
               >
+                {/* Top row: avatar + info */}
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
                   <div className="relative flex-shrink-0">
@@ -448,31 +393,28 @@ const UserManagementTab = () => {
                     </div>
                   </div>
 
-                  {/* Desktop Actions */}
+                  {/* Desktop Actions — label + icon */}
                   <div className="hidden md:flex items-center gap-1 flex-shrink-0">
-                    {[
-                      { label: 'View', icon: MdPerson, cls: 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700', fn: () => open('showViewUser', user) },
-                      { label: 'Role', icon: MdEdit, cls: 'bg-purple-900/20 hover:bg-purple-900/40 text-purple-300 border border-purple-800/30', fn: () => open('showChangeRole', user) },
-                      { label: 'Reset', icon: MdLockReset, cls: 'bg-blue-900/20 hover:bg-blue-900/40 text-blue-300 border border-blue-800/30', fn: () => open('showResetPassword', user) },
-                      { label: 'Logout', icon: MdLogout, cls: 'bg-amber-900/20 hover:bg-amber-900/40 text-amber-300 border border-amber-800/30', fn: () => open('showLogout', user) },
-                      { label: 'Delete', icon: MdDelete, cls: 'bg-red-900/20 hover:bg-red-900/40 text-red-300 border border-red-800/30', fn: () => open('showDelete', user) },
-                    ].map(({ label, icon: Icon, cls, fn }) => (
+                    {getActionButtons(user).map(({ label, icon: Icon, cls, fn }) => (
                       <button key={label} onClick={fn} className={`px-2.5 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${cls}`}>
                         <Icon className="w-3.5 h-3.5" />{label}
                       </button>
                     ))}
                   </div>
+                </div>
 
-                  {/* Mobile Menu Button */}
-                  <div className="relative md:hidden flex-shrink-0">
+                {/* Mobile Actions — icon + label, full width row below user info */}
+                <div className="flex md:hidden items-center gap-1.5 mt-2.5 pt-2.5 border-t border-slate-700/50">
+                  {getActionButtons(user).map(({ label, icon: Icon, cls, fn }) => (
                     <button
-                      ref={el => mobileMenuRefs.current[user._id] = el}
-                      onClick={() => setMobileMenuUserId(mobileMenuUserId === user._id ? null : user._id)}
-                      className="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors"
+                      key={label}
+                      onClick={fn}
+                      className={`flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-lg transition-colors ${cls}`}
                     >
-                      <MdMoreVert className="w-4 h-4 text-slate-400" />
+                      <Icon className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-medium leading-none">{label}</span>
                     </button>
-                  </div>
+                  ))}
                 </div>
               </motion.div>
             )) : (
@@ -529,27 +471,6 @@ const UserManagementTab = () => {
           )}
         </div>
       </div>
-
-      {/* ── Mobile Dropdown Portal ── */}
-      <AnimatePresence>
-        {mobileMenuUserId && (() => {
-          const u = users.find(u => u._id === mobileMenuUserId);
-          if (!u) return null;
-          return (
-            <MobileMenu
-              key={mobileMenuUserId}
-              user={u}
-              anchorRef={{ current: mobileMenuRefs.current[mobileMenuUserId] }}
-              onClose={() => setMobileMenuUserId(null)}
-              onView={() => open('showViewUser', u)}
-              onRole={() => open('showChangeRole', u)}
-              onReset={() => open('showResetPassword', u)}
-              onLogout={() => open('showLogout', u)}
-              onDelete={() => open('showDelete', u)}
-            />
-          );
-        })()}
-      </AnimatePresence>
 
       <AnimatePresence>
         {popupState.showDelete && <DeletePopup user={selectedUser} onConfirm={handleDeleteUser} onCancel={closeAllPopups} loading={actionLoading} />}

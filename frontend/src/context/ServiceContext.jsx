@@ -108,7 +108,7 @@ export const ServiceProvider = ({ children }) => {
             setError(null);
 
             const preparedData = prepareServiceData(updateData);
-            const response = await axiosInstance.put(`/departments/${deptId}/services/${serviceId}`, preparedData);
+            const response = await axiosInstance.patch(`/departments/${deptId}/services/${serviceId}`, preparedData);
 
             const updatedService = transformServiceData(response.data.data);
 

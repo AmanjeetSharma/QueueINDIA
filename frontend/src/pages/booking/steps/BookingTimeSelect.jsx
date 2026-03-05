@@ -8,7 +8,11 @@ import {
   FaTimes,
   FaArrowLeft,
   FaArrowRight,
-  FaUserClock
+  FaUserClock,
+  FaMoon,
+  FaSun,
+  FaCloudSun,
+  FaUmbrellaBeach
 } from 'react-icons/fa';
 
 const BookingTimeSelect = () => {
@@ -71,9 +75,11 @@ const BookingTimeSelect = () => {
         case 'morning':
           return hour >= 6 && hour < 12;
         case 'afternoon':
-          return hour >= 12 && hour < 17;
+          return hour >= 12 && hour < 16; // 12 PM to 4 PM
         case 'evening':
-          return hour >= 17 && hour < 21;
+          return hour >= 16 && hour < 20; // 4 PM to 8 PM
+        case 'night':
+          return hour >= 20 || hour < 6; // 8 PM to 6 AM
         default:
           return true;
       }
@@ -84,6 +90,20 @@ const BookingTimeSelect = () => {
     if (!slot.available) return 'full';
     if (slot.remaining <= 3) return 'limited';
     return 'available';
+  };
+
+  const getTimePeriodIcon = (hour) => {
+    if (hour >= 6 && hour < 12) return <FaSun className="text-slate-500 text-xs" />;
+    if (hour >= 12 && hour < 16) return <FaUmbrellaBeach className="text-slate-500 text-xs" />;
+    if (hour >= 16 && hour < 20) return <FaCloudSun className="text-slate-500 text-xs" />;
+    return <FaMoon className="text-slate-500 text-xs" />;
+  };
+
+  const getTimePeriod = (hour) => {
+    if (hour >= 6 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 16) return 'afternoon';
+    if (hour >= 16 && hour < 20) return 'evening';
+    return 'night';
   };
 
   if (loading) {
@@ -187,18 +207,46 @@ const BookingTimeSelect = () => {
         <div className="mb-4">
           <p className="text-xs font-medium text-slate-700 mb-2">Filter by time</p>
           <div className="flex flex-wrap gap-2">
-            {['all', 'morning', 'afternoon', 'evening'].map((filter) => (
+            {[
+              { id: 'all', label: 'All Times', icon: null },
+              { id: 'morning', label: 'Morning', icon: <FaSun className="text-xs" /> },
+              { id: 'afternoon', label: 'Afternoon', icon: <FaUmbrellaBeach className="text-xs" /> },
+              { id: 'evening', label: 'Evening', icon: <FaCloudSun className="text-xs" /> },
+              { id: 'night', label: 'Night', icon: <FaMoon className="text-xs" /> }
+            ].map((filter) => (
               <button
-                key={filter}
-                onClick={() => setTimeFilter(filter)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all capitalize ${timeFilter === filter
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
+                key={filter.id}
+                onClick={() => setTimeFilter(filter.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all capitalize flex items-center gap-1.5 ${
+                  timeFilter === filter.id
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
               >
-                {filter === 'all' ? 'All Times' : filter}
+                {filter.icon}
+                {filter.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Time Ranges Info */}
+        <div className="mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div className="bg-slate-50 text-slate-700 px-2 py-1 rounded flex items-center justify-center gap-1.5">
+            <FaSun className="text-slate-500" />
+            Morning: 6 AM - 12 PM
+          </div>
+          <div className="bg-slate-50 text-slate-700 px-2 py-1 rounded flex items-center justify-center gap-1.5">
+            <FaUmbrellaBeach className="text-slate-500" />
+            Afternoon: 12 PM - 4 PM
+          </div>
+          <div className="bg-slate-50 text-slate-700 px-2 py-1 rounded flex items-center justify-center gap-1.5">
+            <FaCloudSun className="text-slate-500" />
+            Evening: 4 PM - 8 PM
+          </div>
+          <div className="bg-slate-50 text-slate-700 px-2 py-1 rounded flex items-center justify-center gap-1.5">
+            <FaMoon className="text-slate-500" />
+            Night: 8 PM - 6 AM
           </div>
         </div>
 
@@ -211,7 +259,7 @@ const BookingTimeSelect = () => {
             <h3 className="text-base font-bold text-slate-900 mb-1">No slots available</h3>
             <p className="text-slate-600 text-xs mb-4 max-w-xs mx-auto">
               {timeFilter !== 'all'
-                ? 'No time slots available for this time period.'
+                ? `No time slots available for ${timeFilter} period.`
                 : 'No available slots for the selected date.'
               }
             </p>
@@ -229,18 +277,26 @@ const BookingTimeSelect = () => {
               const availability = getSlotAvailability(slot);
               const isSelected = selectedSlot === slot.time;
               const isAvailable = checkSlotAvailability(slot);
+              const hour = parseInt(slot.start.split(':')[0]);
+              const timePeriod = getTimePeriod(hour);
+              const periodIcon = getTimePeriodIcon(hour);
+
+              const getPeriodStyles = () => {
+                if (isSelected) {
+                  return 'bg-blue-600 text-white';
+                }
+                
+                if (!isAvailable) return 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50';
+                
+                return 'bg-white text-slate-700 hover:bg-blue-50 border border-slate-200 hover:border-blue-300';
+              };
 
               return (
                 <button
                   key={slot.time}
                   onClick={() => handleSlotSelect(slot)}
                   disabled={!isAvailable}
-                  className={`relative p-2.5 rounded-lg transition-all ${isSelected
-                    ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white scale-105'
-                    : !isAvailable
-                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                      : 'bg-white text-slate-700 hover:bg-blue-50 border border-slate-200 hover:border-blue-300'
-                    }`}
+                  className={`relative p-2.5 rounded-lg transition-all ${getPeriodStyles()}`}
                 >
                   {/* Selected Check */}
                   {isSelected && (
@@ -249,14 +305,23 @@ const BookingTimeSelect = () => {
                     </div>
                   )}
 
+                  {/* Time Period Icon */}
+                  {!isSelected && isAvailable && (
+                    <div className="absolute top-1 right-1">
+                      {periodIcon}
+                    </div>
+                  )}
+
                   {/* Slot Time */}
                   <div className="text-center">
-                    <div className={`text-sm font-bold mb-0.5 ${isSelected ? 'text-white' : 'text-slate-900'
-                      }`}>
+                    <div className={`text-sm font-bold mb-0.5 ${
+                      isSelected ? 'text-white' : 'text-slate-900'
+                    }`}>
                       {formatTimeDisplay(slot.start)}
                     </div>
-                    <div className={`text-[10px] ${isSelected ? 'text-blue-100' : 'text-slate-500'
-                      }`}>
+                    <div className={`text-[10px] ${
+                      isSelected ? 'text-blue-100' : 'text-slate-500'
+                    }`}>
                       to {formatTimeDisplay(slot.end)}
                     </div>
                   </div>
@@ -264,17 +329,21 @@ const BookingTimeSelect = () => {
                   {/* Availability Status */}
                   <div className="mt-1.5 pt-1.5 border-t border-opacity-20">
                     <div className="text-center">
-                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${!isAvailable
-                        ? 'text-red-600 bg-red-50'
-                        : availability === 'limited'
-                          ? 'text-amber-600 bg-amber-50'
-                          : 'text-green-600 bg-green-50'
-                        }`}>
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                        !isAvailable
+                          ? 'text-red-600 bg-red-50'
+                          : availability === 'limited'
+                            ? 'text-amber-600 bg-amber-50'
+                            : isSelected
+                              ? 'text-white bg-white bg-opacity-20'
+                              : 'text-green-600 bg-green-50'
+                      }`}>
                         {!isAvailable ? 'Booked' : availability === 'limited' ? 'Limited' : 'Open'}
                       </span>
                       {isAvailable && (
-                        <p className={`text-[10px] mt-1 font-medium ${isSelected ? 'text-blue-200' : 'text-slate-500'
-                          }`}>
+                        <p className={`text-[10px] mt-1 font-medium ${
+                          isSelected ? 'text-white' : 'text-slate-500'
+                        }`}>
                           {slot.remaining} slots
                         </p>
                       )}
@@ -289,11 +358,37 @@ const BookingTimeSelect = () => {
         {/* Legend */}
         <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 mt-4">
           <p className="text-xs font-medium text-slate-700 mb-2">Status Legend</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
               <span className="text-xs text-slate-600">Selected</span>
             </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <FaSun className="text-slate-500 text-xs" />
+                <span className="text-xs text-slate-600">Morning</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <FaUmbrellaBeach className="text-slate-500 text-xs" />
+                <span className="text-xs text-slate-600">Afternoon</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <FaCloudSun className="text-slate-500 text-xs" />
+                <span className="text-xs text-slate-600">Evening</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <FaMoon className="text-slate-500 text-xs" />
+                <span className="text-xs text-slate-600">Night</span>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 mt-2 pt-2 border-t border-slate-200">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <span className="text-xs text-slate-600">Available</span>

@@ -13,7 +13,6 @@ import {
   FaHome,
   FaDollarSign,
   FaEnvelope,
-  FaIdCard,
   FaBuilding,
   FaShieldAlt,
   FaTachometerAlt,
@@ -45,7 +44,7 @@ const Navbar = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
       }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target) && !event.target.closest('button[class*="md:hidden"]')) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target) && !event.target.closest('button[class*="lg:hidden"]')) {
         setIsMobileMenuOpen(false);
       }
     };
@@ -148,18 +147,18 @@ const Navbar = () => {
   const mobileMenuVariants = {
     hidden: {
       opacity: 0,
-      height: 0,
+      y: -20,
     },
     visible: {
       opacity: 1,
-      height: "auto",
+      y: 0,
       transition: {
         duration: 0.2,
       },
     },
     exit: {
       opacity: 0,
-      height: 0,
+      y: -20,
       transition: {
         duration: 0.15,
       },
@@ -168,35 +167,32 @@ const Navbar = () => {
 
   return (
     <header className="border-b bg-white/90 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between">
 
-        {/* Logo - Extreme Left */}
+        {/* Logo - Compact for mobile */}
         <div className="flex items-center">
-          <Link to="/" className="flex items-center gap-3">
-            {/* <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow">
-              <span className="text-white font-bold text-lg">Q</span>
-            </div> */}
-            <span className="font-bold text-3xl bg-slate-800 bg-clip-text text-transparent select-none">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3">
+            <span className="font-bold text-2xl sm:text-3xl bg-slate-800 bg-clip-text text-transparent select-none">
               Queue
-              <span className="font-bold text-3xl bg-blue-600 bg-clip-text text-transparent select-none">
+              <span className="font-bold text-2xl sm:text-3xl bg-blue-600 bg-clip-text text-transparent select-none">
                 INDIA
               </span>
             </span>
           </Link>
         </div>
 
-        {/* Everything Else - Right Side */}
-        <div className="flex items-center gap-6">
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-4 select-none">
+        {/* Right Side - Compact for mobile */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Desktop Navigation Links - Hidden on mobile/tablet */}
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2 select-none">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className="group flex items-center gap-2 text-gray-600 hover:text-indigo-600 font-normal text-sm transition-colors py-2 px-3 rounded-lg"
+                className="group flex items-center gap-1.5 text-gray-600 hover:text-indigo-600 font-normal text-xs xl:text-sm transition-colors py-1.5 px-2 xl:px-3 rounded-lg"
               >
-                <link.icon className="w-3.5 h-3.5" />
-                <span className="relative">
+                <link.icon className="w-3 h-3 xl:w-3.5 xl:h-3.5" />
+                <span className="relative whitespace-nowrap">
                   {link.label}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
                 </span>
@@ -204,39 +200,39 @@ const Navbar = () => {
             ))}
           </nav>
 
-          {/* Desktop Dropdown */}
+          {/* Desktop Dropdown - Hidden on mobile */}
           <div className="hidden lg:block relative" ref={dropdownRef}>
             {isAuthenticated ? (
-              // Authenticated user dropdown trigger with enhanced design
+              // Authenticated user dropdown trigger - Compact
               <button
                 onClick={toggleDropdown}
-                className="flex items-center gap-3 hover:bg-gray-50 rounded-xl p-2 transition-colors border border-transparent hover:border-gray-200 group"
+                className="flex items-center gap-2 hover:bg-gray-50 rounded-lg p-1.5 transition-colors border border-transparent hover:border-gray-200 group"
               >
-                {/* User Avatar */}
+                {/* User Avatar - Smaller */}
                 <div className="relative">
                   {user?.avatar ? (
                     <img
                       src={user.avatar}
                       alt="Profile"
-                      className="w-9 h-9 rounded-full object-cover border border-gray-200 shadow-sm"
+                      className="w-7 h-7 xl:w-8 xl:h-8 rounded-full object-cover border border-gray-200 shadow-sm"
                     />
                   ) : (
-                    <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
-                      <span className="text-white font-semibold text-sm">
+                    <div className="w-7 h-7 xl:w-8 xl:h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
+                      <span className="text-white font-semibold text-xs xl:text-sm">
                         {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                       </span>
                     </div>
                   )}
-                  {/* Online indicator */}
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                  {/* Online indicator - Smaller */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
                 </div>
 
-                {/* User Name */}
-                <div className="text-left">
-                  <p className="text-sm font-medium text-gray-900">
+                {/* User Name - Hidden on smaller screens */}
+                <div className="hidden xl:block text-left">
+                  <p className="text-xs font-medium text-gray-900">
                     Hi! {user?.name?.split(' ')[0] || 'User'}
                   </p>
-                  <p className="text-xs text-gray-500">Welcome Back</p>
+                  <p className="text-[10px] text-gray-500">Welcome Back</p>
                 </div>
 
                 {/* Dropdown Arrow */}
@@ -245,29 +241,29 @@ const Navbar = () => {
                   transition={{ duration: 0.2 }}
                   className="text-gray-400"
                 >
-                  <FaChevronDown className="w-3 h-3" />
+                  <FaChevronDown className="w-2.5 h-2.5" />
                 </motion.div>
               </button>
             ) : (
-              // Non-authenticated user dropdown trigger - Only Sign In
+              // Non-authenticated user dropdown trigger - Compact
               <button
                 onClick={toggleDropdown}
-                className="flex items-center gap-2 hover:bg-gray-50 rounded-xl p-2 transition-colors border border-transparent hover:border-gray-200"
+                className="flex items-center gap-1.5 hover:bg-gray-50 rounded-lg p-1.5 transition-colors border border-transparent hover:border-gray-200"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
-                  <FaUser className="w-3.5 h-3.5 text-white" />
+                <div className="w-7 h-7 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
+                  <FaUser className="w-3 h-3 text-white" />
                 </div>
                 <motion.div
                   animate={{ rotate: isDropdownOpen ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
                   className="text-gray-400"
                 >
-                  <FaChevronDown className="w-3 h-3" />
+                  <FaChevronDown className="w-2.5 h-2.5" />
                 </motion.div>
               </button>
             )}
 
-            {/* Animated Dropdown Menu - Elevated with shadow */}
+            {/* Animated Dropdown Menu - Same as before */}
             <AnimatePresence>
               {isDropdownOpen && (
                 <motion.div
@@ -275,17 +271,17 @@ const Navbar = () => {
                   initial="hidden"
                   animate="visible"
                   exit="exit"
-                  className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border border-gray-200 py-3 z-50"
+                  className="absolute right-0 mt-2 w-64 xl:w-72 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50"
                 >
                   {isAuthenticated ? (
-                    // Authenticated user menu
+                    // Authenticated user menu (same content, compact padding)
                     <>
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="font-medium text-gray-900 truncate">{user?.name}</p>
-                        <p className="text-sm text-gray-500 truncate">{user?.email}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <FaShieldAlt className={`w-3 h-3 ${roleColors.shieldColor}`} />
-                          <span className={`text-xs ${roleColors.textColor} font-medium`}>
+                      <div className="px-3 py-2 border-b border-gray-100">
+                        <p className="font-medium text-gray-900 text-sm truncate">{user?.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <FaShieldAlt className={`w-2.5 h-2.5 ${roleColors.shieldColor}`} />
+                          <span className={`text-[10px] ${roleColors.textColor} font-medium`}>
                             {formatRole(user?.role)}
                           </span>
                         </div>
@@ -295,15 +291,15 @@ const Navbar = () => {
                       {user?.role === 'SUPER_ADMIN' && (
                         <Link
                           to="/super-admin-panel"
-                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-red-50 transition-colors group"
+                          className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-red-50 transition-colors group"
                           onClick={() => setIsDropdownOpen(false)}
                         >
-                          <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                            <FaUserShield className="w-4 h-4 text-red-600" />
+                          <div className="w-6 h-6 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                            <FaUserShield className="w-3 h-3 text-red-600" />
                           </div>
                           <div>
-                            <span className="font-medium">Super Admin Panel</span>
-                            <p className="text-xs text-gray-500">Full system control</p>
+                            <span className="text-sm font-medium">Super Admin Panel</span>
+                            <p className="text-[10px] text-gray-500">Full system control</p>
                           </div>
                         </Link>
                       )}
@@ -311,15 +307,15 @@ const Navbar = () => {
                       {user?.role === 'ADMIN' && (
                         <Link
                           to="/admin-panel"
-                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-purple-50 transition-colors group"
+                          className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-purple-50 transition-colors group"
                           onClick={() => setIsDropdownOpen(false)}
                         >
-                          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                            <FaUserCog className="w-4 h-4 text-purple-600" />
+                          <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                            <FaUserCog className="w-3 h-3 text-purple-600" />
                           </div>
                           <div>
-                            <span className="font-medium">Admin Panel</span>
-                            <p className="text-xs text-gray-500">Administration tools</p>
+                            <span className="text-sm font-medium">Admin Panel</span>
+                            <p className="text-[10px] text-gray-500">Administration tools</p>
                           </div>
                         </Link>
                       )}
@@ -327,113 +323,113 @@ const Navbar = () => {
                       {user?.role === 'DEPARTMENT_OFFICER' && (
                         <Link
                           to="/officer-panel"
-                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors group"
+                          className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-blue-50 transition-colors group"
                           onClick={() => setIsDropdownOpen(false)}
                         >
-                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                            <FaUserTie className="w-4 h-4 text-blue-600" />
+                          <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                            <FaUserTie className="w-3 h-3 text-blue-600" />
                           </div>
                           <div>
-                            <span className="font-medium">Officer Panel</span>
-                            <p className="text-xs text-gray-500">Department management</p>
+                            <span className="text-sm font-medium">Officer Panel</span>
+                            <p className="text-[10px] text-gray-500">Department management</p>
                           </div>
                         </Link>
                       )}
 
-                      {/* Dashboard Link - Universal for all roles */}
+                      {/* Dashboard Link */}
                       <Link
                         to="/dashboard"
-                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                        className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-indigo-50 transition-colors group"
                         onClick={() => setIsDropdownOpen(false)}
                       >
-                        <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                          <FaTachometerAlt className="w-4 h-4 text-indigo-600" />
+                        <div className="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                          <FaTachometerAlt className="w-3 h-3 text-indigo-600" />
                         </div>
                         <div>
-                          <span className="font-medium">Dashboard</span>
-                          <p className="text-xs text-gray-500">User dashboard</p>
+                          <span className="text-sm font-medium">Dashboard</span>
+                          <p className="text-[10px] text-gray-500">User dashboard</p>
                         </div>
                       </Link>
 
                       <Link
                         to="/contact"
-                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors group"
+                        className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-blue-50 transition-colors group"
                         onClick={() => setIsDropdownOpen(false)}
                       >
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                          <FaEnvelope className="w-4 h-4 text-blue-600" />
+                        <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                          <FaEnvelope className="w-3 h-3 text-blue-600" />
                         </div>
-                        <span>Contact</span>
+                        <span className="text-sm  font-medium">Contact</span>
                       </Link>
 
                       <Link
                         to="/about"
-                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors group"
+                        className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-blue-50 transition-colors group"
                         onClick={() => setIsDropdownOpen(false)}
                       >
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                          <FcAbout  className="w-4 h-4 text-blue-600" />
+                        <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                          <FcAbout className="w-3 h-3 text-blue-600" />
                         </div>
-                        <span>About</span>
+                        <span className="text-sm  font-medium">About</span>
                       </Link>
 
-                      <div className="border-t border-gray-100 my-2"></div>
+                      <div className="border-t border-gray-100 my-1"></div>
 
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors group cursor-pointer"
+                        className="flex items-center gap-2 w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 transition-colors group cursor-pointer"
                       >
-                        <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                          <FaSignOutAlt className="w-4 h-4" />
+                        <div className="w-6 h-6 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                          <FaSignOutAlt className="w-3 h-3" />
                         </div>
-                        <span>Logout</span>
+                        <span className="text-sm">Logout</span>
                       </button>
                     </>
                   ) : (
-                    // Non-authenticated user menu
+                    // Non-authenticated user menu (same content, compact padding)
                     <>
                       <Link
                         to="/login"
-                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                        className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-indigo-50 transition-colors group"
                         onClick={() => setIsDropdownOpen(false)}
                       >
-                        <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                          <FaSignInAlt className="w-4 h-4 text-indigo-600" />
+                        <div className="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                          <FaSignInAlt className="w-3 h-3 text-indigo-600" />
                         </div>
-                        <span>Login</span>
+                        <span className="text-sm">Login</span>
                       </Link>
 
                       <Link
                         to="/register"
-                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                        className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-indigo-50 transition-colors group"
                         onClick={() => setIsDropdownOpen(false)}
                       >
-                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                          <FaUser className="w-4 h-4 text-green-600" />
+                        <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                          <FaUser className="w-3 h-3 text-green-600" />
                         </div>
-                        <span>Register</span>
+                        <span className="text-sm">Register</span>
                       </Link>
 
                       <Link
                         to="/contact"
-                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                        className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-indigo-50 transition-colors group"
                         onClick={() => setIsDropdownOpen(false)}
                       >
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                          <FaEnvelope className="w-4 h-4 text-blue-600" />
+                        <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                          <FaEnvelope className="w-3 h-3 text-blue-600" />
                         </div>
-                        <span>Contact</span>
+                        <span className="text-sm">Contact</span>
                       </Link>
 
                       <Link
                         to="/about"
-                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-indigo-50 transition-colors group"
+                        className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-indigo-50 transition-colors group"
                         onClick={() => setIsDropdownOpen(false)}
                       >
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                          <FcAbout  className="w-4 h-4 text-blue-600" />
+                        <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                          <FcAbout className="w-3 h-3 text-blue-600" />
                         </div>
-                        <span>About</span>
+                        <span className="text-sm">About</span>
                       </Link>
                     </>
                   )}
@@ -442,21 +438,22 @@ const Navbar = () => {
             </AnimatePresence>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - More compact */}
           <button
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
             onClick={toggleMobileMenu}
+            aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? (
-              <FaTimes className="w-5 h-5 text-gray-600" />
+              <FaTimes className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
             ) : (
-              <FaBars className="w-5 h-5 text-gray-600" />
+              <FaBars className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
             )}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Optimized for small screens */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -465,82 +462,82 @@ const Navbar = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="lg:hidden absolute top-16 left-0 right-0 bg-white border-b shadow-lg z-40 overflow-hidden"
+            className="lg:hidden absolute top-14 left-0 right-0 bg-white border-b shadow-lg z-40 max-h-[calc(100vh-3.5rem)] overflow-y-auto"
           >
-            <div className="px-4 py-3 space-y-1">
-              {/* Mobile Navigation Links */}
+            <div className="px-2 py-2 space-y-0.5">
+              {/* Mobile Navigation Links - Compact */}
               {navLinks.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-lg transition-colors group"
+                  className="flex items-center gap-2.5 py-2.5 px-3 hover:bg-indigo-50 rounded-lg transition-colors group text-sm"
                   onClick={closeMobileMenu}
                 >
-                  <link.icon className="w-5 h-5 text-gray-600" />
+                  <link.icon className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">{link.label}</span>
                 </Link>
               ))}
 
-              {/* Contact in mobile menu */}
+              {/* Contact & About in mobile menu - Compact */}
               <Link
                 to="/contact"
-                className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-lg transition-colors"
+                className="flex items-center gap-2.5 py-2.5 px-3 hover:bg-indigo-50 rounded-lg transition-colors text-sm"
                 onClick={closeMobileMenu}
               >
-                <FaEnvelope className="w-5 h-5 text-gray-600" />
+                <FaEnvelope className="w-4 h-4 text-gray-600" />
                 <span className="font-medium text-gray-700">Contact</span>
               </Link>
 
               <Link
                 to="/about"
-                className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-lg transition-colors"
+                className="flex items-center gap-2.5 py-2.5 px-3 hover:bg-indigo-50 rounded-lg transition-colors text-sm"
                 onClick={closeMobileMenu}
               >
-                <FaInfoCircle  className="w-5 h-5 text-gray-600" />
+                <FaInfoCircle className="w-4 h-4 text-gray-600" />
                 <span className="font-medium text-gray-700">About</span>
               </Link>
 
-              <div className="border-t border-gray-200 pt-3 mt-2">
+              <div className="border-t border-gray-200 my-2 pt-2">
                 {isAuthenticated ? (
-                  // Mobile authenticated user menu
+                  // Mobile authenticated user menu - Compact
                   <>
-                    <div className="flex items-center gap-3 px-4 py-3 mb-2 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2.5 px-3 py-2.5 mb-1 bg-gray-50 rounded-lg">
                       {user?.avatar ? (
                         <img
                           src={user.avatar}
                           alt="Profile"
-                          className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                          className="w-8 h-8 rounded-full object-cover border border-gray-200"
                         />
                       ) : (
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border border-gray-200">
-                          <span className="text-white font-semibold text-sm">
+                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border border-gray-200 flex-shrink-0">
+                          <span className="text-white font-semibold text-xs">
                             {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                           </span>
                         </div>
                       )}
-                      <div>
-                        <p className="font-medium text-gray-900">Hi! {user?.name?.split(' ')[0] || 'User'}</p>
-                        <p className="text-sm text-gray-500">{user?.email}</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          <FaShieldAlt className={`w-3 h-3 ${roleColors.shieldColor}`} />
-                          <span className={`text-xs ${roleColors.textColor} font-medium`}>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-gray-900 text-sm truncate">Hi! {user?.name?.split(' ')[0] || 'User'}</p>
+                        <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <FaShieldAlt className={`w-2.5 h-2.5 ${roleColors.shieldColor} flex-shrink-0`} />
+                          <span className={`text-[10px] ${roleColors.textColor} font-medium truncate`}>
                             {formatRole(user?.role)}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Role-Specific Panels in Mobile */}
+                    {/* Role-Specific Panels in Mobile - Compact */}
                     {user?.role === 'SUPER_ADMIN' && (
                       <Link
                         to="/super-admin-panel"
-                        className="flex items-center gap-3 py-3 px-4 hover:bg-red-50 rounded-lg transition-colors mb-2"
+                        className="flex items-center gap-2.5 py-2.5 px-3 hover:bg-red-50 rounded-lg transition-colors mb-1 text-sm"
                         onClick={closeMobileMenu}
                       >
-                        <FaUserShield className="w-5 h-5 text-red-600" />
-                        <div>
-                          <span className="font-medium">Super Admin Panel</span>
-                          <p className="text-xs text-gray-500">Full system control</p>
+                        <FaUserShield className="w-4 h-4 text-red-600 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <span className="font-medium block truncate">Super Admin Panel</span>
+                          <p className="text-[10px] text-gray-500 truncate">Full system control</p>
                         </div>
                       </Link>
                     )}
@@ -548,13 +545,13 @@ const Navbar = () => {
                     {user?.role === 'ADMIN' && (
                       <Link
                         to="/admin-panel"
-                        className="flex items-center gap-3 py-3 px-4 hover:bg-purple-50 rounded-lg transition-colors mb-2"
+                        className="flex items-center gap-2.5 py-2.5 px-3 hover:bg-purple-50 rounded-lg transition-colors mb-1 text-sm"
                         onClick={closeMobileMenu}
                       >
-                        <FaUserCog className="w-5 h-5 text-purple-600" />
-                        <div>
-                          <span className="font-medium">Admin Panel</span>
-                          <p className="text-xs text-gray-500">Administration tools</p>
+                        <FaUserCog className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <span className="font-medium block truncate">Admin Panel</span>
+                          <p className="text-[10px] text-gray-500 truncate">Administration tools</p>
                         </div>
                       </Link>
                     )}
@@ -562,56 +559,56 @@ const Navbar = () => {
                     {user?.role === 'DEPARTMENT_OFFICER' && (
                       <Link
                         to="/officer-panel"
-                        className="flex items-center gap-3 py-3 px-4 hover:bg-blue-50 rounded-lg transition-colors mb-2"
+                        className="flex items-center gap-2.5 py-2.5 px-3 hover:bg-blue-50 rounded-lg transition-colors mb-1 text-sm"
                         onClick={closeMobileMenu}
                       >
-                        <FaUserTie className="w-5 h-5 text-blue-600" />
-                        <div>
-                          <span className="font-medium">Officer Panel</span>
-                          <p className="text-xs text-gray-500">Department management</p>
+                        <FaUserTie className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <span className="font-medium block truncate">Officer Panel</span>
+                          <p className="text-[10px] text-gray-500 truncate">Department management</p>
                         </div>
                       </Link>
                     )}
 
-                    {/* Universal Dashboard in Mobile */}
+                    {/* Universal Dashboard in Mobile - Compact */}
                     <Link
                       to="/dashboard"
-                      className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-lg transition-colors mb-2"
+                      className="flex items-center gap-2.5 py-2.5 px-3 hover:bg-indigo-50 rounded-lg transition-colors mb-1 text-sm"
                       onClick={closeMobileMenu}
                     >
-                      <FaTachometerAlt className="w-5 h-5 text-gray-600" />
-                      <div>
-                        <span className="font-medium">Dashboard</span>
-                        <p className="text-xs text-gray-500">User dashboard</p>
+                      <FaTachometerAlt className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <span className="font-medium block truncate">Dashboard</span>
+                        <p className="text-[10px] text-gray-500 truncate">User dashboard</p>
                       </div>
                     </Link>
 
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-3 w-full text-left py-3 px-4 hover:bg-red-50 rounded-lg transition-colors text-red-600"
+                      className="flex items-center gap-2.5 w-full text-left py-2.5 px-3 hover:bg-red-50 rounded-lg transition-colors text-red-600 text-sm"
                     >
-                      <FaSignOutAlt className="w-5 h-5" />
+                      <FaSignOutAlt className="w-4 h-4 flex-shrink-0" />
                       <span>Logout</span>
                     </button>
                   </>
                 ) : (
-                  // Mobile non-authenticated user menu
+                  // Mobile non-authenticated user menu - Compact
                   <>
                     <Link
                       to="/login"
-                      className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-lg transition-colors mb-2"
+                      className="flex items-center gap-2.5 py-2.5 px-3 hover:bg-indigo-50 rounded-lg transition-colors mb-1 text-sm"
                       onClick={closeMobileMenu}
                     >
-                      <FaSignInAlt className="w-5 h-5 text-gray-600" />
+                      <FaSignInAlt className="w-4 h-4 text-gray-600" />
                       <span>Login</span>
                     </Link>
 
                     <Link
                       to="/register"
-                      className="flex items-center gap-3 py-3 px-4 hover:bg-indigo-50 rounded-lg transition-colors mb-2"
+                      className="flex items-center gap-2.5 py-2.5 px-3 hover:bg-indigo-50 rounded-lg transition-colors mb-1 text-sm"
                       onClick={closeMobileMenu}
                     >
-                      <FaUser className="w-5 h-5 text-gray-600" />
+                      <FaUser className="w-4 h-4 text-gray-600" />
                       <span>Register</span>
                     </Link>
                   </>

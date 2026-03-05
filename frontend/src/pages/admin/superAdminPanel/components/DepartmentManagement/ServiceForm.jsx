@@ -13,7 +13,10 @@ import {
   FiFileText,
   FiSettings,
   FiTag,
-  FiCheckCircle
+  FiCheckCircle,
+  FiEdit2,
+  FiX,
+  FiCheck
 } from 'react-icons/fi';
 
 const ServiceForm = () => {
@@ -42,12 +45,16 @@ const ServiceForm = () => {
     requiredDocs: []
   });
 
+  // Edit states for slot windows
+  const [editingSlotIndex, setEditingSlotIndex] = useState(null);
   const [slotWindow, setSlotWindow] = useState({
     start: '',
     end: '',
     maxTokens: ''
   });
 
+  // Edit states for required documents
+  const [editingDocIndex, setEditingDocIndex] = useState(null);
   const [requiredDoc, setRequiredDoc] = useState({
     name: '',
     description: '',
@@ -115,13 +122,16 @@ const ServiceForm = () => {
     return timeToMinutes(end) > timeToMinutes(start);
   };
 
-  // Check if slot windows overlap
-  const doSlotsOverlap = (windows) => {
+  // Check if slot windows overlap (excluding current editing window)
+  const doSlotsOverlap = (windows, currentIndex = -1) => {
     if (windows.length < 2) return false;
     
     const sorted = [...windows].sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
     
     for (let i = 0; i < sorted.length - 1; i++) {
+      // Skip if this is the current editing window (for edit mode)
+      if (currentIndex !== -1 && i === currentIndex) continue;
+      
       const current = sorted[i];
       const next = sorted[i + 1];
       if (timeToMinutes(current.end) > timeToMinutes(next.start)) {
@@ -141,8 +151,8 @@ const ServiceForm = () => {
     return startMin >= globalStartMin && endMin <= globalEndMin;
   };
 
-  // Validate slot window before adding
-  const validateSlotWindow = () => {
+  // Validate slot window before adding/updating
+  const validateSlotWindow = (isEditing = false) => {
     const { start, end, maxTokens } = slotWindow;
     
     if (!start || !end || !maxTokens) {
@@ -162,14 +172,21 @@ const ServiceForm = () => {
     }
 
     if (!isWithinGlobalHours(start, end, formData.tokenManagement.slotStartTime, formData.tokenManagement.slotEndTime)) {
-      setSlotWindowError('📅 Slot must be within ' + formData.tokenManagement.slotStartTime + ' - ' + formData.tokenManagement.slotEndTime);
+      setSlotWindowError(`📅 Slot must be within ${formData.tokenManagement.slotStartTime} - ${formData.tokenManagement.slotEndTime}`);
       return false;
     }
 
-    const newWindow = { start, end, maxTokens: tokenValue };
-    const existingWindows = [...formData.tokenManagement.slotWindows, newWindow];
+    // Check for overlaps with existing windows
+    let windowsToCheck = [...formData.tokenManagement.slotWindows];
+    if (isEditing && editingSlotIndex !== null) {
+      // Remove the current editing window from the list for overlap check
+      windowsToCheck = windowsToCheck.filter((_, idx) => idx !== editingSlotIndex);
+    }
     
-    if (doSlotsOverlap(existingWindows)) {
+    const newWindow = { start, end, maxTokens: tokenValue };
+    const allWindows = [...windowsToCheck, newWindow];
+    
+    if (doSlotsOverlap(allWindows)) {
       setSlotWindowError('🔄 Slot windows cannot overlap');
       return false;
     }
@@ -192,8 +209,47 @@ const ServiceForm = () => {
         }
       }));
 
-      setSlotWindow({ start: '', end: '', maxTokens: '' });
+      resetSlotWindowForm();
     }
+  };
+
+  const handleEditSlotWindow = (index) => {
+    const windowToEdit = formData.tokenManagement.slotWindows[index];
+    setSlotWindow({
+      start: windowToEdit.start,
+      end: windowToEdit.end,
+      maxTokens: windowToEdit.maxTokens.toString()
+    });
+    setEditingSlotIndex(index);
+  };
+
+  const handleUpdateSlotWindow = () => {
+    if (validateSlotWindow(true) && editingSlotIndex !== null) {
+      const tokenValue = parseInt(slotWindow.maxTokens);
+      setFormData(prev => ({
+        ...prev,
+        tokenManagement: {
+          ...prev.tokenManagement,
+          slotWindows: prev.tokenManagement.slotWindows.map((window, idx) => 
+            idx === editingSlotIndex 
+              ? { ...slotWindow, maxTokens: tokenValue }
+              : window
+          )
+        }
+      }));
+
+      resetSlotWindowForm();
+    }
+  };
+
+  const handleCancelSlotEdit = () => {
+    resetSlotWindowForm();
+  };
+
+  const resetSlotWindowForm = () => {
+    setSlotWindow({ start: '', end: '', maxTokens: '' });
+    setEditingSlotIndex(null);
+    setSlotWindowError('');
   };
 
   const handleRemoveSlotWindow = (index) => {
@@ -204,10 +260,21 @@ const ServiceForm = () => {
         slotWindows: prev.tokenManagement.slotWindows.filter((_, i) => i !== index)
       }
     }));
+    
+    // If we're editing this window, cancel edit mode
+    if (editingSlotIndex === index) {
+      resetSlotWindowForm();
+    }
+  };
+
+  // Document management functions
+  const resetDocForm = () => {
+    setRequiredDoc({ name: '', description: '', isMandatory: true });
+    setEditingDocIndex(null);
   };
 
   const handleAddRequiredDoc = () => {
-    if (!requiredDoc.name) {
+    if (!requiredDoc.name.trim()) {
       alert('Please enter document name');
       return;
     }
@@ -217,7 +284,38 @@ const ServiceForm = () => {
       requiredDocs: [...prev.requiredDocs, { ...requiredDoc }]
     }));
 
-    setRequiredDoc({ name: '', description: '', isMandatory: true });
+    resetDocForm();
+  };
+
+  const handleEditRequiredDoc = (index) => {
+    const docToEdit = formData.requiredDocs[index];
+    setRequiredDoc({
+      name: docToEdit.name || '',
+      description: docToEdit.description || '',
+      isMandatory: docToEdit.isMandatory ?? true
+    });
+    setEditingDocIndex(index);
+  };
+
+  const handleUpdateRequiredDoc = () => {
+    if (!requiredDoc.name.trim()) {
+      alert('Please enter document name');
+      return;
+    }
+
+    if (editingDocIndex !== null) {
+      setFormData(prev => ({
+        ...prev,
+        requiredDocs: prev.requiredDocs.map((doc, idx) =>
+          idx === editingDocIndex ? { ...requiredDoc } : doc
+        )
+      }));
+      resetDocForm();
+    }
+  };
+
+  const handleCancelDocEdit = () => {
+    resetDocForm();
   };
 
   const handleRemoveRequiredDoc = (index) => {
@@ -225,6 +323,11 @@ const ServiceForm = () => {
       ...prev,
       requiredDocs: prev.requiredDocs.filter((_, i) => i !== index)
     }));
+    
+    // If we're editing this document, cancel edit mode
+    if (editingDocIndex === index) {
+      resetDocForm();
+    }
   };
 
   const handleBlur = (field) => {
@@ -706,7 +809,7 @@ const ServiceForm = () => {
                 </p>
               )}
 
-              {/* Add Slot Window */}
+              {/* Add/Edit Slot Window */}
               <div className="space-y-2 mb-3">
                 <div className="grid grid-cols-3 gap-2">
                   <input
@@ -733,14 +836,37 @@ const ServiceForm = () => {
                   />
                 </div>
                 
-                <button
-                  type="button"
-                  onClick={handleAddSlotWindow}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 transition-colors"
-                >
-                  <FiPlus className="w-3.5 h-3.5" />
-                  Add Slot Window
-                </button>
+                <div className="flex gap-2">
+                  {editingSlotIndex !== null ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleUpdateSlotWindow}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-500/30 transition-colors"
+                      >
+                        <FiCheck className="w-3.5 h-3.5" />
+                        Update Slot
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancelSlotEdit}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-600/20 hover:bg-slate-600/30 text-slate-400 text-xs font-medium rounded-lg border border-slate-500/30 transition-colors"
+                      >
+                        <FiX className="w-3.5 h-3.5" />
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleAddSlotWindow}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 transition-colors"
+                    >
+                      <FiPlus className="w-3.5 h-3.5" />
+                      Add Slot Window
+                    </button>
+                  )}
+                </div>
                 
                 {slotWindowError && (
                   <p className="text-xs text-red-400 flex items-center gap-1">
@@ -754,18 +880,34 @@ const ServiceForm = () => {
               {formData.tokenManagement.slotWindows.length > 0 && (
                 <div className="space-y-2">
                   {formData.tokenManagement.slotWindows.map((window, index) => (
-                    <div key={index} className="flex items-center justify-between bg-slate-800/30 border border-slate-700/50 rounded-lg p-2">
+                    <div 
+                      key={index} 
+                      className={`flex items-center justify-between bg-slate-800/30 border rounded-lg p-2 ${
+                        editingSlotIndex === index ? 'border-blue-500/50 bg-blue-900/20' : 'border-slate-700/50'
+                      }`}
+                    >
                       <div className="flex items-center gap-3">
                         <span className="text-xs font-mono text-slate-300">{window.start} - {window.end}</span>
                         <span className="text-xs text-slate-500">max {window.maxTokens}</span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSlotWindow(index)}
-                        className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded"
-                      >
-                        <FiTrash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleEditSlotWindow(index)}
+                          className="p-1 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded"
+                          title="Edit slot"
+                        >
+                          <FiEdit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSlotWindow(index)}
+                          className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded"
+                          title="Delete slot"
+                        >
+                          <FiTrash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -780,7 +922,7 @@ const ServiceForm = () => {
               Required Documents
             </h2>
 
-            {/* Add Document */}
+            {/* Add/Edit Document */}
             <div className="space-y-2 mb-3">
               <div className="grid grid-cols-1 gap-2">
                 <input
@@ -810,14 +952,37 @@ const ServiceForm = () => {
                   <span className="text-xs text-slate-400">Mandatory</span>
                 </label>
                 
-                <button
-                  type="button"
-                  onClick={handleAddRequiredDoc}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 transition-colors"
-                >
-                  <FiPlus className="w-3.5 h-3.5" />
-                  Add Document
-                </button>
+                <div className="flex gap-2">
+                  {editingDocIndex !== null ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleUpdateRequiredDoc}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-500/30 transition-colors"
+                      >
+                        <FiCheck className="w-3.5 h-3.5" />
+                        Update
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancelDocEdit}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-600/20 hover:bg-slate-600/30 text-slate-400 text-xs font-medium rounded-lg border border-slate-500/30 transition-colors"
+                      >
+                        <FiX className="w-3.5 h-3.5" />
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleAddRequiredDoc}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 transition-colors"
+                    >
+                      <FiPlus className="w-3.5 h-3.5" />
+                      Add Document
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -825,7 +990,12 @@ const ServiceForm = () => {
             {formData.requiredDocs.length > 0 && (
               <div className="space-y-2">
                 {formData.requiredDocs.map((doc, index) => (
-                  <div key={index} className="flex items-center justify-between bg-slate-800/30 border border-slate-700/50 rounded-lg p-2">
+                  <div 
+                    key={index} 
+                    className={`flex items-center justify-between bg-slate-800/30 border rounded-lg p-2 ${
+                      editingDocIndex === index ? 'border-blue-500/50 bg-blue-900/20' : 'border-slate-700/50'
+                    }`}
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-slate-300 truncate">{doc.name}</span>
@@ -839,13 +1009,24 @@ const ServiceForm = () => {
                         <p className="text-xs text-slate-500 truncate">{doc.description}</p>
                       )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveRequiredDoc(index)}
-                      className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded ml-2"
-                    >
-                      <FiTrash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1 ml-2">
+                      <button
+                        type="button"
+                        onClick={() => handleEditRequiredDoc(index)}
+                        className="p-1 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded"
+                        title="Edit document"
+                      >
+                        <FiEdit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveRequiredDoc(index)}
+                        className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded"
+                        title="Delete document"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

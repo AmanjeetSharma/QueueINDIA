@@ -70,7 +70,7 @@ const addService = asyncHandler(async (req, res) => {
 
     const savedService = department.services[department.services.length - 1];
 
-    console.log(`🆕 Service Added: ${savedService.name} (${savedService.serviceCode}) to ${department.name}`);
+    console.log(`🆕 Service Added: ${savedService.name} (${savedService.serviceCode}) to ${department.name} by ${req.user.email}`);
 
     return res.status(201).json(
         new ApiResponse(201, savedService, "Service added successfully")
@@ -164,7 +164,7 @@ const updateService = asyncHandler(async (req, res) => {
 
     await department.save();
 
-    console.log(`Service Updated: ${service.name} (${service.serviceCode}) in ${department.name}`);
+    console.log(`Service Updated: ${service.name} (${service.serviceCode}) in ${department.name} by ${req.user.email}`);
 
     return res.status(200).json(
         new ApiResponse(200, service, "Service updated successfully")
@@ -202,6 +202,8 @@ const deleteService = asyncHandler(async (req, res) => {
 
     await department.save();
 
+    console.log(`Service Deleted: ${service.name} (${service.serviceCode}) from ${department.name} (id:${department._id}) by ${req.user.email}`);
+
     return res.status(200).json(
         new ApiResponse(200, service.name, "Service deleted successfully")
     );
@@ -225,6 +227,8 @@ const getServiceById = asyncHandler(async (req, res) => {
 
     const service = department.services.id(serviceId);
     if (!service) throw new ApiError(404, "Service not found");
+
+    console.log(`Service Fetched: ${service.name} | id: ${service._id} | Department: ${department.name} (id:${department._id})`);
 
     return res.status(200).json(
         new ApiResponse(200, service, "Service fetched successfully")

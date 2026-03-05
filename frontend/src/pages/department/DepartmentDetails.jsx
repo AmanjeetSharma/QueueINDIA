@@ -266,7 +266,7 @@ const DepartmentDetails = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate(`/departments/${deptId}/services/new`)}
+                  onClick={() => navigate(`/manage/departments/${deptId}/services/create`)}
                   className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all text-sm sm:text-base font-medium shadow-lg hover:shadow-xl w-full sm:w-auto"
                 >
                   <FaPlus className="text-xs sm:text-sm" />
@@ -405,7 +405,7 @@ const DepartmentDetails = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate(`/departments/${deptId}/services/new`)}
+                    onClick={() => navigate(`/manage/departments/${deptId}/services/create`)}
                     className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 sm:px-5 sm:py-3 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all text-sm sm:text-base font-medium shadow-lg w-full sm:w-auto"
                   >
                     <FaPlus /> Add First Service

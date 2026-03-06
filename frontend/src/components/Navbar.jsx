@@ -208,31 +208,31 @@ const Navbar = () => {
                 onClick={toggleDropdown}
                 className="flex items-center gap-2 hover:bg-gray-50 rounded-lg p-1.5 transition-colors border border-transparent hover:border-gray-200 group"
               >
-                {/* User Avatar - Smaller */}
+                {/* User Avatar - INCREASED SIZE */}
                 <div className="relative">
                   {user?.avatar ? (
                     <img
                       src={user.avatar}
                       alt="Profile"
-                      className="w-7 h-7 xl:w-8 xl:h-8 rounded-full object-cover border border-gray-200 shadow-sm"
+                      className="w-9 h-9 xl:w-10 xl:h-10 rounded-full object-cover border border-gray-200 shadow-sm"
                     />
                   ) : (
-                    <div className="w-7 h-7 xl:w-8 xl:h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
-                      <span className="text-white font-semibold text-xs xl:text-sm">
+                    <div className="w-9 h-9 xl:w-10 xl:h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
+                      <span className="text-white font-semibold text-sm xl:text-base">
                         {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                       </span>
                     </div>
                   )}
-                  {/* Online indicator - Smaller */}
-                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
+                  {/* Online indicator - INCREASED SIZE */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                 </div>
 
                 {/* User Name - Hidden on smaller screens */}
                 <div className="hidden xl:block text-left">
-                  <p className="text-xs font-medium text-gray-900">
+                  <p className="text-s font-medium text-slate-900">
                     Hi! {user?.name?.split(' ')[0] || 'User'}
                   </p>
-                  <p className="text-[10px] text-gray-500">Welcome Back</p>
+                  <p className="text-[12px] text-gray-500">Welcome Back</p>
                 </div>
 
                 {/* Dropdown Arrow */}
@@ -250,8 +250,8 @@ const Navbar = () => {
                 onClick={toggleDropdown}
                 className="flex items-center gap-1.5 hover:bg-gray-50 rounded-lg p-1.5 transition-colors border border-transparent hover:border-gray-200"
               >
-                <div className="w-7 h-7 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
-                  <FaUser className="w-3 h-3 text-white" />
+                <div className="w-9 h-9 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
+                  <FaUser className="w-4 h-4 text-white" />
                 </div>
                 <motion.div
                   animate={{ rotate: isDropdownOpen ? 180 : 0 }}
@@ -501,16 +501,16 @@ const Navbar = () => {
                 {isAuthenticated ? (
                   // Mobile authenticated user menu - Compact
                   <>
-                    <div className="flex items-center gap-2.5 px-3 py-2.5 mb-1 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3 px-3 py-3 mb-1 bg-gray-50 rounded-lg">
                       {user?.avatar ? (
                         <img
                           src={user.avatar}
                           alt="Profile"
-                          className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                          className="w-10 h-10 rounded-full object-cover border border-gray-200"
                         />
                       ) : (
-                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border border-gray-200 flex-shrink-0">
-                          <span className="text-white font-semibold text-xs">
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border border-gray-200 flex-shrink-0">
+                          <span className="text-white font-semibold text-sm">
                             {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                           </span>
                         </div>
@@ -526,7 +526,6 @@ const Navbar = () => {
                         </div>
                       </div>
                     </div>
-
                     {/* Role-Specific Panels in Mobile - Compact */}
                     {user?.role === 'SUPER_ADMIN' && (
                       <Link

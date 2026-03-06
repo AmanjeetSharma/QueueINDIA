@@ -221,7 +221,7 @@ const BookingTimeSelect = () => {
                   timeFilter === filter.id
                     ? 'bg-blue-600 text-white'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
+                } cursor-pointer`}
               >
                 {filter.icon}
                 {filter.label}
@@ -296,7 +296,7 @@ const BookingTimeSelect = () => {
                   key={slot.time}
                   onClick={() => handleSlotSelect(slot)}
                   disabled={!isAvailable}
-                  className={`relative p-2.5 rounded-lg transition-all ${getPeriodStyles()}`}
+                  className={`relative p-2.5 rounded-lg transition-all ${getPeriodStyles()} cursor-pointer`}
                 >
                   {/* Selected Check */}
                   {isSelected && (
@@ -335,7 +335,7 @@ const BookingTimeSelect = () => {
                           : availability === 'limited'
                             ? 'text-amber-600 bg-amber-50'
                             : isSelected
-                              ? 'text-white bg-white bg-opacity-20'
+                              ? 'text-green-600 bg-green-50 bg-opacity-20'
                               : 'text-green-600 bg-green-50'
                       }`}>
                         {!isAvailable ? 'Booked' : availability === 'limited' ? 'Limited' : 'Open'}
@@ -344,7 +344,7 @@ const BookingTimeSelect = () => {
                         <p className={`text-[10px] mt-1 font-medium ${
                           isSelected ? 'text-white' : 'text-slate-500'
                         }`}>
-                          {slot.remaining} slots
+                          {slot.remaining} slots left
                         </p>
                       )}
                     </div>

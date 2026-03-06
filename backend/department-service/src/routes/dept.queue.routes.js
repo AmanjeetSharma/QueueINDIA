@@ -4,7 +4,6 @@ import {
     getLiveQueue,
     recallSkippedTokens,
     serveNextToken,
-    serveTokenById,
     completeToken,
     skipToken,
     getQueueStats,
@@ -30,13 +29,6 @@ router.post("/queue/tokens/recall-skipped", verifyToken, authorizeRoles("SUPER_A
 // @desc    Serve next token
 // @access  Private (Officers/Admins)
 router.post("/queue/tokens/serve-next", verifyToken, authorizeRoles("SUPER_ADMIN", "DEPARTMENT_OFFICER", "ADMIN"), serveNextToken);
-
-// @desc    Serve specific token by ID
-// @access  Private (Officers/Admins)
-router.post("/queue/tokens/:tokenId/serve", verifyToken, authorizeRoles("SUPER_ADMIN", "DEPARTMENT_OFFICER", "ADMIN"), serveTokenById);
-
-
-
 
 // /queue/tokens/:tokenId/complete
 router.post("/queue/tokens/:tokenId/complete", verifyToken, authorizeRoles("SUPER_ADMIN", "DEPARTMENT_OFFICER", "ADMIN"), completeToken);

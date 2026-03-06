@@ -432,15 +432,6 @@ const QueueManagement = () => {
                                                 <span className="hidden sm:inline">Skip</span>
                                             </button>
                                         </div>
-
-                                        <button
-                                            onClick={handleServeNext}
-                                            disabled={actionInProgress || isRefreshing}
-                                            className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 rounded-lg font-bold transition-colors"
-                                        >
-                                            <Play className="w-5 h-5" />
-                                            Serve Next Token
-                                        </button>
                                     </div>
                                 ) : (
                                     <div className="text-center py-6 md:py-8">
@@ -452,14 +443,13 @@ const QueueManagement = () => {
                                             disabled={actionInProgress || isRefreshing}
                                             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg font-semibold transition-colors"
                                         >
-                                            Start Serving
+                                            Serve Token
                                         </button>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Waiting Queue - Compact */}
                         {/* Waiting Queue - Compact */}
                         <div className="bg-slate-800 border border-slate-700 rounded-xl md:rounded-2xl overflow-hidden">
                             <div className="bg-purple-500/10 px-4 py-3 border-b border-slate-700 flex items-center justify-between">

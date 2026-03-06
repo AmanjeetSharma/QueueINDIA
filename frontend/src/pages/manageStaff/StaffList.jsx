@@ -8,6 +8,8 @@ import {
   Search, Filter, Trash2, UserCheck, UserX, Briefcase,
   Edit, Save, AlertTriangle, Key, Phone, ChevronDown, MoreVertical
 } from 'lucide-react';
+import { IoPersonRemoveOutline } from "react-icons/io5";
+
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -244,7 +246,7 @@ const StaffList = () => {
             {userCanManage && (
               <button
                 onClick={() => setShowAssignModal(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-sm"
+                className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-sm cursor-pointer"
               >
                 <UserPlus className="w-4 h-4" />
                 <span className="hidden sm:inline">Add Staff</span>
@@ -439,9 +441,9 @@ const StaffList = () => {
                             ) : (
                               <button
                                 onClick={() => { setSelectedStaff(member); setRemoveConfirmationText(''); setShowRemoveConfirm(true); }}
-                                className="p-1.5 hover:bg-red-500/10 rounded-lg transition-colors text-red-400 hover:text-red-300"
+                                className="py-2.5 px-3 hover:bg-red-500/30 rounded-lg transition-colors text-red-500 hover:text-red-400 cursor-pointer"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <IoPersonRemoveOutline className="w-4 h-4" />
                               </button>
                             )}
                           </td>
@@ -653,11 +655,11 @@ const StaffList = () => {
                   <button
                     type="submit"
                     disabled={assignLoading}
-                    className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {assignLoading ? <><Loader className="w-4 h-4 animate-spin" />Adding…</> : <><UserPlus className="w-4 h-4" />Add Staff</>}
                   </button>
-                  <button type="button" onClick={() => setShowAssignModal(false)} className="flex-1 py-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors">
+                  <button type="button" onClick={() => setShowAssignModal(false)} className="flex-1 py-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors cursor-pointer">
                     Cancel
                   </button>
                 </div>

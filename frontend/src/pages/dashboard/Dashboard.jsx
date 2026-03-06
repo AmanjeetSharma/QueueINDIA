@@ -30,8 +30,8 @@ const STATUS_CONFIG = {
 };
 
 const ACTION_CARDS = [
-  { title: 'My Profile', sub: 'Account settings', icon: FaUser, link: '/profile', gradient: 'from-gray-800 to-slate-600' },
-  { title: 'My Bookings', sub: 'View all records', icon: FaCalendarAlt, link: '/my-bookings', gradient: 'from-blue-700 to-blue-500' },
+  { title: 'My Profile', sub: 'Account settings', icon: FaUser, link: '/profile', gradient: 'from-blue-700 to-blue-500' },
+  { title: 'My Bookings', sub: 'View all records', icon: FaCalendarAlt, link: '/my-bookings', gradient: 'from-purple-800 to-violet-500' },
   { title: 'Book Service', sub: 'New appointment', icon: FaStar, link: '/departments', gradient: 'from-orange-500 to-amber-500' },
   { title: 'How It Works', sub: 'Quick guide', icon: FaInfoCircle, link: '/how-things-work', gradient: 'from-green-600 to-emerald-500' },
 ];

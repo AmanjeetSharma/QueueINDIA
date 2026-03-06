@@ -204,13 +204,13 @@ const assignStaffToDepartment = asyncHandler(async (req, res) => {
     } catch (err) {
         throw new ApiError(
             err.response?.status || 500,
-            err.response?.data?.message || "User not found | User service error"
+            err.response?.data?.message || "User does not exist | User service error"
         );
     }
 
     const user = userServiceResponse.data?.data;
     if (!user) {
-        throw new ApiError(404, "User not found");
+        throw new ApiError(404, "User does not exist");
     }
 
     if (user.role === "SUPER_ADMIN") {

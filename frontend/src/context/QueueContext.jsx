@@ -173,41 +173,6 @@ export const QueueProvider = ({ children }) => {
 
 
 
-    // Serve specific token by ID
-    const serveTokenById = useCallback(async (tokenId, serviceId = null, date = null) => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            const response = await axiosInstance.post(`/departments/queue/tokens/${tokenId}/serve`);
-
-            toast.success(response.data.message, {
-                duration: 3000,
-                position: 'bottom-left'
-            });
-
-            // Refresh live queue if serviceId and date provided
-            if (serviceId && date) {
-                getLiveQueue(serviceId, date);
-            }
-
-            return response.data.data;
-        } catch (err) {
-            const errorMsg = err?.response?.data?.message || 'Failed to serve token by ID';
-            setError(errorMsg);
-            toast.error(errorMsg, {
-                duration: 4000,
-                position: 'bottom-left'
-            });
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    }, [getLiveQueue]);
-
-
-
-
 
 
 
@@ -404,7 +369,6 @@ export const QueueProvider = ({ children }) => {
         getLiveQueue,
         recallSkippedTokens,
         serveNextToken,
-        serveTokenById,
         completeToken,
         skipToken,
         getQueueStats,

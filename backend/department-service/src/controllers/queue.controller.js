@@ -240,90 +240,6 @@ const serveNextToken = asyncHandler(async (req, res) => {
 
 
 
-
-
-const serveTokenById = asyncHandler(async (req, res) => {
-    const { tokenId } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(tokenId)) {
-        throw new ApiError(400, "Invalid token ID");
-    }
-
-    const token = await ServiceToken.findById(tokenId);
-
-    if (!token) {
-        throw new ApiError(404, "Service token not found");
-    }
-
-    /* ───────────── DEPARTMENT PROTECTION ───────────── */
-
-    if (req.user.role !== "SUPER_ADMIN") {
-        if (!req.user.departmentId) {
-            throw new ApiError(400, "User not assigned to any department | Access denied!");
-        }
-
-        if (token.department.toString() !== req.user.departmentId.toString()) {
-            throw new ApiError(403, "This token does not belong to your department | Access denied!");
-        }
-    }
-
-    if (token.status !== "WAITING") {
-        throw new ApiError(
-            400,
-            `Only WAITING tokens can be served (current: ${token.status})`
-        );
-    }
-
-    /* ───────────── ENSURE NO ACTIVE SERVING TOKEN ───────────── */
-
-    const alreadyServing = await ServiceToken.findOne({
-        department: token.department,
-        service: token.service,
-        date: token.date,
-        status: "SERVING"
-    }).lean();
-
-    if (alreadyServing) {
-        throw new ApiError(
-            409,
-            "A token is already being served. Complete or skip it first."
-        );
-    }
-
-    /* ───────────── SERVE THIS TOKEN ───────────── */
-
-    token.status = "SERVING";
-    await token.save();
-
-    console.log(
-        `[QUEUE] MANUAL SERVE | Token: ${token.tokenNumber} | Priority: ${token.priorityType}`
-    );
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            token,
-            "Token is now being served"
-        )
-    );
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 const completeToken = asyncHandler(async (req, res) => {
     const { tokenId } = req.params;
 
@@ -575,7 +491,6 @@ export {
     getLiveQueue,
     recallSkippedTokens,
     serveNextToken,
-    serveTokenById,
     completeToken,
     skipToken,
     getQueueStats,

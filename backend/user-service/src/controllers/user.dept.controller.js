@@ -63,7 +63,8 @@ const findUserByEmail = asyncHandler(async (req, res) => {
     const user = await User.findOne({ email }).select("_id name email role");
 
     if (!user) {
-        throw new ApiError(404, "User not found");
+        console.log(`User not found with email: ${email} | User-dept controller`);
+        throw new ApiError(404, "User does not exist");
     }
 
     return res

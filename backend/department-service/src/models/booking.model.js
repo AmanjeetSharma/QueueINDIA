@@ -104,7 +104,7 @@ const bookingSchema = new mongoose.Schema({
             "APPROVED",          // Approved, token assigned
             "REJECTED",          // Rejected
             "CANCELLED",         // User cancelled
-            "COMPLETED"          // Service completed
+            "COMPLETED",       // Service completed
         ],
         default: "PENDING_DOCS"
     },

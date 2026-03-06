@@ -56,6 +56,15 @@ const serviceTokenSchema = new mongoose.Schema({
 
     completedAt: Date,
 
+
+    servedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    },
+    servedByName: String,
+    servedAt: Date,
+
+
 }, { timestamps: true });
 
 serviceTokenSchema.index(

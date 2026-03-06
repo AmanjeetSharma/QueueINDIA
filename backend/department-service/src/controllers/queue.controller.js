@@ -49,11 +49,13 @@ const getLiveQueue = asyncHandler(async (req, res) => {
 
     /* ───────────── CURRENTLY SERVING ───────────── */
 
-    const serving = await ServiceToken.findOne({
+    // 🔥 CHANGED: find() instead of findOne() to support multiple officers
+    const serving = await ServiceToken.find({
         ...baseFilter,
         status: "SERVING"
     })
-        .select("tokenNumber priorityType priorityRank status")
+        // 🔥 FIXED: removed comma inside select
+        .select("tokenNumber priorityType priorityRank status servedBy servedByName userName slotTime booking")
         .lean();
 
     /* ───────────── WAITING QUEUE ───────────── */
@@ -63,13 +65,17 @@ const getLiveQueue = asyncHandler(async (req, res) => {
         status: "WAITING"
     })
         .sort({
-            priorityRank: -1, // higher priority first
-            tokenNumber: 1    // FIFO inside same priority
+            priorityRank: -1,
+            tokenNumber: 1
         })
-        .select("tokenNumber priorityType priorityRank status userName slotTime")
+        .select("tokenNumber priorityType priorityRank status userName slotTime booking")
         .lean();
 
-    console.log(`Live Queue fetched | date: ${date} | totalWaiting: ${waiting.length}`);
+    // 🔥 FIXED: safe optional chaining to avoid null crash
+    console.log(
+        `Live Queue fetched | date: ${date} | serving: ${serving?.length || 0} | waiting: ${waiting?.length || 0}`
+    );
+
     return res.status(200).json(
         new ApiResponse(
             200,
@@ -77,9 +83,13 @@ const getLiveQueue = asyncHandler(async (req, res) => {
                 departmentId,
                 serviceId,
                 date,
-                serving: serving || null,
-                waiting,
-                totalWaiting: waiting.length
+
+                // 🔥 NEW: always return arrays (never null)
+                serving: serving || [],
+                totalServing: serving?.length || 0,
+
+                waiting: waiting || [],
+                totalWaiting: waiting?.length || 0
             },
             "Live queue fetched successfully"
         )
@@ -128,7 +138,7 @@ const recallSkippedTokens = asyncHandler(async (req, res) => {
         }
     );
 
-    console.log(`Tokens recalled: ${result.modifiedCount} | Service: ${serviceId} | Date: ${date}`);    
+    console.log(`Tokens recalled: ${result.modifiedCount} | Service: ${serviceId} | Date: ${date}`);
 
     return res.status(200).json(
         new ApiResponse(
@@ -177,9 +187,7 @@ const serveNextToken = asyncHandler(async (req, res) => {
     /* ───────────── ENSURE SINGLE SERVING TOKEN ───────────── */
 
     const alreadyServing = await ServiceToken.findOne({
-        department: departmentId,
-        service: serviceId,
-        date,
+        servedBy: req.user._id,
         status: "SERVING"
     }).lean();
 
@@ -201,7 +209,10 @@ const serveNextToken = asyncHandler(async (req, res) => {
         },
         {
             $set: {
-                status: "SERVING"
+                status: "SERVING",
+                servedBy: req.user._id,
+                servedAt: new Date(),
+                servedByName: req.user.name
             }
         },
         {
@@ -238,7 +249,9 @@ const serveNextToken = asyncHandler(async (req, res) => {
 
 
 
-
+/* =========================================================
+   COMPLETE TOKEN
+   ========================================================= */
 
 const completeToken = asyncHandler(async (req, res) => {
     const { tokenId } = req.params;
@@ -253,7 +266,8 @@ const completeToken = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Service token not found");
     }
 
-    // Department protection
+    /* ───────────── DEPARTMENT PROTECTION ───────────── */
+
     if (req.user.role !== "SUPER_ADMIN") {
         if (!req.user.departmentId) {
             throw new ApiError(400, "You are not assigned to any department | Access denied!");
@@ -264,27 +278,50 @@ const completeToken = asyncHandler(async (req, res) => {
         }
     }
 
+    /* ───────────── NEW: SAFE SERVED BY VALIDATION ───────────── */
+    // prevents crash if servedBy is null
+    if (!token.servedBy || token.servedBy.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not serving this token");
+    }
+
     if (token.status !== "SERVING") {
         throw new ApiError(400, "Only SERVING token can be completed");
     }
 
-    // 1️⃣ Complete token
-    token.status = "COMPLETED";
-    token.completedAt = new Date();
-    await token.save();
+    /* ───────────── CHANGED: ATOMIC UPDATE TO PREVENT RACE CONDITIONS ───────────── */
 
-    // 2️⃣ Complete booking (direct link)
-    await Booking.findByIdAndUpdate(token.booking, {
+    const updatedToken = await ServiceToken.findOneAndUpdate(
+        {
+            _id: tokenId,
+            status: "SERVING",
+            servedBy: req.user._id
+        },
+        {
+            status: "COMPLETED",
+            completedAt: new Date()
+        },
+        { new: true }
+    );
+
+    if (!updatedToken) {
+        throw new ApiError(409, "Token could not be completed. It may have already been updated.");
+    }
+
+    /* ───────────── BOOKING STATUS UPDATE ───────────── */
+
+    await Booking.findByIdAndUpdate(updatedToken.booking, {
         status: "COMPLETED"
     });
 
-    console.log(`Token completed: ${token._id} | Token Number: ${token.tokenNumber} | Date: ${token.date}`);
+    console.log(
+        `Token completed: ${updatedToken._id} | Token Number: ${updatedToken.tokenNumber} | Date: ${updatedToken.date}`
+    );
 
     return res.status(200).json(
         new ApiResponse(
             200,
             null,
-            "Service completed successfully"
+            "Booking token marked as completed"
         )
     );
 });
@@ -295,6 +332,13 @@ const completeToken = asyncHandler(async (req, res) => {
 
 
 
+
+
+
+
+/* =========================================================
+   SKIP TOKEN
+   ========================================================= */
 
 const skipToken = asyncHandler(async (req, res) => {
     const { tokenId } = req.params;
@@ -309,7 +353,8 @@ const skipToken = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Service token not found");
     }
 
-    // Department protection
+    /* ───────────── DEPARTMENT PROTECTION ───────────── */
+
     if (req.user.role !== "SUPER_ADMIN") {
         if (!req.user.departmentId) {
             throw new ApiError(400, "User not assigned to any department");
@@ -320,21 +365,43 @@ const skipToken = asyncHandler(async (req, res) => {
         }
     }
 
-    // Only SERVING token can be skipped
+    /* ───────────── NEW: SAFE SERVED BY VALIDATION ───────────── */
+
+    if (!token.servedBy || token.servedBy.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not serving this token");
+    }
+
     if (token.status !== "SERVING") {
         throw new ApiError(400, "Only SERVING token can be skipped");
     }
 
-    token.status = "SKIPPED";
-    await token.save();
+    /* ───────────── CHANGED: ATOMIC UPDATE ───────────── */
 
-    console.log(`Token skipped: ${token._id} | Token Number: ${token.tokenNumber}`);
+    const updatedToken = await ServiceToken.findOneAndUpdate(
+        {
+            _id: tokenId,
+            status: "SERVING",
+            servedBy: req.user._id
+        },
+        {
+            status: "SKIPPED"
+        },
+        { new: true }
+    );
+
+    if (!updatedToken) {
+        throw new ApiError(409, "Token could not be skipped. It may have already been updated.");
+    }
+
+    console.log(
+        `Token skipped: ${updatedToken._id} | Token Number: ${updatedToken.tokenNumber}`
+    );
 
     return res.status(200).json(
         new ApiResponse(
             200,
             null,
-            "Token skipped successfully"
+            "Token skipped"
         )
     );
 });

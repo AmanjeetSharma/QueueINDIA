@@ -34,8 +34,7 @@ export const QueueProvider = ({ children }) => {
 
     // Get live queue for a specific service and date
     const getLiveQueue = useCallback(async (serviceId, date, departmentId = null) => {
-        // console.log("request reached");
-        // console.log("Fetching live queue with params:", {
+        // console.log("Request Reached\nFetching live queue with params:", {
         //     serviceId,
         //     date,
         //     departmentId
@@ -65,14 +64,14 @@ export const QueueProvider = ({ children }) => {
             //     duration: 3000,
             //     position: 'bottom-left'
             // });
-
+            // console.log("Live queue fetched successfully:", response.data.data); // debug log
             return response.data.data;
         } catch (err) {
             const errorMsg = err?.response?.data?.message || 'Failed to fetch live queue';
             setError(errorMsg);
             toast.error(errorMsg, {
                 duration: 4000,
-                position: 'bottom-left'
+                position: 'top-center'
             });
             throw err;
         } finally {
@@ -115,7 +114,7 @@ export const QueueProvider = ({ children }) => {
             setError(errorMsg);
             toast.error(errorMsg, {
                 duration: 4000,
-                position: 'bottom-left'
+                position: 'top-center'
             });
             throw err;
         } finally {
@@ -145,7 +144,7 @@ export const QueueProvider = ({ children }) => {
 
             toast.success(response.data.message, {
                 duration: 3000,
-                position: 'top-left'
+                position: 'top-center'
             });
 
             // Refresh live queue after serving
@@ -186,7 +185,7 @@ export const QueueProvider = ({ children }) => {
 
             toast.success(response.data.message, {
                 duration: 3000,
-                position: 'bottom-left'
+                position: 'top-center'
             });
 
             // Refresh live queue if serviceId and date provided
@@ -200,7 +199,7 @@ export const QueueProvider = ({ children }) => {
             setError(errorMsg);
             toast.error(errorMsg, {
                 duration: 4000,
-                position: 'bottom-left'
+                position: 'top-center'
             });
             throw err;
         } finally {
@@ -224,7 +223,7 @@ export const QueueProvider = ({ children }) => {
 
             toast.success(response.data.message, {
                 duration: 3000,
-                position: 'top-left'
+                position: 'top-center'
             });
 
             // Refresh live queue if serviceId and date provided
@@ -276,7 +275,7 @@ export const QueueProvider = ({ children }) => {
             setError(errorMsg);
             toast.error(errorMsg, {
                 duration: 4000,
-                position: 'bottom-left'
+                position: 'top-center'
             });
             throw err;
         } finally {
@@ -310,7 +309,7 @@ export const QueueProvider = ({ children }) => {
             setError(errorMsg);
             toast.error(errorMsg, {
                 duration: 4000,
-                position: 'bottom-left'
+                position: 'top-center'
             });
             throw err;
         } finally {

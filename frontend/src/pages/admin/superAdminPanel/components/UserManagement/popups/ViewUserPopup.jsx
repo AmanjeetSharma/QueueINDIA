@@ -209,47 +209,6 @@ const ViewUserPopup = ({ user, onClose }) => {
                 </div>
               </div>
             </div>
-
-            {/* Verification Status Summary */}
-            <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4">
-              <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <MdOutlineVerified className="w-4 h-4" />
-                Verification Status
-              </h4>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center gap-2">
-                  <div className={`p-1.5 rounded-lg ${user?.isEmailVerified ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
-                    {user?.isEmailVerified ? (
-                      <MdVerified className="w-4 h-4 text-emerald-400" />
-                    ) : (
-                      <MdOutlineWarning className="w-4 h-4 text-amber-400" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Email</p>
-                    <p className={`text-xs font-medium ${user?.isEmailVerified ? 'text-emerald-400' : 'text-amber-400'}`}>
-                      {user?.isEmailVerified ? 'Verified' : 'Unverified'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className={`p-1.5 rounded-lg ${user?.isPhoneVerified ? 'bg-emerald-500/20' : 'bg-slate-700/50'}`}>
-                    {user?.isPhoneVerified ? (
-                      <MdVerified className="w-4 h-4 text-emerald-400" />
-                    ) : (
-                      <MdOutlinePhone className="w-4 h-4 text-slate-400" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Phone</p>
-                    <p className={`text-xs font-medium ${user?.isPhoneVerified ? 'text-emerald-400' : 'text-slate-400'}`}>
-                      {user?.isPhoneVerified ? 'Verified' : user?.phone ? 'Unverified' : 'Not provided'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 

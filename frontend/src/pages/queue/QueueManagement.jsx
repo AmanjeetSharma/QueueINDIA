@@ -263,25 +263,26 @@ const QueueManagement = () => {
         };
         return labels[priorityType] || 'Regular';
     };
-
     const formatLastRefreshTime = () => {
-        if (!lastRefreshTime) return 'Never';
+    if (!lastRefreshTime) return '___';
 
-        const diffInSeconds = Math.floor((currentTime - lastRefreshTime.getTime()) / 1000);
+    // Both are now timestamps (numbers)
+    const diffInSeconds = Math.floor((currentTime - lastRefreshTime.getTime()) / 1000);
 
-        if (diffInSeconds < 60) {
-            return `${diffInSeconds}s ago`;
-        } else if (diffInSeconds < 3600) {
-            const minutes = Math.floor(diffInSeconds / 60);
-            return `${minutes}m ago`;
-        } else {
-            return lastRefreshTime.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-    };
-
+    if (diffInSeconds < 0) {
+        return 'Just now';
+    } else if (diffInSeconds < 60) {
+        return `${diffInSeconds}s ago`;
+    } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `${minutes}m ago`;
+    } else {
+        return lastRefreshTime.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+};
     const intervalOptions = [
         { value: 10, label: '10s' },
         { value: 30, label: '30s' },
@@ -402,13 +403,11 @@ const QueueManagement = () => {
                     </div>
 
                     {/* Auto-refresh Status */}
-                    {isAutoRefresh && (
-                        <div className="mt-2 flex items-center gap-2 text-xs text-slate-300">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                            <span>Auto-refresh ({refreshInterval}s)</span>
-                            <span className="text-slate-500 ml-auto">Last: {formatLastRefreshTime()}</span>
-                        </div>
-                    )}
+                    <div className="mt-2 flex items-center gap-2 text-xs text-slate-300">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                        <span>Auto-refresh ({refreshInterval}s)</span>
+                        <span className="text-slate-500 ml-auto">Last: {formatLastRefreshTime()}</span>
+                    </div>
                 </div>
             </header>
 

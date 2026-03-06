@@ -525,7 +525,7 @@ const QueueManagement = () => {
                                 <div className="flex items-center justify-between">
                                     <h2 className="font-semibold flex items-center gap-2">
                                         <Users className="w-4 h-4 text-purple-400" />
-                                        Waiting Queue
+                                        Waiting In Queue
                                     </h2>
                                     <span className="px-2 py-1 bg-purple-500/30 text-purple-300 rounded-full text-xs font-bold">
                                         {liveQueue.totalWaiting || 0}
@@ -625,13 +625,13 @@ const QueueManagement = () => {
                             </button>
                         )}
 
-                        {/* Your Actions */}
+                        {/* Perform Token Actions */}
                         {myServingToken && (
                             <div className="bg-slate-800/90 border border-blue-500/30 rounded-xl overflow-hidden">
                                 <div className="bg-blue-500/20 px-4 py-3 border-b border-blue-500/30">
                                     <h2 className="font-semibold flex items-center gap-2 text-blue-300">
                                         <MdGeneratingTokens className="w-6 h-6 text-amber-300" />
-                                        Your Token Actions
+                                        Perform Token Actions
                                     </h2>
                                 </div>
 

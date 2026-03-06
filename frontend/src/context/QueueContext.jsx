@@ -19,7 +19,7 @@ export const QueueProvider = ({ children }) => {
         waiting: [],
         totalWaiting: 0,
     });
-    const [queueStats, setQueueStats] = useState(null);
+
     const [departmentServices, setDepartmentServices] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -57,14 +57,15 @@ export const QueueProvider = ({ children }) => {
                 totalWaiting: response.data.data.totalWaiting || 0,
                 departmentId: response.data.data.departmentId,
                 serviceId: response.data.data.serviceId,
-                date: response.data.data.date
+                date: response.data.data.date,
+                skippedCount: response.data.data.skippedCount || 0,
             });
 
             // toast.success(response.data.message, {
             //     duration: 3000,
             //     position: 'bottom-left'
             // });
-            // console.log("Live queue fetched successfully:", response.data.data); // debug log
+            console.log("Live queue fetched successfully:", response.data.data); // debug log
             return response.data.data;
         } catch (err) {
             const errorMsg = err?.response?.data?.message || 'Failed to fetch live queue';
@@ -253,44 +254,6 @@ export const QueueProvider = ({ children }) => {
 
 
 
-
-    // Get queue statistics
-    const getQueueStats = useCallback(async (serviceId = null, date = null, departmentId = null) => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            const params = {};
-            if (serviceId) params.serviceId = serviceId;
-            if (date) params.date = date;
-            if (departmentId) params.departmentId = departmentId;
-
-            const response = await axiosInstance.get('/departments/queue/stats', { params });
-
-            setQueueStats(response.data.data);
-
-            return response.data.data;
-        } catch (err) {
-            const errorMsg = err?.response?.data?.message || 'Failed to fetch queue statistics';
-            setError(errorMsg);
-            toast.error(errorMsg, {
-                duration: 4000,
-                position: 'top-center'
-            });
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-
-
-
-
-
-
-
-
     // Get department services for queue management
     const getDepartmentServicesForQueue = useCallback(async (departmentId = null) => {
         try {
@@ -329,8 +292,7 @@ export const QueueProvider = ({ children }) => {
         if (!serviceId || !date) return;
 
         await getLiveQueue(serviceId, date, departmentId);
-        await getQueueStats(serviceId, date, departmentId);
-    }, [getLiveQueue, getQueueStats]);
+    }, [getLiveQueue]);
 
     // Clear all queue data
     const clearQueueData = useCallback(() => {
@@ -339,7 +301,6 @@ export const QueueProvider = ({ children }) => {
             waiting: [],
             totalWaiting: 0,
         });
-        setQueueStats(null);
         setDepartmentServices([]);
         setError(null);
     }, []);
@@ -361,7 +322,7 @@ export const QueueProvider = ({ children }) => {
 
     const value = {
         liveQueue,
-        queueStats,
+
         departmentServices,
         loading,
         error,
@@ -370,7 +331,6 @@ export const QueueProvider = ({ children }) => {
         serveNextToken,
         completeToken,
         skipToken,
-        getQueueStats,
         getDepartmentServicesForQueue,
         refreshQueueData,
         clearQueueData,

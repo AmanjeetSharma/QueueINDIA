@@ -6,7 +6,6 @@ import {
     serveNextToken,
     completeToken,
     skipToken,
-    getQueueStats,
     getDepartmentServicesForQueue
 } from "../controllers/queue.controller.js";
 
@@ -36,10 +35,7 @@ router.post("/queue/tokens/:tokenId/complete", verifyToken, authorizeRoles("SUPE
 // /queue/tokens/:tokenId/skip
 router.post("/queue/tokens/:tokenId/skip", verifyToken, authorizeRoles("SUPER_ADMIN", "DEPARTMENT_OFFICER", "ADMIN"), skipToken);
 
-// GET /queue/stats?date=YYYY-MM-DD
-router.get("/queue/stats", verifyToken, authorizeRoles("SUPER_ADMIN", "DEPARTMENT_OFFICER", "ADMIN"), getQueueStats);
-
-// GET /queue/department-services?departmentId=xxx
+// GET /queue/department-services?departmentId=xxxxx
 router.get("/queue/department-services", verifyToken, authorizeRoles("SUPER_ADMIN", "DEPARTMENT_OFFICER", "ADMIN"), getDepartmentServicesForQueue);
 
 export default router;

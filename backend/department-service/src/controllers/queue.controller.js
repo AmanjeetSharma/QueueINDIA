@@ -47,33 +47,30 @@ const getLiveQueue = asyncHandler(async (req, res) => {
         date
     };
 
-    /* ───────────── CURRENTLY SERVING ───────────── */
 
-    // 🔥 CHANGED: find() instead of findOne() to support multiple officers
     const serving = await ServiceToken.find({
         ...baseFilter,
         status: "SERVING"
     })
-        // 🔥 FIXED: removed comma inside select
         .select("tokenNumber priorityType priorityRank status servedBy servedByName userName slotTime booking")
         .lean();
 
-    /* ───────────── WAITING QUEUE ───────────── */
 
     const waiting = await ServiceToken.find({
         ...baseFilter,
         status: "WAITING"
     })
-        .sort({
-            priorityRank: -1,
-            tokenNumber: 1
-        })
+        .sort({ priorityRank: -1, tokenNumber: 1 })
         .select("tokenNumber priorityType priorityRank status userName slotTime booking")
         .lean();
 
-    // 🔥 FIXED: safe optional chaining to avoid null crash
+    const skippedCount = await ServiceToken.countDocuments({
+        ...baseFilter,
+        status: "SKIPPED"
+    });
+
     console.log(
-        `Live Queue fetched | date: ${date} | serving: ${serving?.length || 0} | waiting: ${waiting?.length || 0}`
+        `Live Queue fetched | date: ${date} | serving: ${serving?.length || 0} | waiting: ${waiting?.length || 0} | skipped: ${skippedCount}`
     );
 
     return res.status(200).json(
@@ -89,7 +86,9 @@ const getLiveQueue = asyncHandler(async (req, res) => {
                 totalServing: serving?.length || 0,
 
                 waiting: waiting || [],
-                totalWaiting: waiting?.length || 0
+                totalWaiting: waiting?.length || 0,
+
+                skippedCount: skippedCount || 0
             },
             "Live queue fetched successfully"
         )
@@ -416,89 +415,6 @@ const skipToken = asyncHandler(async (req, res) => {
 
 
 
-
-const getQueueStats = asyncHandler(async (req, res) => {
-    const { serviceId, date, departmentId: queryDeptId } = req.query;
-
-    // Department resolution (same as getLiveQueue)
-    let departmentId;
-    if (req.user.role === "SUPER_ADMIN") {
-        if (!queryDeptId || !mongoose.Types.ObjectId.isValid(queryDeptId)) {
-            throw new ApiError(400, "Valid departmentId is required for SUPER_ADMIN");
-        }
-        departmentId = queryDeptId;
-    } else {
-        if (!req.user.departmentId) {
-            throw new ApiError(400, "User is not assigned to any department");
-        }
-        departmentId = req.user.departmentId;
-    }
-
-    const baseFilter = {
-        department: departmentId,
-        date: date || new Date().toISOString().split('T')[0]
-    };
-
-    if (serviceId && mongoose.Types.ObjectId.isValid(serviceId)) {
-        baseFilter.service = serviceId;
-    }
-
-    // Get today's statistics
-    const stats = await ServiceToken.aggregate([
-        {
-            $match: baseFilter
-        },
-        {
-            $group: {
-                _id: "$status",
-                count: { $sum: 1 },
-                avgWaitTime: {
-                    $avg: {
-                        $subtract: ["$servedAt", "$createdAt"]
-                    }
-                }
-            }
-        }
-    ]);
-
-    // Format the response
-    const formattedStats = {
-        departmentId,
-        serviceId: serviceId || null,
-        date: baseFilter.date,
-        todayServed: stats.find(s => s._id === "COMPLETED")?.count || 0,
-        todayPending: stats.find(s => s._id === "WAITING")?.count || 0,
-        todaySkipped: stats.find(s => s._id === "SKIPPED")?.count || 0,
-        avgWaitTime: stats.find(s => s._id === "COMPLETED")?.avgWaitTime || 0
-    };
-
-    console.log("Queue statistics fetched for service:", {
-        departmentId,
-        serviceId: serviceId || null,
-        date: baseFilter.date,
-        stats: formattedStats
-    });
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            formattedStats,
-            "Queue statistics fetched successfully"
-        )
-    );
-});
-
-
-
-
-
-
-
-
-
-
-
-
 const getDepartmentServicesForQueue = asyncHandler(async (req, res) => {
     // Resolve department
     const departmentId =
@@ -560,6 +476,5 @@ export {
     serveNextToken,
     completeToken,
     skipToken,
-    getQueueStats,
     getDepartmentServicesForQueue,
 };

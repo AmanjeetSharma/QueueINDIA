@@ -264,25 +264,25 @@ const QueueManagement = () => {
         return labels[priorityType] || 'Regular';
     };
     const formatLastRefreshTime = () => {
-    if (!lastRefreshTime) return '___';
+        if (!lastRefreshTime) return '___';
 
-    // Both are now timestamps (numbers)
-    const diffInSeconds = Math.floor((currentTime - lastRefreshTime.getTime()) / 1000);
+        // Both are now timestamps (numbers)
+        const diffInSeconds = Math.floor((currentTime - lastRefreshTime.getTime()) / 1000);
 
-    if (diffInSeconds < 0) {
-        return 'Just now';
-    } else if (diffInSeconds < 60) {
-        return `${diffInSeconds}s ago`;
-    } else if (diffInSeconds < 3600) {
-        const minutes = Math.floor(diffInSeconds / 60);
-        return `${minutes}m ago`;
-    } else {
-        return lastRefreshTime.toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-};
+        if (diffInSeconds < 0) {
+            return 'Just now';
+        } else if (diffInSeconds < 60) {
+            return `${diffInSeconds}s ago`;
+        } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `${minutes}m ago`;
+        } else {
+            return lastRefreshTime.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    };
     const intervalOptions = [
         { value: 10, label: '10s' },
         { value: 30, label: '30s' },
@@ -406,7 +406,12 @@ const QueueManagement = () => {
                     <div className="mt-2 flex items-center gap-2 text-xs text-slate-300">
                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                         <span>Auto-refresh ({refreshInterval}s)</span>
-                        <span className="text-slate-500 ml-auto">Last: {formatLastRefreshTime()}</span>
+                        <span className="text-slate-500 ml-auto">
+                            <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                <span>Last synced: {formatLastRefreshTime()}</span>
+                            </div>
+                        </span>
                     </div>
                 </div>
             </header>
@@ -422,7 +427,7 @@ const QueueManagement = () => {
                                 <div className="flex items-center justify-between">
                                     <h2 className="font-semibold flex items-center gap-2">
                                         <Activity className="w-4 h-4 text-blue-400" />
-                                        Currently Serving
+                                        Currently Serving Officers
                                     </h2>
                                     <span className="text-sm text-slate-400">
                                         {liveQueue.serving?.length || 0} active
@@ -460,20 +465,27 @@ const QueueManagement = () => {
 
                                                             {/* Right Section - Officer and Time */}
                                                             <div className="flex items-center gap-3">
-                                                                <div className="flex items-center gap-1.5">
-                                                                    {isMine ? (
-                                                                        <>
-                                                                            <UserCheck className="w-3.5 h-3.5 text-blue-400" />
-                                                                            <span className="text-xs text-blue-400 font-medium">You</span>
-                                                                        </>
-                                                                    ) : (
-                                                                        <>
-                                                                            <User className="w-3.5 h-3.5 text-slate-500" />
-                                                                            <span className="text-xs text-slate-400">
-                                                                                {token.servedByName || 'Officer'}
-                                                                            </span>
-                                                                        </>
-                                                                    )}
+                                                                <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-slate-700/30">
+                                                                    <span className="text-xs text-slate-500 font-medium">Officer:</span>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        {isMine ? (
+                                                                            <>
+                                                                                <div className="p-1 rounded-full bg-blue-500/20">
+                                                                                    <UserCheck className="w-3.5 h-3.5 text-blue-400" />
+                                                                                </div>
+                                                                                <span className="text-xs text-blue-400 font-semibold bg-blue-500/10 px-1.5 py-0.5 rounded">You</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <div className="p-1 rounded-full bg-slate-600/30">
+                                                                                    <User className="w-3.5 h-3.5 text-slate-400" />
+                                                                                </div>
+                                                                                <span className="text-xs text-slate-300 font-medium max-w-[80px] truncate" title={token.servedByName || 'Officer'}>
+                                                                                    {token.servedByName || 'Officer'}
+                                                                                </span>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
 
                                                                 {token.slotTime && (
@@ -642,7 +654,7 @@ const QueueManagement = () => {
                                                 <button
                                                     onClick={(e) => handleViewBooking(myServingToken.booking, e)}
                                                     className="p-2 bg-blue-600/20 hover:bg-blue-600/30 rounded-lg transition-colors cursor-pointer"
-                                                    title="View Booking"
+                                                    title="View Booking Details"
                                                 >
                                                     <ChevronRight className="w-4 h-4 text-blue-400" />
                                                 </button>
@@ -705,7 +717,7 @@ const QueueManagement = () => {
                                         </p>
                                         {myServingToken && (
                                             <p className="text-xs text-green-400 mt-1">
-                                                (You: 1)
+                                                (tokens being served)
                                             </p>
                                         )}
                                     </div>
@@ -715,24 +727,54 @@ const QueueManagement = () => {
                                         <p className="text-2xl font-bold text-blue-300">
                                             {liveQueue.totalWaiting || 0}
                                         </p>
+                                        <p className="text-xs text-blue-400 mt-1">
+                                            (tokens in queue)
+                                        </p>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-700">
-                                    <div className="flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
-                                        <span>Last synced: {formatLastRefreshTime()}</span>
+                                {liveQueue.skippedCount > 0 ? (
+                                    <div className="pt-2 border-t border-slate-700">
+                                        {/* Alert Banner */}
+                                        <div className="mb-2 flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                                            <div className="p-1 bg-amber-500/20 rounded-full">
+                                                <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-xs text-amber-300">
+                                                    <span className="font-bold text-amber-400">{liveQueue.skippedCount}</span> skipped token{liveQueue.skippedCount !== 1 ? 's' : ''} waiting to be recalled
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Recall Button */}
+                                        <button
+                                            onClick={handleRecallSkipped}
+                                            disabled={actionInProgress}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 rounded-lg text-white shadow-lg shadow-amber-600/20 transition-all disabled:opacity-50 cursor-pointer text-sm font-bold"
+                                            title="Recall Skipped Tokens"
+                                        >
+                                            {actionInProgress === 'recall' ? (
+                                                <>
+                                                    <Loader className="w-4 h-4 animate-spin" />
+                                                    <span>Recalling Tokens...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <RotateCcw className="w-4 h-4" />
+                                                    <span>Recall Skipped Token{liveQueue.skippedCount !== 1 ? 's' : ''}</span>
+                                                </>
+                                            )}
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={handleRecallSkipped}
-                                        disabled={actionInProgress}
-                                        className="flex items-center gap-1 px-4 py-1.5 bg-amber-600/40 hover:bg-amber-600/20 rounded text-yellow-500 transition-colors disabled:opacity-50 cursor-pointer"
-                                        title="Recall Skipped Tokens"
-                                    >
-                                        <RotateCcw className="w-3 h-3" />
-                                        <span className="hidden sm:inline">Recall Skipped Tokens</span>
-                                    </button>
-                                </div>
+                                ) : (
+                                    <div className="pt-2 border-t border-slate-700">
+                                        <div className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-slate-500 text-sm font-medium bg-slate-800/30">
+                                            <CheckCircle className="w-4 h-4 text-slate-600" />
+                                            <span>No skipped tokens</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

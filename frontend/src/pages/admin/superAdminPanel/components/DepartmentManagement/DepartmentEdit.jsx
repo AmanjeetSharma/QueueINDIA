@@ -515,7 +515,7 @@ const DepartmentEdit = () => {
                                             >
                                                 <option value="active">Active</option>
                                                 <option value="inactive">Inactive</option>
-                                                <option value="maintenance">Maintenance</option>
+                                                <option value="under-maintenance">Maintenance</option>
                                             </select>
                                         </div>
                                     </div>

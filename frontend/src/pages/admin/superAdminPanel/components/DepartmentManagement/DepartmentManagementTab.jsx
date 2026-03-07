@@ -144,7 +144,7 @@ const DepartmentManagementTab = () => {
   const getStatusBadge = (status) => {
     const config = {
       'active': { color: 'bg-green-500/20 text-green-300 border border-green-500/30', icon: <FiCheckCircle className="w-3 h-3" /> },
-      'inactive': { color: 'bg-gray-500/20 text-gray-300 border border-gray-500/30', icon: <FiXCircle className="w-3 h-3" /> },
+      'inactive': { color: 'bg-red-500/20 text-red-300 border border-red-500/30', icon: <FiXCircle className="w-3 h-3" /> },
       'under-maintenance': { color: 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30', icon: null }
     };
 

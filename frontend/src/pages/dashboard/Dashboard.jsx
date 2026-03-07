@@ -40,9 +40,9 @@ const ACTION_CARDS = [
 function StatusChip({ status }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.CANCELLED;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium ${cfg.bg} ${cfg.text}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {cfg.label}
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${cfg.bg} ${cfg.text} whitespace-nowrap`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} flex-shrink-0`} />
+      <span className="truncate max-w-[100px] sm:max-w-none">{cfg.label}</span>
     </span>
   );
 }
@@ -57,14 +57,14 @@ function StatCard({ label, value, accent, icon: Icon, className = '' }) {
   };
 
   return (
-    <div className={`rounded-xl p-5 transition-all duration-200 hover:shadow-lg ${className}`}>
-      <div className="flex justify-between items-center mb-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 truncate">
+    <div className={`rounded-xl p-3 sm:p-5 transition-all duration-200 hover:shadow-lg ${className}`}>
+      <div className="flex justify-between items-center mb-1 sm:mb-2">
+        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-gray-400 truncate pr-1">
           {label}
         </p>
-        <Icon className={`text-xl opacity-80 flex-shrink-0 ${accentColors[accent]}`} />
+        <Icon className={`text-base sm:text-xl opacity-80 flex-shrink-0 ${accentColors[accent]}`} />
       </div>
-      <p className={`text-3xl font-bold ${accentColors[accent]}`}>
+      <p className={`text-xl sm:text-3xl font-bold ${accentColors[accent]}`}>
         {value}
       </p>
     </div>
@@ -155,21 +155,21 @@ const Dashboard = () => {
     <div className="min-h-screen bg-white font-sans flex flex-col w-full overflow-x-hidden">
       {/* ── Vibrant Purple to Blue Gradient Header ── */}
       <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 shadow-lg w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 w-full">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-4 min-w-0 flex-1">
-              <div className="w-12 h-12 rounded-full border-2 border-white/30 bg-white/20 flex items-center justify-center hover:border-white/50 transition-colors flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 w-full">
+          <div className="flex items-center justify-between w-full gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white/30 bg-white/20 flex items-center justify-center hover:border-white/50 transition-colors flex-shrink-0">
                 {user?.avatar ? (
-                  <img src={user.avatar} alt="avatar" className="w-11 h-11 rounded-full object-cover" />
+                  <img src={user.avatar} alt="avatar" className="w-7 h-7 sm:w-9 sm:h-9 rounded-full object-cover" />
                 ) : (
-                  <FaUser className="text-white text-xl" />
+                  <FaUser className="text-white text-sm sm:text-base" />
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-white font-bold text-lg truncate">
+                <p className="text-white font-bold text-sm sm:text-base truncate">
                   Welcome back, {firstName} 👋
                 </p>
-                <p className="text-white/80 text-xs mt-0.5 truncate">
+                <p className="text-white/80 text-[10px] sm:text-xs mt-0.5 truncate">
                   {stats.upcoming > 0
                     ? `${stats.upcoming} active appointment${stats.upcoming !== 1 ? 's' : ''}`
                     : 'Ready to book your next service?'}
@@ -177,9 +177,9 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 flex-shrink-0">
-              <AiFillDashboard className="text-white text-sm" />
-              <span className="font-mono text-xs font-semibold text-white tracking-wider hidden sm:inline">DASHBOARD</span>
+            <div className="flex items-center gap-1 sm:gap-2 bg-white/10 backdrop-blur-sm rounded-full px-2 sm:px-4 py-1 sm:py-2 border border-white/20 flex-shrink-0">
+              <AiFillDashboard className="text-white text-xs sm:text-sm" />
+              <span className="font-mono text-[10px] sm:text-xs font-semibold text-white tracking-wider hidden xs:inline">DASHBOARD</span>
             </div>
           </div>
         </div>
@@ -187,10 +187,10 @@ const Dashboard = () => {
 
       {/* ── Scrollable Content Area ── */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 w-full">
 
           {/* ── Stats Row with Tinted Cards ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 w-full">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8 w-full">
             <StatCard
               label="Total"
               value={stats.totalBookings}
@@ -222,86 +222,87 @@ const Dashboard = () => {
           </div>
 
           {/* ── Quick Actions ── */}
-          <div className="mb-8 w-full">
-            <p className="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-3 pl-1">
+          <div className="mb-6 sm:mb-8 w-full">
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-indigo-500 mb-2 sm:mb-3 pl-1">
               Quick Actions
             </p>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 w-full">
               {ACTION_CARDS.map((card) => (
                 <Link
                   key={card.link}
                   to={card.link}
-                  className={`block bg-gradient-to-br ${card.gradient} rounded-xl p-4 sm:p-5 text-white shadow-md hover:shadow-xl transition-all duration-200 hover:-translate-y-1 w-full`}
+                  className={`block bg-gradient-to-br ${card.gradient} rounded-xl p-3 sm:p-5 text-white shadow-md hover:shadow-xl transition-all duration-200 hover:-translate-y-1 w-full`}
                 >
-                  <div className="flex justify-between items-start mb-3 sm:mb-4">
-                    <card.icon className="text-xl sm:text-2xl text-white/90" />
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                      <FaArrowRight className="text-white text-xs" />
+                  <div className="flex justify-between items-start mb-2 sm:mb-4">
+                    <card.icon className="text-base sm:text-2xl text-white/90" />
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                      <FaArrowRight className="text-white text-[8px] sm:text-xs" />
                     </div>
                   </div>
-                  <p className="font-bold text-sm sm:text-base mb-1 truncate">{card.title}</p>
-                  <p className="text-xs text-white/80 truncate">{card.sub}</p>
+                  <p className="font-bold text-xs sm:text-base mb-0.5 sm:mb-1 truncate">{card.title}</p>
+                  <p className="text-[10px] sm:text-xs text-white/80 truncate">{card.sub}</p>
                 </Link>
               ))}
             </div>
           </div>
 
           {/* ── Two Column Layout ── */}
-          <div className="grid lg:grid-cols-3 gap-6 w-full">
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 w-full">
             {/* Left Column - Recent Bookings (spans 2 columns) */}
-            <div className="lg:col-span-2 w-full">
+            <div className="lg:col-span-2 w-full min-w-0">
               <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow w-full overflow-hidden">
-                <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100">
-                  <p className="font-bold text-gray-900 text-sm sm:text-base">Recent Bookings</p>
-                  <Link to="/my-bookings" className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-indigo-500 hover:text-indigo-600 flex-shrink-0">
-                    View All <FaArrowRight className="text-xs" />
+                <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+                  <p className="font-bold text-gray-900 text-xs sm:text-base truncate pr-2">Recent Bookings</p>
+                  <Link to="/my-bookings" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm font-semibold text-indigo-500 hover:text-indigo-600 flex-shrink-0 whitespace-nowrap">
+                    View All <FaArrowRight className="text-[8px] sm:text-xs" />
                   </Link>
                 </div>
 
                 {loading && recentBookings.length === 0 ? (
-                  <div className="py-12 text-center">
-                    <div className="w-8 h-8 border-2 border-gray-200 border-t-indigo-500 rounded-full animate-spin mx-auto mb-3" />
-                    <p className="text-sm text-gray-400">Loading your bookings...</p>
+                  <div className="py-8 sm:py-12 text-center">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 border-2 border-gray-200 border-t-indigo-500 rounded-full animate-spin mx-auto mb-2 sm:mb-3" />
+                    <p className="text-xs sm:text-sm text-gray-400">Loading your bookings...</p>
                   </div>
                 ) : recentBookings.length === 0 ? (
-                  <div className="py-12 px-4 sm:px-6 text-center">
-                    <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-4">
-                      <FaCalendarAlt className="text-indigo-500 text-2xl" />
+                  <div className="py-8 sm:py-12 px-3 sm:px-6 text-center">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                      <FaCalendarAlt className="text-indigo-500 text-lg sm:text-2xl" />
                     </div>
-                    <p className="font-semibold text-gray-900 mb-2">No bookings yet</p>
-                    <p className="text-sm text-gray-400 mb-4">Start by booking your first appointment</p>
+                    <p className="font-semibold text-gray-900 text-sm sm:text-base mb-1 sm:mb-2">No bookings yet</p>
+                    <p className="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">Start by booking your first appointment</p>
                     <Link
                       to="/departments"
-                      className="inline-flex items-center gap-2 bg-indigo-500 text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-indigo-600 transition-colors"
+                      className="inline-flex items-center gap-1 sm:gap-2 bg-indigo-500 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold hover:bg-indigo-600 transition-colors"
                     >
-                      <FaCalendarAlt className="text-xs" /> Book Appointment
+                      <FaCalendarAlt className="text-[10px] sm:text-xs" /> Book Appointment
                     </Link>
                   </div>
                 ) : (
                   recentBookings.map((booking) => (
-                    <div key={booking._id} className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors hover:pl-6 sm:hover:pl-8 w-full">
-                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                        <FaBuilding className="text-indigo-500 text-base sm:text-lg" />
+                    <div key={booking._id} className="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors w-full">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                        <FaBuilding className="text-indigo-500 text-sm sm:text-base" />
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm sm:text-base mb-1 truncate">
+                        <p className="font-semibold text-gray-900 text-xs sm:text-base mb-0.5 sm:mb-1 truncate">
                           {booking.service?.name || 'Unknown Service'}
                         </p>
-                        <div className="flex flex-col xs:flex-row items-start xs:items-center gap-1 xs:gap-3 flex-wrap">
-                          <span className="text-xs text-gray-500 truncate max-w-[150px] xs:max-w-none">
+                        <div className="flex flex-col xs:flex-row items-start xs:items-center gap-0.5 xs:gap-2 flex-wrap">
+                          <span className="text-[10px] sm:text-xs text-gray-500 truncate max-w-[120px] xs:max-w-[150px]">
                             {booking.metadata?.departmentName || '—'}
                           </span>
-                          <span className="font-mono text-xs text-gray-400">
+                          <span className="font-mono text-[10px] sm:text-xs text-gray-400 hidden xs:inline">•</span>
+                          <span className="font-mono text-[10px] sm:text-xs text-gray-400 whitespace-nowrap">
                             {formatDate(booking.date)} • {formatTime(booking.slotTime)}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                         <StatusChip status={booking.status} />
-                        <Link to={`/bookings/${booking._id}`} className="text-gray-400 hover:text-indigo-500 transition-colors">
-                          <FaArrowRight className="text-sm" />
+                        <Link to={`/bookings/${booking._id}`} className="text-gray-400 hover:text-indigo-500 transition-colors p-1">
+                          <FaArrowRight className="text-xs sm:text-sm" />
                         </Link>
                       </div>
                     </div>
@@ -311,71 +312,71 @@ const Dashboard = () => {
             </div>
 
             {/* Right Column - Next Up */}
-            <div className="lg:col-span-1 w-full">
+            <div className="lg:col-span-1 w-full min-w-0">
               <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden w-full">
                 <div className={`h-1 ${closestUpcoming ? 'bg-gradient-to-r from-purple-500 to-indigo-500' : 'bg-gray-200'}`} />
-                <div className="p-5 sm:p-6">
-                  <p className="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-4">
+                <div className="p-4 sm:p-6">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-indigo-500 mb-3 sm:mb-4">
                     {closestUpcoming ? 'Next Appointment' : 'No Upcoming'}
                   </p>
 
                   {closestUpcoming ? (
                     <>
-                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2 leading-tight">
+                      <h3 className="text-sm sm:text-lg font-bold text-gray-900 mb-1 sm:mb-2 leading-tight break-words">
                         {closestUpcoming.service?.name || 'Appointment'}
                       </h3>
-                      <p className="text-xs sm:text-sm text-gray-500 mb-5">
+                      <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-5 break-words">
                         {closestUpcoming.metadata?.departmentName}
                       </p>
 
-                      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-5">
+                      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-5">
                         {[
                           { icon: FaCalendarAlt, top: formatDate(closestUpcoming.date), sub: getDaysUntil(closestUpcoming.date) },
                           { icon: FaClock, top: formatTime(closestUpcoming.slotTime), sub: 'Time slot' },
                         ].map((item, i) => (
-                          <div key={i} className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                            <div className="flex items-center gap-1.5 mb-1.5">
-                              <item.icon className="text-indigo-500 text-xs" />
-                              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                          <div key={i} className="bg-gray-50 rounded-xl p-2 sm:p-3 border border-gray-100">
+                            <div className="flex items-center gap-1 sm:gap-1.5 mb-1 sm:mb-1.5">
+                              <item.icon className="text-indigo-500 text-[10px] sm:text-xs" />
+                              <span className="text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                                 {i === 0 ? 'Date' : 'Time'}
                               </span>
                             </div>
-                            <p className="font-mono font-semibold text-xs sm:text-sm text-gray-900 break-words">{item.top}</p>
-                            {item.sub && <p className="text-[10px] text-indigo-500 font-semibold mt-1">{item.sub}</p>}
+                            <p className="font-mono font-semibold text-[10px] sm:text-sm text-gray-900 break-words">{item.top}</p>
+                            {item.sub && <p className="text-[8px] sm:text-[10px] text-indigo-500 font-semibold mt-0.5 sm:mt-1">{item.sub}</p>}
                           </div>
                         ))}
                       </div>
 
                       {closestUpcoming.tokenNumber && (
-                        <div className="bg-indigo-50 rounded-xl p-3 border border-indigo-100 mb-5">
-                          <p className="text-xs text-indigo-500 mb-1">Token Number</p>
-                          <p className="font-mono font-bold text-base sm:text-lg text-indigo-600 break-all">
+                        <div className="bg-indigo-50 rounded-xl p-2 sm:p-3 border border-indigo-100 mb-4 sm:mb-5">
+                          <p className="text-[10px] sm:text-xs text-indigo-500 mb-0.5 sm:mb-1">Token Number</p>
+                          <p className="font-mono font-bold text-sm sm:text-lg text-indigo-600 break-all">
                             #{closestUpcoming.tokenNumber}
                           </p>
                         </div>
                       )}
 
-                      <div className="mb-5">
+                      <div className="mb-4 sm:mb-5">
                         <StatusChip status={closestUpcoming.status} />
                       </div>
 
                       <Link
                         to={`/bookings/${closestUpcoming._id}`}
-                        className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-full text-sm transition-colors"
+                        className="flex items-center justify-center gap-1 sm:gap-2 w-full py-2 sm:py-3 px-3 sm:px-4 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-full text-xs sm:text-sm transition-colors"
                       >
-                        View Details <FaArrowRight className="text-xs" />
+                        View Details <FaArrowRight className="text-[10px] sm:text-xs" />
                       </Link>
                     </>
                   ) : (
                     <>
-                      <p className="text-xs sm:text-sm text-gray-500 mb-6 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6 leading-relaxed">
                         Ready to book your next service? Browse departments and schedule your appointment today.
                       </p>
                       <Link
                         to="/departments"
-                        className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-full text-sm transition-colors"
+                        className="flex items-center justify-center gap-1 sm:gap-2 w-full py-2 sm:py-3 px-3 sm:px-4 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-full text-xs sm:text-sm transition-colors"
                       >
-                        Book Now <FaArrowRight className="text-xs" />
+                        Book Now <FaArrowRight className="text-[10px] sm:text-xs" />
                       </Link>
                     </>
                   )}
@@ -385,13 +386,13 @@ const Dashboard = () => {
           </div>
 
           {/* ── Footer ── */}
-          <div className="text-center mt-10 pt-6 border-t border-gray-100 w-full">
-            <p className="text-xs text-gray-400 flex items-center justify-center gap-2 flex-wrap px-2">
-              <FaShieldAlt className="text-indigo-400 text-xs flex-shrink-0" />
+          <div className="text-center mt-6 sm:mt-10 pt-4 sm:pt-6 border-t border-gray-100 w-full">
+            <p className="text-[10px] sm:text-xs text-gray-400 flex items-center justify-center gap-1 sm:gap-2 flex-wrap px-2">
+              <FaShieldAlt className="text-indigo-400 text-[10px] sm:text-xs flex-shrink-0" />
               <span className="truncate">Secure public service portal · By using this service, you agree to our</span>
               <Link to="/terms-of-service" className="text-indigo-500 hover:text-indigo-600 font-medium whitespace-nowrap">Terms</Link>
               <span>&</span>
-              <Link to="/privacy-policy" className="text-indigo-500 hover:text-indigo-600 font-medium whitespace-nowrap">Privacy Policy</Link>
+              <Link to="/privacy-policy" className="text-indigo-500 hover:text-indigo-600 font-medium whitespace-nowrap">Privacy</Link>
               <span>· © 2024 QueueINDIA</span>
             </p>
           </div>

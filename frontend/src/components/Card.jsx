@@ -7,4 +7,3 @@ const Card = ({ title, desc }) => {
     );
 };
 
-export default Card;

@@ -33,7 +33,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
     const message = "A reset email has been sent, if the account exists.";
 
-    const delay = ms => new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms)); // 2 second delay
     await delay(2000); // Simulate processing delay to mitigate timing attacks
     // Always send generic message to avoid account enumeration
     if (!user) {

@@ -8,6 +8,7 @@ import { sendEmail } from "../services/sendEmail.js";
 import resetPasswordHtml from "../utils/emailTemplates/resetPasswordHtml.js";
 import { phoneValidator, passwordValidator } from "../utils/validators.js";
 import { isPasswordBreached } from "../utils/passwordBreachCheck.js";
+import { set } from "mongoose";
 
 
 
@@ -30,11 +31,16 @@ const forgotPassword = asyncHandler(async (req, res) => {
     // Find user
     const user = await User.findOne({ email: email.toLowerCase() }).select("+password");
 
+    const message = "A reset email has been sent, if the account exists.";
+
+    const delay = ms => new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+    await delay(2000); // Simulate processing delay to mitigate timing attacks
     // Always send generic message to avoid account enumeration
     if (!user) {
+        console.log(`No email sent - no account found for → ${email}`);
         return res
             .status(200)
-            .json(new ApiResponse(200, {}, "Reset email has been sent if the account exists."));
+            .json(new ApiResponse(200, {}, message));
     }
 
     if (!user.password) {
@@ -56,12 +62,16 @@ const forgotPassword = asyncHandler(async (req, res) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     const html = resetPasswordHtml(resetUrl);
 
-    await sendEmail(user.email, "Password Reset Request", html, true);
+    try {
+        await sendEmail(user.email, "Password Reset Request", html, true);
+    } catch (error) {
+        throw new ApiError(500, "Error sending email. Email service might be down. Please try again later.");
+    }
     console.log(`📧 Password reset email sent → ${user.email}`);
 
     return res
         .status(200)
-        .json(new ApiResponse(200, {}, "Reset email has been sent to the provided email address."));
+        .json(new ApiResponse(200, {}, message));
 });
 
 
@@ -96,14 +106,14 @@ const resetPassword = asyncHandler(async (req, res) => {
         );
     }
 
-        // const passwordBreachCheck = await isPasswordBreached(newPassword);
-        // // console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck); // debug log
-        // if (passwordBreachCheck.breached) {
-        //     throw new ApiError(
-        //         400,
-        //         `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
-        //     );
-        // }
+    // const passwordBreachCheck = await isPasswordBreached(newPassword);
+    // // console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck); // debug log
+    // if (passwordBreachCheck.breached) {
+    //     throw new ApiError(
+    //         400,
+    //         `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
+    //     );
+    // }
 
 
 

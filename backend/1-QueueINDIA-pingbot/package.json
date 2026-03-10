@@ -5,9 +5,13 @@
     "type": "module",
     "main": "pingBot.js",
     "scripts": {
-        "start": "node pingBot.js"
+        "start": "node pingBot.js",
+        "dev": "nodemon pingBot.js"
     },
     "dependencies": {
-        "axios": "^1.13.4"
+        "axios": "^1.13.6",
+        "cors": "^2.8.6",
+        "dotenv": "^17.3.1",
+        "express": "^5.2.1"
     }
 }

@@ -1,10 +1,46 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { browserName, osName, deviceType } from "react-device-detect";
 import { motion } from "framer-motion";
-import { FaEye, FaEyeSlash, FaCheck, FaTimes, FaUser, FaEnvelope, FaLock, FaCamera, FaTrash, FaGoogle, FaUserPlus } from "react-icons/fa";
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { FaEye, FaEyeSlash, FaCheck, FaTimes, FaUser, FaEnvelope, FaLock, FaCamera, FaTrash, FaUserPlus } from "react-icons/fa";
+import { GoogleLogin } from '@react-oauth/google';
+
+// Animation variants - defined outside component
+const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 }
+};
+
+const scaleIn = {
+    initial: { scale: 0 },
+    animate: { scale: 1 }
+};
+
+const fadeIn = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 }
+};
+
+// Memoized device info
+const deviceInfo = `${browserName} on ${osName} (${deviceType})`;
+
+// Password strength utility - pure function
+const checkPasswordCriteriaUtil = (password) => ({
+    length: password.length >= 8,
+    lowercase: /[a-z]/.test(password),
+    uppercase: /[A-Z]/.test(password),
+    number: /\d/.test(password),
+    special: /[@$!%*?&]/.test(password)
+});
+
+const getPasswordStrengthUtil = (criteria) => {
+    const fulfilledCount = Object.values(criteria).filter(Boolean).length;
+    if (fulfilledCount === 5) return "strong";
+    if (fulfilledCount >= 3) return "medium";
+    if (fulfilledCount >= 1) return "weak";
+    return "";
+};
 
 const Register = () => {
     const { register, googleLogin } = useAuth();
@@ -16,12 +52,11 @@ const Register = () => {
         email: "",
         password: "",
         confirmPassword: "",
-        device: `${browserName} on ${osName} (${deviceType})`
+        device: deviceInfo
     });
     const [avatar, setAvatar] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [passwordStrength, setPasswordStrength] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [passwordCriteria, setPasswordCriteria] = useState({
@@ -32,112 +67,80 @@ const Register = () => {
         special: false
     });
 
-    const onChange = (e) => {
+    // Memoized password strength
+    const passwordStrength = useMemo(() => 
+        getPasswordStrengthUtil(passwordCriteria)
+    , [passwordCriteria]);
+
+    // Memoized password match status
+    const doPasswordsMatch = useMemo(() => 
+        form.password && form.confirmPassword && form.password === form.confirmPassword
+    , [form.password, form.confirmPassword]);
+
+    // Memoized form validation
+    const isFormValid = useMemo(() => {
+        const allCriteriaMet = Object.values(passwordCriteria).every(Boolean);
+        return form.name && 
+               form.email && 
+               form.password && 
+               form.confirmPassword && 
+               form.password === form.confirmPassword &&
+               allCriteriaMet &&
+               !isLoading;
+    }, [form, passwordCriteria, isLoading]);
+
+    // UseCallback for event handlers
+    const onChange = useCallback((e) => {
         const { name, value } = e.target;
-        setForm({ ...form, [name]: value });
+        setForm(prev => ({ ...prev, [name]: value }));
 
-        // Check password strength and criteria
         if (name === "password") {
-            checkPasswordStrength(value);
-            checkPasswordCriteria(value);
+            const criteria = checkPasswordCriteriaUtil(value);
+            setPasswordCriteria(criteria);
         }
-    };
+    }, []);
 
-    const checkPasswordCriteria = (password) => {
-        const criteria = {
-            length: password.length >= 8,
-            lowercase: /[a-z]/.test(password),
-            uppercase: /[A-Z]/.test(password),
-            number: /\d/.test(password),
-            special: /[@$!%*?&]/.test(password)
-        };
-        setPasswordCriteria(criteria);
-    };
-
-    const checkPasswordStrength = (password) => {
-        const criteria = {
-            length: password.length >= 8,
-            lowercase: /[a-z]/.test(password),
-            uppercase: /[A-Z]/.test(password),
-            number: /\d/.test(password),
-            special: /[@$!%*?&]/.test(password)
-        };
-
-        const fulfilledCount = Object.values(criteria).filter(Boolean).length;
-
-        if (fulfilledCount === 5) {
-            setPasswordStrength("strong");
-        } else if (fulfilledCount >= 3) {
-            setPasswordStrength("medium");
-        } else if (fulfilledCount >= 1) {
-            setPasswordStrength("weak");
-        } else {
-            setPasswordStrength("");
-        }
-    };
-
-    const handleAvatarChange = (e) => {
+    const handleAvatarChange = useCallback((e) => {
         const file = e.target.files?.[0];
-        if (file) {
-            // Check file size (max 2MB)
-            if (file.size > 2 * 1024 * 1024) {
-                return;
-            }
+        if (!file) return;
 
-            // Check file type
-            if (!file.type.startsWith('image/')) {
-                return;
-            }
+        // Check file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) return;
 
-            setAvatar(file);
+        // Check file type
+        if (!file.type.startsWith('image/')) return;
 
-            // Create preview
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setAvatarPreview(e.target.result);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
+        setAvatar(file);
 
-    const removeAvatar = () => {
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setAvatarPreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }, []);
+
+    const removeAvatar = useCallback(() => {
         setAvatar(null);
         setAvatarPreview(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
-    };
+    }, []);
 
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
-    };
+    const togglePasswordVisibility = useCallback(() => {
+        setShowPassword(prev => !prev);
+    }, []);
 
-    const toggleConfirmPasswordVisibility = () => {
-        setShowConfirmPassword(!showConfirmPassword);
-    };
+    const toggleConfirmPasswordVisibility = useCallback(() => {
+        setShowConfirmPassword(prev => !prev);
+    }, []);
 
-    const onSubmit = async (e) => {
+    const onSubmit = useCallback(async (e) => {
         e.preventDefault();
+        if (!isFormValid || isLoading) return;
+
         setIsLoading(true);
-
-        // Validate passwords match
-        if (form.password !== form.confirmPassword) {
-            setIsLoading(false);
-            return;
-        }
-
-        // Validate password strength
-        if (passwordStrength === "weak" && form.password.length > 0) {
-            setIsLoading(false);
-            return;
-        }
-
-        // Check if all criteria are met for strong password
-        const allCriteriaMet = Object.values(passwordCriteria).every(Boolean);
-        if (!allCriteriaMet && form.password.length > 0) {
-            setIsLoading(false);
-            return;
-        }
 
         try {
             const fd = new FormData();
@@ -154,11 +157,10 @@ const Register = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [form, avatar, register, navigate, isFormValid, isLoading]);
 
-    const handleGoogleSuccess = async (credentialResponse) => {
+    const handleGoogleSuccess = useCallback(async (credentialResponse) => {
         try {
-            const deviceInfo = `${browserName} on ${osName} (${deviceType})`;
             await googleLogin({
                 tokenId: credentialResponse.credential,
                 device: deviceInfo
@@ -167,76 +169,100 @@ const Register = () => {
         } catch (error) {
             // Error handled in AuthContext
         }
-    };
+    }, [googleLogin, navigate]);
 
-    const handleGoogleError = () => {
+    const handleGoogleError = useCallback(() => {
         console.log('Google Login Failed');
-    };
+    }, []);
 
-    const getPasswordStrengthColor = () => {
+    // Memoized password input types
+    const passwordInputType = useMemo(() => 
+        showPassword ? "text" : "password"
+    , [showPassword]);
+
+    const confirmPasswordInputType = useMemo(() => 
+        showConfirmPassword ? "text" : "password"
+    , [showConfirmPassword]);
+
+    // Memoized strength meter width
+    const strengthMeterWidth = useMemo(() => {
+        if (passwordStrength === "strong") return "100%";
+        if (passwordStrength === "medium") return "66%";
+        if (passwordStrength === "weak") return "33%";
+        return "0%";
+    }, [passwordStrength]);
+
+    // Memoized strength meter color
+    const strengthMeterColor = useMemo(() => {
         switch (passwordStrength) {
             case "strong": return "bg-green-500";
             case "medium": return "bg-yellow-500";
             case "weak": return "bg-red-500";
             default: return "bg-gray-200";
         }
-    };
+    }, [passwordStrength]);
 
-    const getPasswordStrengthText = () => {
+    const strengthText = useMemo(() => {
         switch (passwordStrength) {
             case "strong": return "Strong password";
             case "medium": return "Medium strength";
             case "weak": return "Weak password";
             default: return "Enter a password";
         }
-    };
+    }, [passwordStrength]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4 py-8 relative overflow-hidden">
             {/* Subtle Background Elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {/* Very subtle grid pattern */}
-                <div className="absolute inset-0 opacity-[0.02] bg-[linear-gradient(rgba(0,0,0,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.1)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
-
-                {/* Soft gradient orbs */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+            <div className="absolute inset-0 overflow-hidden pointer-events-none will-change-transform">
+                <div className="absolute inset-0 opacity-[0.02]" 
+                     style={{ 
+                         backgroundImage: 'linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)',
+                         backgroundSize: '50px 50px'
+                     }} 
+                />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 will-change-transform"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 will-change-transform"></div>
             </div>
 
             {/* Main Card */}
             <div className="max-w-md w-full mx-auto relative">
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="relative bg-white rounded-2xl shadow-lg border border-gray-100 p-8"
+                    variants={fadeInUp}
+                    initial="initial"
+                    animate="animate"
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="relative bg-white rounded-2xl shadow-lg border border-gray-100 p-8 will-change-transform"
                 >
                     {/* Header */}
                     <div className="text-center mb-8">
                         <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                            variants={scaleIn}
+                            initial="initial"
+                            animate="animate"
+                            transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 15 }}
                             className="flex justify-center mb-6"
                         >
-                            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md will-change-transform">
                                 <FaUserPlus className="text-white text-xl" />
                             </div>
                         </motion.div>
 
                         <motion.h1
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
+                            variants={fadeInUp}
+                            initial="initial"
+                            animate="animate"
+                            transition={{ delay: 0.2 }}
                             className="text-2xl font-bold text-gray-800 mb-2"
                         >
                             Join QueueINDIA
                         </motion.h1>
 
                         <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.4 }}
+                            variants={fadeIn}
+                            initial="initial"
+                            animate="animate"
+                            transition={{ delay: 0.25 }}
                             className="text-gray-600"
                         >
                             Create your account to access public services
@@ -249,28 +275,27 @@ const Register = () => {
                             {/* Avatar Upload */}
                             <div className="flex justify-center">
                                 <div className="relative">
-                                    <motion.div
-                                        // whileHover={{ scale: 1.05 }}
-                                        className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-100"
-                                    >
+                                    <div className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-100 will-change-transform">
                                         {avatarPreview ? (
                                             <img
                                                 src={avatarPreview}
                                                 alt="Avatar preview"
                                                 className="w-full h-full object-cover"
+                                                loading="lazy"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-gray-400">
                                                 <FaUser className="w-8 h-8" />
                                             </div>
                                         )}
-                                    </motion.div>
+                                    </div>
                                     <motion.button
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.9 }}
                                         type="button"
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-2 rounded-full shadow-md hover:bg-blue-700 transition-colors cursor-pointer"
+                                        className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-2 rounded-full shadow-md hover:bg-blue-700 transition-colors cursor-pointer will-change-transform"
+                                        disabled={isLoading}
                                     >
                                         <FaCamera className="w-3 h-3" />
                                     </motion.button>
@@ -280,7 +305,8 @@ const Register = () => {
                                             whileTap={{ scale: 0.9 }}
                                             type="button"
                                             onClick={removeAvatar}
-                                            className="absolute -bottom-2 -left-2 bg-red-500 text-white p-2 rounded-full shadow-md hover:bg-red-600 transition-colors"
+                                            className="absolute -bottom-2 -left-2 bg-red-500 text-white p-2 rounded-full shadow-md hover:bg-red-600 transition-colors will-change-transform"
+                                            disabled={isLoading}
                                         >
                                             <FaTrash className="w-3 h-3" />
                                         </motion.button>
@@ -292,6 +318,7 @@ const Register = () => {
                                     accept="image/*"
                                     onChange={handleAvatarChange}
                                     className="hidden"
+                                    disabled={isLoading}
                                 />
                             </div>
 
@@ -301,8 +328,7 @@ const Register = () => {
                                     Full Name
                                 </label>
                                 <div className="relative">
-                                    <motion.input
-                                        whileFocus={{ scale: 1.01 }}
+                                    <input
                                         id="name"
                                         name="name"
                                         type="text"
@@ -311,8 +337,10 @@ const Register = () => {
                                         onChange={onChange}
                                         className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder-gray-400 pl-12"
                                         required
+                                        autoComplete="name"
+                                        disabled={isLoading}
                                     />
-                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                                         <FaUser className="w-4 h-4 text-gray-400" />
                                     </div>
                                 </div>
@@ -324,8 +352,7 @@ const Register = () => {
                                     Email Address
                                 </label>
                                 <div className="relative">
-                                    <motion.input
-                                        whileFocus={{ scale: 1.01 }}
+                                    <input
                                         id="email"
                                         name="email"
                                         type="email"
@@ -334,8 +361,10 @@ const Register = () => {
                                         onChange={onChange}
                                         className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder-gray-400 pl-12"
                                         required
+                                        autoComplete="email"
+                                        disabled={isLoading}
                                     />
-                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                                         <FaEnvelope className="w-4 h-4 text-gray-400" />
                                     </div>
                                 </div>
@@ -347,26 +376,28 @@ const Register = () => {
                                     Password
                                 </label>
                                 <div className="relative">
-                                    <motion.input
-                                        whileFocus={{ scale: 1.01 }}
+                                    <input
                                         id="password"
                                         name="password"
-                                        type={showPassword ? "text" : "password"}
+                                        type={passwordInputType}
                                         placeholder="Create a strong password"
                                         value={form.password}
                                         onChange={onChange}
                                         className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder-gray-400 pl-12 pr-12"
                                         required
+                                        autoComplete="new-password"
+                                        disabled={isLoading}
                                     />
-                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                                         <FaLock className="w-4 h-4 text-gray-400" />
                                     </div>
                                     <motion.button
                                         type="button"
                                         onClick={togglePasswordVisibility}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
+                                        whileHover={!isLoading ? { scale: 1.05 } : {}}
+                                        whileTap={!isLoading ? { scale: 0.95 } : {}}
                                         className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors"
+                                        disabled={isLoading}
                                     >
                                         {showPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
                                     </motion.button>
@@ -377,23 +408,18 @@ const Register = () => {
                                     <div className="mt-2">
                                         <div className="flex justify-between text-xs text-gray-600 mb-1">
                                             <span>Password strength:</span>
-                                            <span className={`font-medium ${passwordStrength === "strong" ? "text-green-600" :
+                                            <span className={`font-medium ${
+                                                passwordStrength === "strong" ? "text-green-600" :
                                                 passwordStrength === "medium" ? "text-yellow-600" :
-                                                    "text-red-600"
-                                                }`}>
-                                                {getPasswordStrengthText()}
+                                                "text-red-600"
+                                            }`}>
+                                                {strengthText}
                                             </span>
                                         </div>
                                         <div className="w-full bg-gray-200 rounded-full h-2">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{
-                                                    width: passwordStrength === "strong" ? "100%" :
-                                                        passwordStrength === "medium" ? "66%" :
-                                                            passwordStrength === "weak" ? "33%" : "0%"
-                                                }}
-                                                transition={{ duration: 0.3 }}
-                                                className={`h-2 rounded-full ${getPasswordStrengthColor()}`}
+                                            <div
+                                                className={`h-2 rounded-full transition-all duration-300 ${strengthMeterColor}`}
+                                                style={{ width: strengthMeterWidth }}
                                             />
                                         </div>
                                     </div>
@@ -401,28 +427,26 @@ const Register = () => {
 
                                 {/* Password Requirements */}
                                 <div className="mt-3 space-y-2">
-                                    <div className="space-y-1">
-                                        <div className={`flex items-center text-xs ${passwordCriteria.length ? 'text-green-600' : 'text-gray-500'}`}>
-                                            {passwordCriteria.length ? <FaCheck className="w-3 h-3 mr-2 text-green-500" /> : <FaTimes className="w-3 h-3 mr-2 text-gray-400" />}
-                                            At least 8 characters
-                                        </div>
-                                        <div className={`flex items-center text-xs ${passwordCriteria.lowercase ? 'text-green-600' : 'text-gray-500'}`}>
-                                            {passwordCriteria.lowercase ? <FaCheck className="w-3 h-3 mr-2 text-green-500" /> : <FaTimes className="w-3 h-3 mr-2 text-gray-400" />}
-                                            One lowercase letter
-                                        </div>
-                                        <div className={`flex items-center text-xs ${passwordCriteria.uppercase ? 'text-green-600' : 'text-gray-500'}`}>
-                                            {passwordCriteria.uppercase ? <FaCheck className="w-3 h-3 mr-2 text-green-500" /> : <FaTimes className="w-3 h-3 mr-2 text-gray-400" />}
-                                            One uppercase letter
-                                        </div>
-                                        <div className={`flex items-center text-xs ${passwordCriteria.number ? 'text-green-600' : 'text-gray-500'}`}>
-                                            {passwordCriteria.number ? <FaCheck className="w-3 h-3 mr-2 text-green-500" /> : <FaTimes className="w-3 h-3 mr-2 text-gray-400" />}
-                                            One number
-                                        </div>
-                                        <div className={`flex items-center text-xs ${passwordCriteria.special ? 'text-green-600' : 'text-gray-500'}`}>
-                                            {passwordCriteria.special ? <FaCheck className="w-3 h-3 mr-2 text-green-500" /> : <FaTimes className="w-3 h-3 mr-2 text-gray-400" />}
-                                            One special character (@$!%*?&)
-                                        </div>
-                                    </div>
+                                    <RequirementItem
+                                        met={passwordCriteria.length}
+                                        text="At least 8 characters"
+                                    />
+                                    <RequirementItem
+                                        met={passwordCriteria.lowercase}
+                                        text="One lowercase letter"
+                                    />
+                                    <RequirementItem
+                                        met={passwordCriteria.uppercase}
+                                        text="One uppercase letter"
+                                    />
+                                    <RequirementItem
+                                        met={passwordCriteria.number}
+                                        text="One number"
+                                    />
+                                    <RequirementItem
+                                        met={passwordCriteria.special}
+                                        text="One special character (@$!%*?&)"
+                                    />
                                 </div>
                             </div>
 
@@ -432,35 +456,37 @@ const Register = () => {
                                     Confirm Password
                                 </label>
                                 <div className="relative">
-                                    <motion.input
-                                        whileFocus={{ scale: 1.01 }}
+                                    <input
                                         id="confirmPassword"
                                         name="confirmPassword"
-                                        type={showConfirmPassword ? "text" : "password"}
+                                        type={confirmPasswordInputType}
                                         placeholder="Confirm your password"
                                         value={form.confirmPassword}
                                         onChange={onChange}
                                         className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder-gray-400 pl-12 pr-12"
                                         required
+                                        autoComplete="new-password"
+                                        disabled={isLoading}
                                     />
-                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                                         <FaLock className="w-4 h-4 text-gray-400" />
                                     </div>
                                     <motion.button
                                         type="button"
                                         onClick={toggleConfirmPasswordVisibility}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
+                                        whileHover={!isLoading ? { scale: 1.05 } : {}}
+                                        whileTap={!isLoading ? { scale: 0.95 } : {}}
                                         className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors"
+                                        disabled={isLoading}
                                     >
                                         {showConfirmPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
                                     </motion.button>
                                 </div>
-                                {form.confirmPassword && form.password !== form.confirmPassword && (
-                                    <p className="text-red-600 text-xs mt-1">Passwords do not match</p>
-                                )}
-                                {form.confirmPassword && form.password === form.confirmPassword && (
-                                    <p className="text-green-600 text-xs mt-1">Passwords match</p>
+                                {form.confirmPassword && (
+                                    <PasswordMatchIndicator
+                                        match={doPasswordsMatch}
+                                        hasPassword={!!form.password}
+                                    />
                                 )}
                             </div>
 
@@ -474,24 +500,19 @@ const Register = () => {
 
                         {/* Submit Button */}
                         <motion.button
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            whileHover={{
-                                scale: 1.01,
-                                backgroundColor: "#2563eb"
-                            }}
-                            whileTap={{ scale: 0.99 }}
+                            variants={fadeInUp}
+                            initial="initial"
+                            animate="animate"
+                            transition={{ delay: 0.3 }}
+                            whileHover={isFormValid ? { scale: 1.01, backgroundColor: "#2563eb" } : {}}
+                            whileTap={isFormValid ? { scale: 0.99 } : {}}
                             type="submit"
-                            disabled={isLoading}
-                            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm cursor-pointer"
+                            disabled={!isFormValid}
+                            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm will-change-transform"
                         >
                             {isLoading ? (
                                 <>
-                                    <motion.div
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                        className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3"
-                                    />
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3" />
                                     Creating account...
                                 </>
                             ) : (
@@ -502,9 +523,10 @@ const Register = () => {
 
                     {/* Divider */}
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.9 }}
+                        variants={fadeIn}
+                        initial="initial"
+                        animate="animate"
+                        transition={{ delay: 0.4 }}
                         className="relative my-6"
                     >
                         <div className="absolute inset-0 flex items-center">
@@ -517,9 +539,10 @@ const Register = () => {
 
                     {/* Google Login Button */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 1.0 }}
+                        variants={fadeIn}
+                        initial="initial"
+                        animate="animate"
+                        transition={{ delay: 0.45 }}
                         className="flex justify-center"
                     >
                         <GoogleLogin
@@ -535,9 +558,10 @@ const Register = () => {
 
                     {/* Sign In Link */}
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 1.1 }}
+                        variants={fadeIn}
+                        initial="initial"
+                        animate="animate"
+                        transition={{ delay: 0.5 }}
                         className="mt-6 pt-6 border-t border-gray-100"
                     >
                         <div className="text-center">
@@ -546,6 +570,7 @@ const Register = () => {
                                 <Link
                                     to="/login"
                                     className="text-blue-600 hover:text-blue-500 font-medium transition-colors"
+                                    tabIndex={isLoading ? -1 : 0}
                                 >
                                     Login
                                 </Link>
@@ -556,9 +581,10 @@ const Register = () => {
 
                 {/* Footer Links */}
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.2 }}
+                    variants={fadeIn}
+                    initial="initial"
+                    animate="animate"
+                    transition={{ delay: 0.55 }}
                     className="text-center mt-6"
                 >
                     <p className="text-gray-500 text-sm">
@@ -574,5 +600,23 @@ const Register = () => {
         </div>
     );
 };
+
+// Extracted sub-components for better performance and reusability
+const RequirementItem = ({ met, text }) => (
+    <div className={`flex items-center text-xs ${met ? 'text-green-600' : 'text-gray-500'}`}>
+        {met ? (
+            <FaCheck className="w-3 h-3 mr-2 text-green-500 flex-shrink-0" />
+        ) : (
+            <FaTimes className="w-3 h-3 mr-2 text-gray-400 flex-shrink-0" />
+        )}
+        <span>{text}</span>
+    </div>
+);
+
+const PasswordMatchIndicator = ({ match, hasPassword }) => (
+    <p className={`text-xs mt-1 ${match ? 'text-green-600' : 'text-red-600'}`}>
+        {match ? '✓ Passwords match' : hasPassword ? '✗ Passwords do not match' : ''}
+    </p>
+);
 
 export default Register;

@@ -10,7 +10,7 @@ import {
   FaSearch, FaExternalLinkAlt, FaChevronRight, FaUserClock,
   FaFileUpload, FaStar, FaCheckCircle, FaInfoCircle,
   FaTimes, FaPlus, FaFilter, FaUpload, FaFileAlt, FaExclamationTriangle,
-  FaShieldAlt
+  FaShieldAlt, FaTools // Added FaTools for maintenance icon
 } from 'react-icons/fa';
 import { formatAddress, formatTime } from '../../lib/formatters';
 
@@ -34,7 +34,16 @@ const DepartmentDetails = () => {
   }, [deptId]);
 
   const services = currentDepartment?.services || [];
+
   const isSlotBookingEnabled = currentDepartment?.isSlotBookingEnabled || false;
+  const departmentStatus = currentDepartment?.status || 'active'; // Assuming status field exists
+  const isDepartmentActive = departmentStatus === 'active';
+  const isUnderMaintenance = departmentStatus === 'under-maintenance';
+  const isInactive = departmentStatus === 'inactive';
+
+  // User can only book if department is active AND slot booking is enabled
+  const canBookOnline = isDepartmentActive && isSlotBookingEnabled;
+
   const priorityCriteria = currentDepartment?.priorityCriteria || {};
   const workingHours = currentDepartment?.workingHours || [];
   const isVerified = user?.isEmailVerified || user?.secondaryEmailVerified || user?.isPhoneVerified;
@@ -55,6 +64,24 @@ const DepartmentDetails = () => {
 
   const handleBookSlot = (serviceId, e) => {
     e.stopPropagation();
+
+    // ✅ Check department status first
+    if (!isDepartmentActive) {
+      if (isUnderMaintenance) {
+        toast.error('This department is currently under maintenance. Please try again later.', {
+          duration: 5000,
+          position: "bottom-left",
+          icon: '🔧'
+        });
+      } else if (isInactive) {
+        toast.error('This department is currently inactive. Online booking is disabled.', {
+          duration: 5000,
+          position: "bottom-left"
+        });
+      }
+      return;
+    }
+
     if (!isAuthenticated) {
       toast.error('Please login to book a slot', {
         duration: 4000,
@@ -86,6 +113,7 @@ const DepartmentDetails = () => {
       });
       return;
     }
+
     navigate(`/departments/${deptId}/services/${serviceId}/book-slot`);
   };
 
@@ -94,6 +122,58 @@ const DepartmentDetails = () => {
   };
 
   const activeFiltersCount = (serviceFilters.priorityOnly ? 1 : 0) + (serviceFilters.requiresDocs ? 1 : 0);
+
+  // Helper function to get status badge
+  const getStatusBadge = () => {
+    if (isUnderMaintenance) {
+      return {
+        icon: FaTools,
+        bgColor: 'bg-amber-500/20',
+        borderColor: 'border-amber-400/30',
+        iconColor: 'text-amber-300',
+        title: 'Under Maintenance',
+        subtitle: 'Temporarily unavailable',
+        textColor: 'text-amber-200',
+        subTextColor: 'text-amber-300'
+      };
+    } else if (isInactive) {
+      return {
+        icon: FaInfoCircle,
+        bgColor: 'bg-red-500/20',
+        borderColor: 'border-red-400/30',
+        iconColor: 'text-red-300',
+        title: 'Inactive',
+        subtitle: 'Online booking disabled',
+        textColor: 'text-red-200',
+        subTextColor: 'text-red-300'
+      };
+    } else if (isSlotBookingEnabled) {
+      return {
+        icon: FaCheckCircle,
+        bgColor: 'bg-green-500/20',
+        borderColor: 'border-green-400/30',
+        iconColor: 'text-green-300',
+        title: 'Online Booking',
+        subtitle: 'Available Now',
+        textColor: 'text-green-200',
+        subTextColor: 'text-green-300'
+      };
+    } else {
+      return {
+        icon: FaInfoCircle,
+        bgColor: 'bg-amber-500/20',
+        borderColor: 'border-amber-400/30',
+        iconColor: 'text-amber-300',
+        title: 'Walk-in Only',
+        subtitle: 'Visit in person',
+        textColor: 'text-amber-200',
+        subTextColor: 'text-amber-300'
+      };
+    }
+  };
+
+  const statusBadge = getStatusBadge();
+  const StatusIcon = statusBadge.icon;
 
   if (deptLoading) {
     return (
@@ -125,7 +205,7 @@ const DepartmentDetails = () => {
           <p className="text-slate-600 mb-6">The department you're looking for doesn't exist or has been moved.</p>
           <Link
             to="/departments"
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-transform"
+            className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-lg hover:shadow-xl hover:scale-105"
           >
             <FaArrowLeft /> Back to Departments
           </Link>
@@ -135,9 +215,12 @@ const DepartmentDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-slate-50">
       {/* Enhanced Hero Header - Mobile Optimized */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white relative overflow-hidden">
+      <div className={`bg-linear-to-r ${isUnderMaintenance ? 'from-amber-600 via-amber-700 to-orange-700' :
+        isInactive ? 'from-red-600 via-red-700 to-red-800' :
+          'from-blue-600 via-blue-700 to-indigo-700'
+        } text-white relative overflow-hidden`}>
         {/* Animated Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
@@ -176,6 +259,15 @@ const DepartmentDetails = () => {
                   <FaMapMarkerAlt className="text-xs sm:text-sm" />
                   {currentDepartment.address?.city}, {currentDepartment.address?.state}
                 </span>
+
+                {/* Status Badge in header */}
+                {(isUnderMaintenance || isInactive) && (
+                  <span className={`px-2 py-1 sm:px-3 sm:py-1 ${isUnderMaintenance ? 'bg-amber-500/30' : 'bg-red-500/30'
+                    } backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium flex items-center gap-1`}>
+                    <StatusIcon className="text-xs" />
+                    {isUnderMaintenance ? 'Under Maintenance' : 'Inactive'}
+                  </span>
+                )}
               </div>
 
               <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-2 sm:mb-3 leading-tight">
@@ -196,23 +288,13 @@ const DepartmentDetails = () => {
               transition={{ delay: 0.3 }}
               className="lg:text-right"
             >
-              {isSlotBookingEnabled ? (
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-green-500/20 backdrop-blur-sm px-3 py-2 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border border-green-400/30">
-                  <FaCheckCircle className="text-lg sm:text-xl text-green-300" />
-                  <div className="text-left">
-                    <div className="text-xs sm:text-sm text-green-200 font-medium">Online Booking</div>
-                    <div className="text-xs text-green-300">Available Now</div>
-                  </div>
+              <div className={`inline-flex items-center gap-2 sm:gap-3 ${statusBadge.bgColor} backdrop-blur-sm px-3 py-2 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border ${statusBadge.borderColor}`}>
+                <StatusIcon className={`text-lg sm:text-xl ${statusBadge.iconColor}`} />
+                <div className="text-left">
+                  <div className={`text-xs sm:text-sm ${statusBadge.textColor} font-medium`}>{statusBadge.title}</div>
+                  <div className={`text-xs ${statusBadge.subTextColor}`}>{statusBadge.subtitle}</div>
                 </div>
-              ) : (
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-amber-500/20 backdrop-blur-sm px-3 py-2 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border border-amber-400/30">
-                  <FaInfoCircle className="text-lg sm:text-xl text-amber-300" />
-                  <div className="text-left">
-                    <div className="text-xs sm:text-sm text-amber-200 font-medium">Walk-in Only</div>
-                    <div className="text-xs text-amber-300">Visit in person</div>
-                  </div>
-                </div>
-              )}
+              </div>
             </motion.div>
           </div>
 
@@ -240,6 +322,38 @@ const DepartmentDetails = () => {
               className="col-span-2 lg:col-span-1"
             />
           </motion.div>
+
+          {/* Maintenance/Inactive Warning Banner */}
+          {(isUnderMaintenance || isInactive) && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className={`mt-4 p-3 sm:p-4 ${isUnderMaintenance ? 'bg-amber-500/20 border-amber-400/30' : 'bg-red-500/20 border-red-400/30'
+                } backdrop-blur-sm rounded-lg border`}
+            >
+              <div className="flex items-start gap-3">
+                <StatusIcon className={`text-lg sm:text-xl ${isUnderMaintenance ? 'text-amber-300' : 'text-red-300'
+                  } shrink-0 mt-0.5`} />
+                <div>
+                  <p className={`text-sm sm:text-base font-medium ${isUnderMaintenance ? 'text-amber-100' : 'text-red-100'
+                    }`}>
+                    {isUnderMaintenance
+                      ? 'This department is currently under maintenance'
+                      : 'This department is currently inactive'
+                    }
+                  </p>
+                  <p className={`text-xs sm:text-sm ${isUnderMaintenance ? 'text-amber-200' : 'text-red-200'
+                    } mt-1`}>
+                    {isUnderMaintenance
+                      ? 'Online booking is temporarily disabled. Please check back later or visit the department in person during working hours.'
+                      : 'Online booking has been disabled for this department. You can still visit in person during working hours.'
+                    }
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
 
@@ -379,8 +493,10 @@ const DepartmentDetails = () => {
                     onBookSlot={(e) => handleBookSlot(service._id, e)}
                     isSlotBookingEnabled={isSlotBookingEnabled}
                     isAuthenticated={isAuthenticated}
-                    canBookSlot={isAuthenticated && isSlotBookingEnabled}
+                    canBookSlot={canBookOnline} // Use the updated canBookOnline flag
                     isVerified={isVerified}
+                    isDepartmentActive={isDepartmentActive}
+                    departmentStatus={departmentStatus}
                   />
                 ))}
               </motion.div>
@@ -601,8 +717,53 @@ const StatCard = ({ label, value, icon: Icon, className = '' }) => (
 );
 
 // Enhanced Service Card Component - Mobile Compact
-const ServiceCard = ({ service, index, onViewDetails, onBookSlot, isSlotBookingEnabled, isAuthenticated, canBookSlot, isVerified }) => {
+const ServiceCard = ({ service, index, onViewDetails, onBookSlot, isSlotBookingEnabled, isAuthenticated, canBookSlot, isVerified, isDepartmentActive, departmentStatus }) => {
   const requiredDocsCount = service.requiredDocs?.length || 0;
+
+  // Determine button state
+  const getButtonState = () => {
+    if (!isDepartmentActive) {
+      return {
+        disabled: true,
+        text: departmentStatus === 'under-maintenance' ? 'Under Maintenance' : 'Department Inactive',
+        bgColor: 'bg-slate-100 text-slate-400',
+        icon: departmentStatus === 'under-maintenance' ? FaTools : FaInfoCircle
+      };
+    }
+    if (!isAuthenticated) {
+      return {
+        disabled: true,
+        text: 'Login to Book',
+        bgColor: 'bg-slate-100 text-slate-400',
+        icon: FaCalendarAlt
+      };
+    }
+    if (!isVerified) {
+      return {
+        disabled: true,
+        text: 'Verification Required',
+        bgColor: 'bg-slate-100 text-slate-400',
+        icon: FaExclamationTriangle
+      };
+    }
+    if (!isSlotBookingEnabled) {
+      return {
+        disabled: true,
+        text: 'Walk-in Only',
+        bgColor: 'bg-slate-100 text-slate-400',
+        icon: FaInfoCircle
+      };
+    }
+    return {
+      disabled: false,
+      text: 'Book Appointment',
+      bgColor: 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800',
+      icon: FaCalendarAlt
+    };
+  };
+
+  const buttonState = getButtonState();
+  const ButtonIcon = buttonState.icon;
 
   return (
     <motion.div
@@ -648,7 +809,7 @@ const ServiceCard = ({ service, index, onViewDetails, onBookSlot, isSlotBookingE
         </div>
 
         {/* Document Upload Info Banner - Mobile Compact */}
-        {requiredDocsCount > 0 && (
+        {requiredDocsCount > 0 && isDepartmentActive && (
           <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg sm:rounded-xl">
             <p className="text-xs text-blue-700 flex items-start gap-2">
               <FaUpload className="mt-0.5 flex-shrink-0 text-xs" />
@@ -659,8 +820,25 @@ const ServiceCard = ({ service, index, onViewDetails, onBookSlot, isSlotBookingE
           </div>
         )}
 
+        {/* Department Status Warning - Show if department is inactive/under maintenance */}
+        {!isDepartmentActive && (
+          <div className={`mb-3 p-2 ${departmentStatus === 'under-maintenance' ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'
+            } border rounded-lg`}>
+            <p className={`text-xs ${departmentStatus === 'under-maintenance' ? 'text-amber-700' : 'text-red-700'
+              } flex items-center gap-1.5`}>
+              <ButtonIcon className={`text-xs ${departmentStatus === 'under-maintenance' ? 'text-amber-600' : 'text-red-600'
+                }`} />
+              <span className="font-medium">
+                {departmentStatus === 'under-maintenance'
+                  ? 'Department is under maintenance'
+                  : 'Department is not accepting online bookings'}
+              </span>
+            </p>
+          </div>
+        )}
+
         {/* Verification Warning - Show if authenticated but not verified */}
-        {isAuthenticated && !isVerified && (
+        {isAuthenticated && !isVerified && isDepartmentActive && (
           <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
             <p className="text-xs text-amber-700 flex items-center gap-1.5">
               <FaExclamationTriangle className="text-amber-600 text-xs" />
@@ -672,27 +850,15 @@ const ServiceCard = ({ service, index, onViewDetails, onBookSlot, isSlotBookingE
         {/* Action Buttons - Mobile Stacked, Desktop Horizontal */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={!buttonState.disabled ? { scale: 1.05 } : {}}
+            whileTap={!buttonState.disabled ? { scale: 0.95 } : {}}
             onClick={onBookSlot}
-            disabled={!canBookSlot || (isAuthenticated && !isVerified)}
-            className={`py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl transition-all font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 ${canBookSlot && isVerified
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl'
-                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+            disabled={buttonState.disabled}
+            className={`py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl transition-all font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 ${buttonState.bgColor} ${buttonState.disabled ? 'cursor-not-allowed opacity-75' : 'shadow-lg hover:shadow-xl'
               }`}
           >
-            {canBookSlot && isVerified ? (
-              <>
-                <FaCalendarAlt className="text-xs sm:text-sm" />
-                <span>Book Appointment</span>
-              </>
-            ) : !isAuthenticated ? (
-              'Login to Book'
-            ) : !isVerified ? (
-              'Verification Required'
-            ) : (
-              'Walk-in Only'
-            )}
+            <ButtonIcon className="text-xs sm:text-sm" />
+            <span>{buttonState.text}</span>
           </motion.button>
 
           <motion.button

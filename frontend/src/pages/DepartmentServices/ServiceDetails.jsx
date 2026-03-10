@@ -30,7 +30,8 @@ import {
     FaUpload,
     FaShieldAlt,
     FaCalendarCheck,
-    FaFileUpload
+    FaFileUpload,
+    FaTools // Added for maintenance icon
 } from 'react-icons/fa';
 import { formatAddress, formatTime } from '../../lib/formatters';
 
@@ -53,7 +54,34 @@ const ServiceDetails = () => {
         }
     }, [deptId]);
 
+    // ✅ Check department operational status
+    const departmentStatus = currentDepartment?.status || 'active';
+    const isDepartmentActive = departmentStatus === 'active';
+    const isUnderMaintenance = departmentStatus === 'under-maintenance';
+    const isInactive = departmentStatus === 'inactive';
+    
+    // User can only book if department is active AND slot booking is enabled
+    const isSlotBookingEnabled = currentDepartment?.isSlotBookingEnabled || false;
+    const canBookOnline = isDepartmentActive && isSlotBookingEnabled;
+
     const handleStartBooking = () => {
+        // ✅ Check department status first
+        if (!isDepartmentActive) {
+            if (isUnderMaintenance) {
+                toast.error('This department is currently under maintenance. Please try again later.', {
+                    duration: 5000,
+                    position: "bottom-left",
+                    icon: '🔧'
+                });
+            } else if (isInactive) {
+                toast.error('This department is currently inactive. Online booking is disabled.', {
+                    duration: 5000,
+                    position: "bottom-left"
+                });
+            }
+            return;
+        }
+
         if (!isAuthenticated) {
             toast.error('Please login to book a slot', {
                 duration: 4000,
@@ -80,7 +108,7 @@ const ServiceDetails = () => {
             return;
         }
 
-        if (!currentDepartment?.isSlotBookingEnabled) {
+        if (!isSlotBookingEnabled) {
             toast.error('Online booking is not available for this department', {
                 duration: 4000,
                 position: "bottom-left"
@@ -90,6 +118,111 @@ const ServiceDetails = () => {
 
         navigate(`/departments/${deptId}/services/${serviceId}/book-slot`);
     };
+
+    // Helper function to get status badge
+    const getStatusBadge = () => {
+        if (isUnderMaintenance) {
+            return {
+                icon: FaTools,
+                bgColor: 'bg-amber-500/20',
+                borderColor: 'border-amber-400/30',
+                iconColor: 'text-amber-300',
+                title: 'Currently Under Maintenance',
+                subtitle: 'Temporarily unavailable',
+                textColor: 'text-amber-200',
+                subTextColor: 'text-amber-300'
+            };
+        } else if (isInactive) {
+            return {
+                icon: FaInfoCircle,
+                bgColor: 'bg-red-500/20',
+                borderColor: 'border-red-400/30',
+                iconColor: 'text-red-300',
+                title: 'Inactive',
+                subtitle: 'Online booking disabled',
+                textColor: 'text-red-200',
+                subTextColor: 'text-red-300'
+            };
+        } else if (isSlotBookingEnabled) {
+            return {
+                icon: FaCalendarCheck,
+                bgColor: 'bg-green-500/20',
+                borderColor: 'border-green-400/30',
+                iconColor: 'text-green-300',
+                title: 'Online Booking',
+                subtitle: 'Available Now',
+                textColor: 'text-green-200',
+                subTextColor: 'text-green-300'
+            };
+        } else {
+            return {
+                icon: FaInfoCircle,
+                bgColor: 'bg-amber-500/20',
+                borderColor: 'border-amber-400/30',
+                iconColor: 'text-amber-300',
+                title: 'Walk-in Only',
+                subtitle: 'Visit in person',
+                textColor: 'text-amber-200',
+                subTextColor: 'text-amber-300'
+            };
+        }
+    };
+
+    // Helper function to get hero gradient based on status
+    const getHeroGradient = () => {
+        if (isUnderMaintenance) return 'from-amber-600 via-amber-700 to-orange-700';
+        if (isInactive) return 'from-red-600 via-red-700 to-red-800';
+        return 'from-blue-600 via-blue-700 to-indigo-700';
+    };
+
+    // Helper function to get button state
+    const getButtonState = () => {
+        if (!isDepartmentActive) {
+            return {
+                disabled: true,
+                text: isUnderMaintenance ? 'Under Maintenance' : 'Department Inactive',
+                bgColor: 'bg-white/20 text-white/60 cursor-not-allowed backdrop-blur-sm',
+                icon: isUnderMaintenance ? FaTools : FaInfoCircle
+            };
+        }
+        if (!isAuthenticated) {
+            return {
+                disabled: true,
+                text: 'Login to Book',
+                bgColor: 'bg-white/20 text-white/60 cursor-not-allowed backdrop-blur-sm',
+                icon: FaCalendarAlt
+            };
+        }
+        const isVerified = user?.isEmailVerified || user?.secondaryEmailVerified || user?.isPhoneVerified;
+        if (!isVerified) {
+            return {
+                disabled: true,
+                text: 'Verification Required',
+                bgColor: 'bg-white/20 text-white/60 cursor-not-allowed backdrop-blur-sm',
+                icon: FaExclamationTriangle
+            };
+        }
+        if (!isSlotBookingEnabled) {
+            return {
+                disabled: true,
+                text: 'Walk-in Only',
+                bgColor: 'bg-white/20 text-white/60 cursor-not-allowed backdrop-blur-sm',
+                icon: FaInfoCircle
+            };
+        }
+        return {
+            disabled: false,
+            text: 'Start Booking',
+            bgColor: 'bg-gradient-to-r from-white to-blue-50 text-blue-600 hover:from-blue-50 hover:to-blue-100 hover:shadow-xl border-2 border-white/50 cursor-pointer',
+            icon: FaCalendarAlt
+        };
+    };
+
+    const statusBadge = getStatusBadge();
+    const StatusIcon = statusBadge.icon;
+    const heroGradient = getHeroGradient();
+    const buttonState = getButtonState();
+    const ButtonIcon = buttonState.icon;
 
     if (loading) {
         return (
@@ -132,17 +265,15 @@ const ServiceDetails = () => {
         );
     }
 
-    const isSlotBookingEnabled = currentDepartment?.isSlotBookingEnabled || false;
     const tokenManagement = currentService.tokenManagement || {};
     const requiredDocs = currentService.requiredDocs || [];
     const priorityCriteria = currentDepartment?.priorityCriteria || {};
-    const canBookSlot = isAuthenticated && isSlotBookingEnabled;
     const isVerified = user?.isEmailVerified || user?.secondaryEmailVerified || user?.isPhoneVerified;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
-            {/* Enhanced Hero Header - Mobile Optimized */}
-            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white relative overflow-hidden">
+            {/* Enhanced Hero Header - Mobile Optimized with Status-based gradient */}
+            <div className={`bg-gradient-to-r ${heroGradient} text-white relative overflow-hidden`}>
                 {/* Animated Background */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
@@ -166,6 +297,42 @@ const ServiceDetails = () => {
                             <span className="font-medium text-sm sm:text-base">Back to Department</span>
                         </motion.button>
                     </motion.div>
+
+                    {/* Status Banner for non-active departments */}
+                    {(isUnderMaintenance || isInactive) && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.15 }}
+                            className={`mb-4 p-3 sm:p-4 ${
+                                isUnderMaintenance ? 'bg-amber-500/20 border-amber-400/30' : 'bg-red-500/20 border-red-400/30'
+                            } backdrop-blur-sm rounded-lg border`}
+                        >
+                            <div className="flex items-start gap-3">
+                                <StatusIcon className={`text-lg sm:text-xl ${
+                                    isUnderMaintenance ? 'text-amber-300' : 'text-red-300'
+                                } flex-shrink-0 mt-0.5`} />
+                                <div>
+                                    <p className={`text-sm sm:text-base font-medium ${
+                                        isUnderMaintenance ? 'text-amber-100' : 'text-red-100'
+                                    }`}>
+                                        {isUnderMaintenance 
+                                            ? 'This department is currently under maintenance'
+                                            : 'This department is currently inactive'
+                                        }
+                                    </p>
+                                    <p className={`text-xs sm:text-sm ${
+                                        isUnderMaintenance ? 'text-amber-200' : 'text-red-200'
+                                    } mt-1`}>
+                                        {isUnderMaintenance
+                                            ? 'Online booking is temporarily disabled. Please check back later or visit the department in person during working hours.'
+                                            : 'Online booking has been disabled for this department. You can still visit in person during working hours.'
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
 
                     {/* Service Header - Mobile Stacked */}
                     <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 sm:gap-6">
@@ -199,15 +366,13 @@ const ServiceDetails = () => {
                                                 <span className="text-xs sm:text-sm">Priority</span>
                                             </motion.span>
                                         )}
+                                        {/* Status Badge */}
                                         <motion.span
                                             whileHover={{ scale: 1.05 }}
-                                            className={`px-2 py-1 sm:px-2.5 sm:py-1.5 rounded text-xs sm:text-sm font-semibold backdrop-blur-sm flex items-center gap-1 ${isSlotBookingEnabled
-                                                ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/30'
-                                                : 'bg-gradient-to-r from-slate-500/20 to-slate-600/20 border border-slate-400/30'
-                                                }`}
+                                            className={`px-2 py-1 sm:px-2.5 sm:py-1.5 ${statusBadge.bgColor} backdrop-blur-sm rounded text-xs sm:text-sm font-semibold flex items-center gap-1 border ${statusBadge.borderColor}`}
                                         >
-                                            {isSlotBookingEnabled ? <FaCalendarCheck className="text-xs" /> : <FaCheckCircle className="text-xs" />}
-                                            <span className="text-xs sm:text-sm">{isSlotBookingEnabled ? 'Online' : 'Walk-in'}</span>
+                                            <StatusIcon className={`text-xs ${statusBadge.iconColor}`} />
+                                            <span className={`text-xs sm:text-sm ${statusBadge.textColor}`}>{statusBadge.title}</span>
                                         </motion.span>
                                     </div>
                                 </div>
@@ -222,28 +387,17 @@ const ServiceDetails = () => {
                             className="w-full lg:w-auto"
                         >
                             <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={!buttonState.disabled ? { scale: 1.05 } : {}}
+                                whileTap={!buttonState.disabled ? { scale: 0.95 } : {}}
                                 onClick={handleStartBooking}
-                                disabled={!canBookSlot || (isAuthenticated && !isVerified)}
-                                className={`w-full py-3 sm:py-4 px-4 rounded-lg sm:rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base lg:text-lg ${canBookSlot && isVerified
-                                        ? 'bg-gradient-to-r from-white to-blue-50 text-blue-600 hover:from-blue-50 hover:to-blue-100 hover:shadow-xl border-2 border-white/50 px-4 cursor-pointer'
-                                        : 'bg-white/20 text-white/60 cursor-not-allowed backdrop-blur-sm'
-                                    }`}
+                                disabled={buttonState.disabled}
+                                className={`w-full py-3 sm:py-4 px-4 rounded-lg sm:rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base lg:text-lg ${buttonState.bgColor} ${
+                                    buttonState.disabled ? 'opacity-75' : ''
+                                }`}
                             >
-                                {canBookSlot && isVerified ? (
-                                    <>
-                                        <FaCalendarAlt className="text-sm sm:text-base" />
-                                        <span>Start Booking</span>
-                                        <FaArrowRight className="text-sm sm:text-base" />
-                                    </>
-                                ) : !isAuthenticated ? (
-                                    'Login to Book'
-                                ) : !isVerified ? (
-                                    'Verification Required'
-                                ) : (
-                                    'Walk-in Only'
-                                )}
+                                <ButtonIcon className="text-sm sm:text-base" />
+                                <span>{buttonState.text}</span>
+                                {!buttonState.disabled && <FaArrowRight className="text-sm sm:text-base" />}
                             </motion.button>
                         </motion.div>
                     </div>
@@ -381,14 +535,52 @@ const ServiceDetails = () => {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.4 }}
-                            className="bg-gradient-to-br from-green-50 via-emerald-50 to-green-50 rounded-lg sm:rounded-xl border border-green-200 shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow"
+                            className={`bg-gradient-to-br ${
+                                isUnderMaintenance ? 'from-amber-50 to-orange-50 border-amber-200' :
+                                isInactive ? 'from-red-50 to-red-50 border-red-200' :
+                                'from-green-50 to-emerald-50 border-green-200'
+                            } rounded-lg sm:rounded-xl border shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow`}
                         >
                             <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
-                                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-green-600 to-emerald-600 rounded-lg flex items-center justify-center">
+                                <div className={`w-7 h-7 sm:w-8 sm:h-8 ${
+                                    isUnderMaintenance ? 'bg-gradient-to-br from-amber-600 to-orange-600' :
+                                    isInactive ? 'bg-gradient-to-br from-red-600 to-red-700' :
+                                    'bg-gradient-to-br from-green-600 to-emerald-600'
+                                } rounded-lg flex items-center justify-center`}>
                                     <FaCalendarAlt className="text-white text-sm" />
                                 </div>
                                 <span className="text-sm sm:text-base lg:text-lg">Booking Process</span>
                             </h3>
+
+                            {/* Department Status Warning inside card */}
+                            {!isDepartmentActive && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mb-4 p-3 bg-white/80 rounded-lg"
+                                >
+                                    <div className="flex items-start gap-2">
+                                        <StatusIcon className={`${
+                                            isUnderMaintenance ? 'text-amber-600' : 'text-red-600'
+                                        } text-sm mt-0.5 flex-shrink-0`} />
+                                        <div>
+                                            <p className={`text-xs font-semibold ${
+                                                isUnderMaintenance ? 'text-amber-800' : 'text-red-800'
+                                            }`}>
+                                                {isUnderMaintenance ? 'Under Maintenance' : 'Department Inactive'}
+                                            </p>
+                                            <p className={`text-xs ${
+                                                isUnderMaintenance ? 'text-amber-700' : 'text-red-700'
+                                            } mt-1`}>
+                                                {isUnderMaintenance
+                                                    ? 'Booking is temporarily unavailable'
+                                                    : 'Online booking is disabled'
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
 
                             <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                                 <BookingStep
@@ -418,7 +610,7 @@ const ServiceDetails = () => {
                             </div>
 
                             {/* Verification Warning - Show if authenticated but not verified */}
-                            {isAuthenticated && !isVerified && (
+                            {isAuthenticated && !isVerified && isDepartmentActive && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -450,27 +642,21 @@ const ServiceDetails = () => {
                             )}
 
                             <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={!buttonState.disabled ? { scale: 1.05 } : {}}
+                                whileTap={!buttonState.disabled ? { scale: 0.95 } : {}}
                                 onClick={handleStartBooking}
-                                disabled={!canBookSlot || (isAuthenticated && !isVerified)}
-                                className={`w-full py-3 sm:py-4 px-0 rounded-lg sm:rounded-xl transition-all font-semibold text-sm sm:text-base shadow-lg flex items-center justify-center gap-2 ${canBookSlot && isVerified
-                                        ? 'bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 text-white hover:from-green-700 hover:via-emerald-700 hover:to-green-800 hover:shadow-xl'
-                                        : 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-400 cursor-not-allowed'
-                                    }`}
+                                disabled={buttonState.disabled}
+                                className={`w-full py-3 sm:py-4 px-0 rounded-lg sm:rounded-xl transition-all font-semibold text-sm sm:text-base shadow-lg flex items-center justify-center gap-2 ${
+                                    buttonState.disabled
+                                        ? 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-400 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 text-white hover:from-green-700 hover:via-emerald-700 hover:to-green-800 hover:shadow-xl'
+                                }`}
                             >
-                                <FaCalendarAlt className="text-sm" />
-                                {canBookSlot && isVerified
-                                    ? 'Start Booking Now'
-                                    : !isAuthenticated
-                                        ? 'Login to Book'
-                                        : !isVerified
-                                            ? 'Verification Required'
-                                            : 'Walk-in Only'
-                                }
+                                <ButtonIcon className="text-sm" />
+                                {buttonState.text}
                             </motion.button>
 
-                            {!isAuthenticated && isSlotBookingEnabled && (
+                            {!isAuthenticated && canBookOnline && (
                                 <p className="text-xs text-slate-600 text-center mt-2 sm:mt-3 flex items-center justify-center gap-2">
                                     <FaShieldAlt className="text-slate-400 text-xs" />
                                     You'll be asked to login before booking
@@ -478,59 +664,61 @@ const ServiceDetails = () => {
                             )}
                         </motion.div>
 
-                        {/* Document Upload Timeline Card */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.45 }}
-                            className="bg-linear-to-br from-blue-50 via-indigo-50 to-blue-50 rounded-lg sm:rounded-xl border border-blue-200 shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow"
-                        >
-                            <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
-                                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-linear-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                                    <FaFileUpload className="text-white text-sm" />
+                        {/* Document Upload Timeline Card - Only show if department is active */}
+                        {isDepartmentActive && (
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.45 }}
+                                className="bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50 rounded-lg sm:rounded-xl border border-blue-200 shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow"
+                            >
+                                <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                                        <FaFileUpload className="text-white text-sm" />
+                                    </div>
+                                    <span className="text-sm sm:text-base lg:text-lg">Document Timeline</span>
+                                </h3>
+
+                                <div className="space-y-2 sm:space-y-3">
+                                    <TimelineStep
+                                        icon={FaCheckCircle}
+                                        title="Book Your Slot First"
+                                        description="Secure appointment first"
+                                        color="green"
+                                    />
+                                    <TimelineStep
+                                        icon={FaUpload}
+                                        title="Upload After Booking"
+                                        description="Submit documents later"
+                                        color="blue"
+                                    />
+                                    <TimelineStep
+                                        icon={FaShieldAlt}
+                                        title="Get Pre-Approval"
+                                        description="Early review saves time"
+                                        color="purple"
+                                    />
+                                    <TimelineStep
+                                        icon={FaUserCheck}
+                                        title="Fast Counter Processing"
+                                        description="Quick verification"
+                                        color="emerald"
+                                    />
                                 </div>
-                                <span className="text-sm sm:text-base lg:text-lg">Document Timeline</span>
-                            </h3>
 
-                            <div className="space-y-2 sm:space-y-3">
-                                <TimelineStep
-                                    icon={FaCheckCircle}
-                                    title="Book Your Slot First"
-                                    description="Secure appointment first"
-                                    color="green"
-                                />
-                                <TimelineStep
-                                    icon={FaUpload}
-                                    title="Upload After Booking"
-                                    description="Submit documents later"
-                                    color="blue"
-                                />
-                                <TimelineStep
-                                    icon={FaShieldAlt}
-                                    title="Get Pre-Approval"
-                                    description="Early review saves time"
-                                    color="purple"
-                                />
-                                <TimelineStep
-                                    icon={FaUserCheck}
-                                    title="Fast Counter Processing"
-                                    description="Quick verification"
-                                    color="emerald"
-                                />
-                            </div>
+                                <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-white/60 rounded-lg sm:rounded-xl border border-blue-200">
+                                    <p className="text-xs text-slate-700 flex items-start gap-1.5 sm:gap-2">
+                                        <FaInfoCircle className="text-blue-600 mt-0.5 flex-shrink-0 text-xs" />
+                                        <span>
+                                            <span className="font-semibold text-blue-700">Tip:</span> Upload documents early for faster processing.
+                                        </span>
+                                    </p>
+                                </div>
+                            </motion.div>
+                        )}
 
-                            <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-white/60 rounded-lg sm:rounded-xl border border-blue-200">
-                                <p className="text-xs text-slate-700 flex items-start gap-1.5 sm:gap-2">
-                                    <FaInfoCircle className="text-blue-600 mt-0.5 flex-shrink-0 text-xs" />
-                                    <span>
-                                        <span className="font-semibold text-blue-700">Tip:</span> Upload documents early for faster processing.
-                                    </span>
-                                </p>
-                            </div>
-                        </motion.div>
-
-                        {/* Priority Access Card */}
-                        {currentService.priorityAllowed && (
+                        {/* Priority Access Card - Only show if service has priority and department is active */}
+                        {currentService.priorityAllowed && isDepartmentActive && (
                             <motion.div
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -642,7 +830,7 @@ const ServiceDetails = () => {
     );
 };
 
-// Helper Components - Mobile Optimized
+// Helper Components - Mobile Optimized (unchanged from original)
 const InfoCard = ({ icon: Icon, label, value, bgColor, iconColor, highlight = false }) => (
     <motion.div
         whileHover={{ scale: 1.02 }}
@@ -761,7 +949,7 @@ const DepartmentInfoItem = ({ icon: Icon, label, value, href }) => (
         whileHover={{ scale: 1.01 }}
         className="flex items-start gap-2 sm:gap-3 p-1.5 sm:p-2 rounded-lg hover:bg-slate-50 transition-colors"
     >
-        <div className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 bg-linear-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+        <div className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
             <Icon className="text-slate-600 text-xs sm:text-sm" />
         </div>
         <div className="flex-1 min-w-0">
@@ -774,7 +962,7 @@ const DepartmentInfoItem = ({ icon: Icon, label, value, href }) => (
                     {value}
                 </a>
             ) : (
-                <p className="text-xs sm:text-sm text-slate-900 font-medium wrap-break-word">{value}</p>
+                <p className="text-xs sm:text-sm text-slate-900 font-medium break-words">{value}</p>
             )}
         </div>
     </motion.div>

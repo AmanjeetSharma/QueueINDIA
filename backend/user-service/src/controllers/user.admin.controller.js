@@ -177,6 +177,11 @@ const resetUserPasswordAdmin = asyncHandler(async (req, res) => {
         throw new ApiError(404, "User not found");
     }
 
+    const hasPassword = !!user.password;
+    if(!hasPassword){
+        throw new ApiError(400, "User does not have a password set [Google Account]. Cannot reset password for social login users.");
+    }
+
     // Generate a random password
     const randomPassword = Math.random().toString(36).slice(-8) +
         Math.random().toString(36).toUpperCase().slice(-4);

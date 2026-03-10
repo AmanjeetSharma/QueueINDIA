@@ -1,10 +1,34 @@
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { browserName, osName, deviceType } from "react-device-detect";
 import { motion } from "framer-motion";
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaUserPlus, FaShieldAlt } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaUserPlus, FaShieldAlt } from "react-icons/fa";
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+
+// Animation variants - defined outside component to prevent recreation
+const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 }
+};
+
+const scaleIn = {
+    initial: { scale: 0 },
+    animate: { scale: 1 }
+};
+
+const slideInLeft = {
+    initial: { opacity: 0, x: -20 },
+    animate: { opacity: 1, x: 0 }
+};
+
+const fadeIn = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 }
+};
+
+// Memoized device info - computed once
+const deviceInfo = `${browserName} on ${osName} (${deviceType})`;
 
 const Login = () => {
     const { login, googleLogin } = useAuth();
@@ -13,19 +37,24 @@ const Login = () => {
     const [form, setForm] = useState({
         email: "",
         password: "",
-        device: `${browserName} on ${osName} (${deviceType})`
+        device: deviceInfo
     });
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+    // Use useCallback for event handlers
+    const onChange = useCallback((e) => {
+        setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    }, []);
 
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
-    };
+    const togglePasswordVisibility = useCallback(() => {
+        setShowPassword(prev => !prev);
+    }, []);
 
-    const onSubmit = async (e) => {
+    const onSubmit = useCallback(async (e) => {
         e.preventDefault();
+        if (isLoading) return; // Prevent double submission
+        
         setIsLoading(true);
 
         try {
@@ -36,11 +65,10 @@ const Login = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [form, login, navigate, isLoading]);
 
-    const handleGoogleSuccess = async (credentialResponse) => {
+    const handleGoogleSuccess = useCallback(async (credentialResponse) => {
         try {
-            const deviceInfo = `${browserName} on ${osName} (${deviceType})`;
             await googleLogin({
                 tokenId: credentialResponse.credential,
                 device: deviceInfo
@@ -49,58 +77,77 @@ const Login = () => {
         } catch (error) {
             // Error handled in AuthContext
         }
-    };
+    }, [googleLogin, navigate]);
 
-    const handleGoogleError = () => {
+    const handleGoogleError = useCallback(() => {
         console.log('Google Login Failed');
-    };
+    }, []);
+
+    // Memoize password input type
+    const passwordInputType = useMemo(() => 
+        showPassword ? "text" : "password"
+    , [showPassword]);
+
+    // Check if form is valid for submission
+    const isFormValid = useMemo(() => 
+        form.email && form.password && !isLoading
+    , [form.email, form.password, isLoading]);
 
     return (
         <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4 py-8 relative overflow-hidden">
-            {/* Subtle Background Elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {/* Very subtle grid pattern */}
-                <div className="absolute inset-0 opacity-[0.02] bg-[linear-gradient(rgba(0,0,0,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.1)_1px,transparent_1px)] bg-size-[50px_50px]"></div>
+            {/* Subtle Background Elements - reduced opacity for better performance */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none will-change-transform">
+                {/* Very subtle grid pattern - using CSS grid instead of background pattern for better performance */}
+                <div className="absolute inset-0 opacity-[0.02]" 
+                     style={{ 
+                         backgroundImage: 'linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)',
+                         backgroundSize: '50px 50px'
+                     }} 
+                />
 
-                {/* Soft gradient orbs */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+                {/* Soft gradient orbs - using transform for better performance */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 will-change-transform"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 will-change-transform"></div>
             </div>
 
             {/* Main Card */}
             <div className="max-w-md w-full mx-auto relative">
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="relative bg-white rounded-2xl shadow-lg border border-gray-100 p-8"
+                    variants={fadeInUp}
+                    initial="initial"
+                    animate="animate"
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="relative bg-white rounded-2xl shadow-lg border border-gray-100 p-8 will-change-transform"
                 >
                     {/* Header */}
                     <div className="text-center mb-8">
                         <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                            variants={scaleIn}
+                            initial="initial"
+                            animate="animate"
+                            transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 15 }}
                             className="flex justify-center mb-6"
                         >
-                            <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                            <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md will-change-transform">
                                 <FaShieldAlt className="text-white text-xl" />
                             </div>
                         </motion.div>
 
                         <motion.h1
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
+                            variants={fadeInUp}
+                            initial="initial"
+                            animate="animate"
+                            transition={{ delay: 0.2 }}
                             className="text-2xl font-bold text-gray-800 mb-2"
                         >
                             Welcome to QueueINDIA
                         </motion.h1>
 
                         <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.4 }}
+                            variants={fadeIn}
+                            initial="initial"
+                            animate="animate"
+                            transition={{ delay: 0.25 }}
                             className="text-gray-600"
                         >
                             Login to access public services
@@ -112,16 +159,16 @@ const Login = () => {
                         <div className="space-y-5">
                             {/* Email Field */}
                             <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.5 }}
+                                variants={slideInLeft}
+                                initial="initial"
+                                animate="animate"
+                                transition={{ delay: 0.3 }}
                             >
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                                     Email Address
                                 </label>
                                 <div className="relative">
-                                    <motion.input
-                                        whileFocus={{ scale: 1.01 }}
+                                    <input
                                         id="email"
                                         name="email"
                                         type="email"
@@ -130,8 +177,10 @@ const Login = () => {
                                         onChange={onChange}
                                         className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder-gray-400 pl-12"
                                         required
+                                        autoComplete="email"
+                                        disabled={isLoading}
                                     />
-                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                                         <FaEnvelope className="w-4 h-4 text-gray-400" />
                                     </div>
                                 </div>
@@ -139,9 +188,10 @@ const Login = () => {
 
                             {/* Password Field */}
                             <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.6 }}
+                                variants={slideInLeft}
+                                initial="initial"
+                                animate="animate"
+                                transition={{ delay: 0.35 }}
                             >
                                 <div className="flex items-center justify-between mb-2">
                                     <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -150,31 +200,35 @@ const Login = () => {
                                     <Link
                                         to="/forgot-password"
                                         className="text-sm text-blue-600 hover:text-blue-500 transition-colors font-medium"
+                                        tabIndex={isLoading ? -1 : 0}
                                     >
                                         Forgot password?
                                     </Link>
                                 </div>
                                 <div className="relative">
-                                    <motion.input
-                                        whileFocus={{ scale: 1.01 }}
+                                    <input
                                         id="password"
                                         name="password"
-                                        type={showPassword ? "text" : "password"}
+                                        type={passwordInputType}
                                         placeholder="Enter your password"
                                         value={form.password}
                                         onChange={onChange}
                                         className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder-gray-400 pl-12 pr-12"
                                         required
+                                        autoComplete="current-password"
+                                        disabled={isLoading}
                                     />
-                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                                         <FaLock className="w-4 h-4 text-gray-400" />
                                     </div>
                                     <motion.button
                                         type="button"
                                         onClick={togglePasswordVisibility}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
+                                        whileHover={!isLoading ? { scale: 1.05 } : {}}
+                                        whileTap={!isLoading ? { scale: 0.95 } : {}}
                                         className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors"
+                                        disabled={isLoading}
+                                        tabIndex={isLoading ? -1 : 0}
                                     >
                                         {showPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
                                     </motion.button>
@@ -191,25 +245,19 @@ const Login = () => {
 
                         {/* Submit Button */}
                         <motion.button
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.8 }}
-                            whileHover={{
-                                scale: 1.01,
-                                backgroundColor: "#2563eb"
-                            }}
-                            whileTap={{ scale: 0.99 }}
+                            variants={fadeInUp}
+                            initial="initial"
+                            animate="animate"
+                            transition={{ delay: 0.45 }}
+                            whileHover={isFormValid ? { scale: 1.01, backgroundColor: "#2563eb" } : {}}
+                            whileTap={isFormValid ? { scale: 0.99 } : {}}
                             type="submit"
-                            disabled={isLoading}
-                            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm"
+                            disabled={!isFormValid}
+                            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm will-change-transform"
                         >
                             {isLoading ? (
                                 <>
-                                    <motion.div
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                        className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3"
-                                    />
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3" />
                                     Logging in...
                                 </>
                             ) : (
@@ -220,9 +268,10 @@ const Login = () => {
 
                     {/* Divider */}
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.9 }}
+                        variants={fadeIn}
+                        initial="initial"
+                        animate="animate"
+                        transition={{ delay: 0.5 }}
                         className="relative my-6"
                     >
                         <div className="absolute inset-0 flex items-center">
@@ -235,9 +284,10 @@ const Login = () => {
 
                     {/* Google Login Button */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 1.0 }}
+                        variants={fadeIn}
+                        initial="initial"
+                        animate="animate"
+                        transition={{ delay: 0.55 }}
                         className="flex justify-center"
                     >
                         <GoogleLogin
@@ -253,9 +303,10 @@ const Login = () => {
 
                     {/* Sign Up Link */}
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 1.1 }}
+                        variants={fadeIn}
+                        initial="initial"
+                        animate="animate"
+                        transition={{ delay: 0.6 }}
                         className="mt-6 pt-6 border-t border-gray-100"
                     >
                         <div className="text-center space-y-3 p-6 bg-linear-to-br from-gray-50 to-blue-50 rounded-2xl border border-blue-100 shadow-sm">
@@ -270,9 +321,10 @@ const Login = () => {
 
                             <Link
                                 to="/register"
-                                className="group inline-flex items-center justify-center gap-3 px-6 py-3 w-full max-w-xs bg-white hover:bg-blue-600 text-blue-600 hover:text-white border-2 border-blue-200 hover:border-blue-600 rounded-xl font-medium transition-all duration-300 ease-out hover:shadow-lg hover:scale-105 active:scale-95"
+                                className="group inline-flex items-center justify-center gap-3 px-6 py-3 w-full max-w-xs bg-white hover:bg-blue-600 text-blue-600 hover:text-white border-2 border-blue-200 hover:border-blue-600 rounded-xl font-medium transition-all duration-300 ease-out hover:shadow-lg hover:scale-105 active:scale-95 will-change-transform"
+                                tabIndex={isLoading ? -1 : 0}
                             >
-                                <FaUserPlus className="w-5 h-5 transition-transform group-hover:scale-110" />
+                                <FaUserPlus className="w-5 h-5 transition-transform group-hover:scale-110 will-change-transform" />
                                 <span>Create New Account</span>
                             </Link>
 
@@ -290,9 +342,10 @@ const Login = () => {
 
                 {/* Footer Links */}
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.2 }}
+                    variants={fadeIn}
+                    initial="initial"
+                    animate="animate"
+                    transition={{ delay: 0.65 }}
                     className="text-center mt-6"
                 >
                     <p className="text-gray-500 text-sm">

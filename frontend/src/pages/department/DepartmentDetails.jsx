@@ -259,15 +259,6 @@ const DepartmentDetails = () => {
                   <FaMapMarkerAlt className="text-xs sm:text-sm" />
                   {currentDepartment.address?.city}, {currentDepartment.address?.state}
                 </span>
-
-                {/* Status Badge in header */}
-                {(isUnderMaintenance || isInactive) && (
-                  <span className={`px-2 py-1 sm:px-3 sm:py-1 ${isUnderMaintenance ? 'bg-amber-500/30' : 'bg-red-500/30'
-                    } backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium flex items-center gap-1`}>
-                    <StatusIcon className="text-xs" />
-                    {isUnderMaintenance ? 'Under Maintenance' : 'Inactive'}
-                  </span>
-                )}
               </div>
 
               <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-2 sm:mb-3 leading-tight">

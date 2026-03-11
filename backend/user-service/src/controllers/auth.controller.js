@@ -51,16 +51,6 @@ const register = asyncHandler(async (req, res) => {
         );
     }
 
-    const passwordBreachCheck = await isPasswordBreached(password);
-    console.log(`Password breach check for "${password}":`, passwordBreachCheck);
-    if (passwordBreachCheck.breached) {
-        throw new ApiError(
-            400,
-            `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a secure password.`
-        );
-    }
-
-
 
     let existingUser = await User.findOne({
         email: email.toLowerCase(),
@@ -82,15 +72,26 @@ const register = asyncHandler(async (req, res) => {
                     fs.unlinkSync(avatarFile.path);
                     console.log("🗑️  Removed avatar image from localServer due to → existing user with password.");
                 }
-                throw new ApiError(409, "A user already exists with this email");
+                throw new ApiError(409, "User already exists");
             } else {
                 throw new ApiError(
                     409,
-                    "This email is registered via Google Sign-in. Please log in using Google and set a password in profile if needed."
+                    // "This email is registered via Google Sign-in. Please log in using Google and set a password in profile if needed."
+                    "User already exists" //generic message as hacking attempt might be there to check which emails are registered with Google Sign-in and which are not (based on error message)
                 );
             }
         }
     }
+
+    // after user existence check, do password breach check to avoid unnecessary API calls to haveibeenpwned for existing users
+    // const passwordBreachCheck = await isPasswordBreached(password);
+    // console.log(`Password breach check for "${password}":`, passwordBreachCheck);
+    // if (passwordBreachCheck.breached) {
+    //     throw new ApiError(
+    //         400,
+    //         `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a secure password.`
+    //     );
+    // }
 
     // If no existing user, create new user
     const hashedPassword = await bcrypt.hash(password, 10);

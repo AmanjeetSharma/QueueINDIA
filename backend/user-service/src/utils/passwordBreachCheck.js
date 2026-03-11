@@ -42,6 +42,4 @@ const isPasswordBreached = async (password) => {
     };
 };
 
-export {
-    isPasswordBreached
-}
+export { isPasswordBreached }

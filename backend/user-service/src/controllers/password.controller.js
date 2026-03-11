@@ -319,14 +319,14 @@ const setPassword = asyncHandler(async (req, res) => {
         );
     }
 
-    const passwordBreachCheck = await isPasswordBreached(newPassword);
-    console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck);
-    if (passwordBreachCheck.breached) {
-        throw new ApiError(
-            400,
-            `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
-        );
-    }
+    // const passwordBreachCheck = await isPasswordBreached(newPassword);
+    // console.log(`🔒 Password breach check for "${newPassword}":`, passwordBreachCheck);
+    // if (passwordBreachCheck.breached) {
+    //     throw new ApiError(
+    //         400,
+    //         `This password has been found in a data breach ${passwordBreachCheck.count} times. Please choose a different password.`
+    //     );
+    // }
 
     const user = await User.findById(userId).select("+password");
 

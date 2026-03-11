@@ -518,7 +518,7 @@ const completeBooking = asyncHandler(async (req, res) => {
     booking.status = "COMPLETED";
     await booking.save();
 
-    // Update token status
+    // Update service token status
     await ServiceToken.findOneAndUpdate(
         { booking: booking._id },
         { status: "COMPLETED" }

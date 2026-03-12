@@ -503,7 +503,6 @@ const Home = () => {
     );
 };
 
-// You'll need to add FaMapMarkerAlt to your imports
-import { FaMapMarkerAlt } from 'react-icons/fa';
+ import { FaMapMarkerAlt } from 'react-icons/fa';
 
 export default Home;

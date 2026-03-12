@@ -6,8 +6,7 @@ import { motion } from "framer-motion";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaUserPlus, FaShieldAlt } from "react-icons/fa";
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
-// Animation variants - defined outside component to prevent recreation
-const fadeInUp = {
+ const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 }
 };
@@ -27,8 +26,7 @@ const fadeIn = {
     animate: { opacity: 1 }
 };
 
-// Memoized device info - computed once
-const deviceInfo = `${browserName} on ${osName} (${deviceType})`;
+ const deviceInfo = `${browserName} on ${osName} (${deviceType})`;
 
 const Login = () => {
     const { login, googleLogin } = useAuth();
@@ -53,7 +51,7 @@ const Login = () => {
 
     const onSubmit = useCallback(async (e) => {
         e.preventDefault();
-        if (isLoading) return; // Prevent double submission
+        if (isLoading) return;
         
         setIsLoading(true);
 
@@ -61,8 +59,7 @@ const Login = () => {
             await login(form);
             navigate("/");
         } catch (err) {
-            // Error handled in AuthContext
-        } finally {
+         } finally {
             setIsLoading(false);
         }
     }, [form, login, navigate, isLoading]);

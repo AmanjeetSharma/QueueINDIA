@@ -1,11 +1,11 @@
 // launchPage.js
-const launchPage = `
+const launchPage = (name = 'Your') => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Department-Service Launched Successfully</title>
+    <title>${name.charAt(0).toUpperCase() + name.slice(1)}-Service Launched Successfully</title>
     <style>
         * {
             margin: 0;
@@ -70,6 +70,14 @@ const launchPage = `
             background-clip: text;
             color: transparent;
             letter-spacing: -0.025em;
+        }
+
+        .service-name {
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
         }
 
         p {
@@ -249,8 +257,10 @@ const launchPage = `
             <div class="success-icon">🚀</div>
             <div class="rocket-flame"></div>
         </div>
-        <h1>Department-Service Launched!</h1>
-        <p>Your department service is running successfully and ready to handle requests.</p>
+        <h1>
+            <span class="service-name">${name.charAt(0).toUpperCase() + name.slice(1)}</span>-Service is Live!
+        </h1>
+        <p>Your ${name.toLowerCase()} service is running successfully and ready to handle requests.</p>
 
         <div class="status">
             <div class="status-dot"></div>

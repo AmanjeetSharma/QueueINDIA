@@ -10,7 +10,7 @@ dotenv.config({
 });
 
 app.get("/", (req, res) => {
-    res.send(launchPage);
+    res.send(launchPage('Department'));
 });
 
 // Start server

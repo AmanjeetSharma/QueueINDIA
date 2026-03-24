@@ -37,7 +37,7 @@ axiosInstance.interceptors.response.use(
                 // console.log("🔁 Retrying original request after refresh...");
                 return axiosInstance(originalRequest);
             } catch (refreshErr) {
-                console.warn("❌ Refresh failed: letting AuthContext handle logout");
+                // console.warn("❌ Refresh failed: letting AuthContext handle logout");
                 return Promise.reject(refreshErr);
             }
         }

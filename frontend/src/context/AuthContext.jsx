@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem("backendReady", "true");
             // console.log("✅ Profile fetched successfully:", data?.data || data?.user);
         } catch (err) {
-            console.error("❌ Fetch profile error:", err);
+            // console.error("❌ Fetch profile error:", err);//debug log
             setUser(null);
         } finally {
             setLoading(false);
@@ -57,13 +57,13 @@ export const AuthProvider = ({ children }) => {
         try {
             const res = await axiosInstance.post("/auth/login", data);
 
-            // ✅ allow cookies to settle
+            // all login response handling is now in the interceptor, so we just need to fetch profile here
             await new Promise((resolve) => setTimeout(resolve, 120));
 
-            // ✅ try profile fetch, but don't override login toast if it fails
+            // try profile fetch, without overriding login toast if it fails
             try {
                 await fetchProfile();
-                // console.log("Avatar from DB:", user.avatar);
+                // console.log("Avatar from DB:", user.avatar);// debug log
 
             } catch (e) {
                 console.warn("Profile fetch after login failed (ignored):", e);

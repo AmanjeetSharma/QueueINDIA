@@ -1,9 +1,9 @@
 import express from "express";
 import { verifyToken, authorizeRoles } from "../middlewares/auth.middleware.js";
-import { getProfile } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { sendVerificationEmail, verifyEmail } from "../controllers/user.controller.js";
 import {
+    getProfile,
     updateProfile,
     changePassword,
     deleteAccount,

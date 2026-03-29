@@ -529,8 +529,8 @@ const getBookingById = asyncHandler(async (req, res) => {
 
         service: booking.service,
 
-        // ✅ THIS IS WHAT FIXES THE UI
         submittedDocs: mergedDocs,
+        bookingRejectionReason: booking.bookingRejectionReason || "", //GLOBAL REJECTION REASON
 
         metadata: booking.metadata,
         createdAt: booking.createdAt

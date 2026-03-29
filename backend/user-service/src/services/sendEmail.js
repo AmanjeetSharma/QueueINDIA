@@ -26,7 +26,7 @@ const sendEmail = async (to, subject, content, isHtml = false) => {
             }
         );
 
-        console.log(`[sendEmail] Email sent to ${to} with message ID: ${response.data.messageId}`);
+        console.log(`[sendEmail] Email sent to ${to}| Sub: ${subject}| Message ID: ${response.data.messageId}`);
 
         return response.data;
 

@@ -14,9 +14,9 @@ export const AuthProvider = ({ children }) => {
             const { data } = await axiosInstance.get("/users/profile");
             setUser(data?.data || data?.user || null);
             localStorage.setItem("backendReady", "true");
-            // console.log("✅ Profile fetched successfully:", data?.data || data?.user);
+            // console.log("Profile fetched successfully:", data?.data || data?.user);
         } catch (err) {
-            // console.error("❌ Fetch profile error:", err);//debug log
+            // console.error("Fetch profile error:", err);//debug log
             setUser(null);
         } finally {
             setLoading(false);
@@ -24,7 +24,6 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        // Attempt silent auth on mount: profile -> if 401 then interceptor will try /auth/refresh
         fetchProfile();
     }, [fetchProfile]);
 
@@ -43,7 +42,7 @@ export const AuthProvider = ({ children }) => {
                 position: "top-center"
             });
         } catch (err) {
-            console.error("❌ Register error:", err);
+            console.error("Register error:", err);
             const msg = err?.response?.data?.message || "Registration failed. Please try again.";
             toast.error(msg, {
                 duration: 3000,
@@ -57,13 +56,12 @@ export const AuthProvider = ({ children }) => {
         try {
             const res = await axiosInstance.post("/auth/login", data);
 
-            // all login response handling is now in the interceptor, so we just need to fetch profile here
             await new Promise((resolve) => setTimeout(resolve, 120));
 
-            // try profile fetch, without overriding login toast if it fails
             try {
-                await fetchProfile();
-                // console.log("Avatar from DB:", user.avatar);// debug log
+                const user = await fetchProfile();                
+                setUser(user);
+                localStorage.setItem("user", JSON.stringify(user));
 
             } catch (e) {
                 console.warn("Profile fetch after login failed (ignored):", e);
@@ -77,8 +75,6 @@ export const AuthProvider = ({ children }) => {
             return res.data;
 
         } catch (err) {
-            // console.log("Login error:", err.response?.data); // <-- we see actual backend error now
-
             const msg = err?.response?.data?.message || "Login failed. Please check your credentials.";
             toast.error(msg, {
                 duration: 3000,
@@ -91,12 +87,12 @@ export const AuthProvider = ({ children }) => {
 
 
 
-    // Add this to your AuthContext functions
     const googleLogin = async (googleData) => {
         try {
             const res = await axiosInstance.post('/oauth2/google-login', googleData);
             const { user } = res.data.data;
-            fetchProfile(); // refresh profile
+            console.log("Google login successful, user data:", user);
+            fetchProfile();
             setUser(user);
             localStorage.setItem("user", JSON.stringify(user));
             localStorage.setItem("backendReady", "true");
@@ -123,7 +119,7 @@ export const AuthProvider = ({ children }) => {
                 position: "top-center"
             });
         } catch (err) {
-            console.error("❌ Logout error:", err);
+            console.error("Logout error:", err);
             const msg = err?.response?.data?.message || "Logout failed";
             toast.error(msg, {
                 duration: 3000,
@@ -147,7 +143,7 @@ export const AuthProvider = ({ children }) => {
                 position: "top-center"
             });
         } catch (err) {
-            console.error("❌ Logout all error:", err);
+            console.error("Logout all error:", err);
             const msg = err?.response?.data?.message || "Logout failed";
             toast.error(msg, {
                 duration: 3000,
@@ -163,7 +159,7 @@ export const AuthProvider = ({ children }) => {
     const updateProfile = async (formData) => {
         try {
             const isFormData = formData instanceof FormData;
-            // console.log("Updating profile with data:", formData);
+            // console.log("Updating profile with data:", formData); // debug log
             const res = await axiosInstance.patch("/users/update-profile", formData, {
                 headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined
             });
@@ -174,7 +170,7 @@ export const AuthProvider = ({ children }) => {
             });
             return res.data;
         } catch (err) {
-            console.error("❌ Update profile error:", err);
+            console.error("Update profile error:", err);
             const msg = err?.response?.data?.message || "Profile update failed";
             toast.error(msg, {
                 duration: 5000,
@@ -202,7 +198,6 @@ export const AuthProvider = ({ children }) => {
                 position: "top-center"
             });
 
-            // Just clear auth state — DO NOT REDIRECT HERE
             setUser(null);
             localStorage.removeItem("user");
             localStorage.removeItem("accessToken");
@@ -230,7 +225,7 @@ export const AuthProvider = ({ children }) => {
             });
             return res.data;
         } catch (err) {
-            console.error("❌ Delete account error:", err);
+            console.error("Delete account error:", err);
             const msg = err?.response?.data?.message || "Account deletion failed";
             toast.error(msg, {
                 duration: 3000,
@@ -246,10 +241,9 @@ export const AuthProvider = ({ children }) => {
     const sessions = async () => {
         try {
             const res = await axiosInstance.get("/users/sessions");
-            // console.log("✅ Fetched user sessions");
             return res.data;
         } catch (err) {
-            console.error("❌ Fetch sessions error:", err);
+            console.error("Fetch sessions error:", err);
             const msg = err?.response?.data?.message || "Failed to fetch sessions";
             toast.error(msg, {
                 duration: 3000,
@@ -278,7 +272,7 @@ export const AuthProvider = ({ children }) => {
                 duration: 3000,
                 position: "top-center"
             });
-            console.error("❌ Add phone error:", error);
+            console.error("Add phone error:", error);
             handleError(error);
         }
     };
@@ -286,7 +280,6 @@ export const AuthProvider = ({ children }) => {
 
 
 
-    // ✅ Verify Phone (Verify OTP)
     const verifyPhone = async (otp) => {
         try {
             const res = await axiosInstance.post("/users/phone/verify", { otp }, {
@@ -296,14 +289,14 @@ export const AuthProvider = ({ children }) => {
                 duration: 3000,
                 position: "top-center"
             });
-            await fetchProfile(); // ✅ refresh user
+            await fetchProfile();
             return res.data.data;
         } catch (error) {
             toast.error(error?.response?.data?.message || "Phone verification failed. Please try again.", {
                 duration: 3000,
                 position: "top-center"
             });
-            console.error("❌ Verify phone error:", error);
+            console.error("Verify phone error:", error);
             handleError(error);
         }
     };
@@ -334,7 +327,6 @@ export const AuthProvider = ({ children }) => {
 
     const verifySecondaryEmail = async (otp) => {
         try {
-            // console.log("Verifying secondary email with OTP:", otp);
             const res = await axiosInstance.post("/users/email/verify-secondary", { otp }, {
                 headers: { "Content-Type": "application/json" }
             });
@@ -342,14 +334,13 @@ export const AuthProvider = ({ children }) => {
                 duration: 3000,
                 position: "top-center"
             });
-            await fetchProfile(); // refresh user
+            await fetchProfile();
             return res.data.data;
         } catch (error) {
             toast.error(error?.response?.data?.message || "Secondary email verification failed. Please try again.", {
                 duration: 3000,
                 position: "top-center"
             });
-            console.error("❌ Verify secondary email error:", error);
             handleError(error);
         }
     };
@@ -359,7 +350,6 @@ export const AuthProvider = ({ children }) => {
 
 
 
-    // Primary Email Verification
     const sendPrimaryEmailVerification = async () => {
         try {
             const res = await axiosInstance.post(`/users/send-verification/${user._id}`);
@@ -396,7 +386,6 @@ export const AuthProvider = ({ children }) => {
 
 
     const forgotPasswordEmail = async (email) => {
-        // setLoading(true);
         try {
             const response = await axiosInstance.post('/reset-password/forgot-password-email', {
                 email
@@ -415,12 +404,10 @@ export const AuthProvider = ({ children }) => {
             });
             throw new Error(errorMessage);
         } finally {
-            // setLoading(false);
         }
     };
 
     const resetPasswordEmail = async (token, newPassword, confirmPassword) => {
-        // setLoading(true);
         try {
             const response = await axiosInstance.post('/reset-password/reset-password-email', {
                 token,
@@ -441,12 +428,10 @@ export const AuthProvider = ({ children }) => {
             });
             throw new Error(errorMessage);
         } finally {
-            // setLoading(false);
         }
     };
 
     const forgotPasswordPhone = async (phone) => {
-        // setLoading(true);
         try {
             const response = await axiosInstance.post('/reset-password/forgot-password-phone', {
                 phone
@@ -465,12 +450,10 @@ export const AuthProvider = ({ children }) => {
             });
             throw new Error(errorMessage);
         } finally {
-            // setLoading(false);
         }
     };
 
     const resetPasswordPhone = async (phone, otp, newPassword, confirmPassword) => {
-        // setLoading(true);
         try {
             const response = await axiosInstance.post('/reset-password/reset-password-phone', {
                 phone,
@@ -492,7 +475,6 @@ export const AuthProvider = ({ children }) => {
             });
             throw new Error(errorMessage);
         } finally {
-            // setLoading(false);
         }
     };
 
@@ -503,7 +485,6 @@ export const AuthProvider = ({ children }) => {
 
     const updateDOB = async (dob) => {
         try {
-            // Format the date if it's a Date object
             let formattedDOB = dob;
             if (dob instanceof Date) {
                 const day = String(dob.getDate()).padStart(2, '0');
@@ -513,7 +494,7 @@ export const AuthProvider = ({ children }) => {
             }
 
             const res = await axiosInstance.patch("/users/update-dob", { dob: formattedDOB });
-            await fetchProfile(); // refresh user data
+            await fetchProfile();
 
             toast.success(res.data.message || "Date of birth updated successfully!", {
                 duration: 3000,
@@ -521,7 +502,7 @@ export const AuthProvider = ({ children }) => {
             });
             return res.data;
         } catch (err) {
-            console.error("❌ Update DOB error:", err);
+            console.error("Update DOB error:", err);
             const msg = err?.response?.data?.message || "Date of birth update failed";
             toast.error(msg, {
                 duration: 5000,
@@ -539,7 +520,7 @@ export const AuthProvider = ({ children }) => {
             const res = await axiosInstance.get("/users/admin/all-users");
             return res.data;
         } catch (err) {
-            console.error("❌ Get all users error:", err);
+            console.error("Get all users error:", err);
             const msg = err?.response?.data?.message || "Failed to fetch users";
             toast.error(msg, {
                 duration: 3000,
@@ -563,7 +544,7 @@ export const AuthProvider = ({ children }) => {
             });
             return res.data;
         } catch (err) {
-            console.error("❌ Force logout error:", err);
+            console.error("Force logout error:", err);
             const msg = err?.response?.data?.message || "Failed to force logout user";
             toast.error(msg, {
                 duration: 3000,
@@ -586,7 +567,7 @@ export const AuthProvider = ({ children }) => {
             });
             return res.data;
         } catch (err) {
-            console.error("❌ Reset user password error:", err);
+            console.error("Reset user password error:", err);
             const msg = err?.response?.data?.message || "Failed to reset user's password";
             toast.error(msg, {
                 duration: 3000,
@@ -610,7 +591,7 @@ export const AuthProvider = ({ children }) => {
             });
             return res.data;
         } catch (err) {
-            console.error("❌ Change user role error:", err);
+            console.error("Change user role error:", err);
             const msg = err?.response?.data?.message || "Failed to change user role";
             toast.error(msg, {
                 duration: 6000,
@@ -630,7 +611,7 @@ export const AuthProvider = ({ children }) => {
             });
             return res.data;
         } catch (err) {
-            console.error("❌ Delete user error:", err);
+            console.error("Delete user error:", err);
             const msg = err?.response?.data?.message || "Failed to delete user";
             toast.error(msg, {
                 duration: 3000,
@@ -648,7 +629,6 @@ export const AuthProvider = ({ children }) => {
 
     const setGoogleUserPassword = async (newPassword, confirmPassword) => {
         try {
-            // console.log("Setting password for Google user...");
             const res = await axiosInstance.post(
                 "/users/google-user/set-password",
                 {
@@ -656,7 +636,7 @@ export const AuthProvider = ({ children }) => {
                     confirmPassword,
                 },
                 {
-                    withCredentials: true, // important for JWT cookie auth
+                    withCredentials: true,
                 }
             );
 
@@ -667,7 +647,7 @@ export const AuthProvider = ({ children }) => {
 
             return res.data;
         } catch (err) {
-            console.error("❌ Set password error:", err);
+            console.error("Set password error:", err);
 
             const msg =
                 err?.response?.data?.message || "Failed to set password";

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { ChevronDown, Upload, CheckCircle, AlertCircle, Clock, MapPin, Phone, Mail, FileText, ArrowLeft, Trash2, Eye, Download, Info, Shield, Bell, Calendar, CheckSquare, Mail as MailIcon, CheckCheck } from 'lucide-react';
+import { ChevronDown, Upload, CheckCircle, AlertCircle, Clock, MapPin, Phone, Mail, FileText, ArrowLeft, Trash2, Eye, Download, Info, Shield, Bell, Calendar, CheckSquare, Mail as MailIcon, CheckCheck, XCircle } from 'lucide-react';
 import { useBooking } from '../../context/BookingContext';
 import { toast } from 'react-hot-toast';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -20,7 +20,6 @@ const BookingDetails = () => {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadingDocId, setUploadingDocId] = useState(null);
-  const [expandedSection, setExpandedSection] = useState(null);
   const [fadeIn, setFadeIn] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState({});
   const [cancelling, setCancelling] = useState(false);
@@ -216,6 +215,12 @@ const BookingDetails = () => {
     navigate('/my-bookings');
   };
 
+  const handleCreateNewBooking = () => {
+    // Navigate to the service page or booking creation page
+    // You can customize this based on your routing structure
+    navigate('/departments');
+  };
+
   const getDocumentCounts = () => {
     if (!booking?.submittedDocs) return { total: 0, uploaded: 0, pendingUpload: 0, approved: 0 };
 
@@ -316,6 +321,9 @@ const BookingDetails = () => {
     day: 'numeric'
   }) : '';
 
+  // Check if booking is rejected
+  const isBookingRejected = booking.status === 'REJECTED';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 pt-6 pb-10 px-4">
       <div
@@ -347,6 +355,83 @@ const BookingDetails = () => {
         {/* Show Completed Booking Card */}
         {booking.status === 'COMPLETED' ? (
           <CompletedBookingCard booking={booking} />
+        ) : isBookingRejected ? (
+          // Rejected Booking UI - Show Create New Booking Option
+          <div className="bg-white rounded-xl shadow border border-red-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-red-50 to-red-100 p-6 border-b border-red-200">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
+                  <XCircle className="text-white" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-red-700">Booking Rejected</h2>
+                  <p className="text-sm text-red-600 mt-1">Your booking has been rejected</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {/* Rejection Reason */}
+              {booking.bookingRejectionReason && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle size={18} className="text-red-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-red-800 mb-1">Rejection Reason:</p>
+                      <p className="text-sm text-red-700">{booking.bookingRejectionReason}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Booking Details Summary */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Booking Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Service</p>
+                    <p className="text-sm font-medium text-gray-900">{booking.service?.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Department</p>
+                    <p className="text-sm font-medium text-gray-900">{booking.metadata?.departmentName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Date & Time</p>
+                    <p className="text-sm font-medium text-gray-900">{formattedDate} | {booking.slotTime?.replace('-', ' - ')}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleCreateNewBooking}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all font-medium text-sm flex items-center justify-center gap-2"
+                >
+                  <Calendar size={18} />
+                  Create New Booking
+                </button>
+                <button
+                  onClick={handleBackToBookings}
+                  className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium text-sm flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft size={18} />
+                  View All Bookings
+                </button>
+              </div>
+
+              {/* Help Text */}
+              <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Info size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-blue-700">
+                    Your booking has been rejected. Please create a new booking with the correct information to proceed.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         ) : (
           <>
             {/* All Documents Approved Success Banner */}
@@ -448,7 +533,7 @@ const BookingDetails = () => {
                   </div>
                 </div>
 
-                {/* Documents Upload Section */}
+                {/* Documents Upload Section - Only show if booking is not rejected */}
                 {booking.status === 'CANCELLED' ? (
                   <div className="bg-white rounded-xl shadow border border-slate-200 p-5">
                     <div className="text-center py-4">

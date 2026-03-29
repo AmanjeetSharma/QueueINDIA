@@ -178,7 +178,7 @@ export const BookingProvider = ({ children }) => {
             setError(null);
 
             const response = await axiosInstance.get(`/departments/bookings/${bookingId}`);
-
+            // console.log(`Fetched booking in context: ${JSON.stringify(response.data.data)}`); // debug log
             const booking = transformBookingData(response.data.data);
             setCurrentBooking(booking);
 

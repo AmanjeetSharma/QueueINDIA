@@ -61,10 +61,8 @@ const getDepartmentStaff = asyncHandler(async (req, res) => {
         );
     }
 
-    // Remove duplicates (safety)
     const uniqueUserIds = [...new Set(userIds.map(id => id.toString()))];
 
-    // Extract token
     const token =
         req.headers.authorization ||
         (req.cookies?.accessToken
@@ -75,7 +73,7 @@ const getDepartmentStaff = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Unauthorized — Token required");
     }
 
-    // Bulk fetch users from User Service
+    // Bulk fetch call to users from User Service (inter-service communication)
     const { data } = await axios.post(
         `${process.env.USER_SERVICE_URL}/api/v1/users-dept/bulk`,
         { userIds: uniqueUserIds },
@@ -84,7 +82,6 @@ const getDepartmentStaff = asyncHandler(async (req, res) => {
 
     const users = data?.data || [];
 
-    // Convert users array to Map for fast lookup
     const userMap = new Map(
         users.map(u => [u._id.toString(), u])
     );
@@ -102,7 +99,7 @@ const getDepartmentStaff = asyncHandler(async (req, res) => {
             email: user.email,
             phone: user.phone,
             avatar: user.avatar,
-            role: staffMember.role, // department-level role
+            role: staffMember.role,
             joinedAt: staffMember.joinedAt,
             assignedBy: staffMember.assignedBy
         };
@@ -196,6 +193,7 @@ const assignStaffToDepartment = asyncHandler(async (req, res) => {
     }
 
     let userServiceResponse;
+    // Fetch user by email from User Service (inter-service communication)
     try {
         userServiceResponse = await axios.get(
             `${process.env.USER_SERVICE_URL}/api/v1/users-dept/find-by-email?email=${email}`,
@@ -221,7 +219,7 @@ const assignStaffToDepartment = asyncHandler(async (req, res) => {
     }
 
 
-    // 1️⃣ Prevent duplicate assignment in same department
+    // preventing user from being assigned multiple times to the same department
     const alreadyAssigned = department.staff.some(
         s => s.userId.toString() === user._id.toString()
     );
@@ -230,7 +228,7 @@ const assignStaffToDepartment = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User already assigned to this department");
     }
 
-    // 2️⃣ Prevent assignment if user already assigned to another department
+    // preventing user from being assigned to multiple departments
     const existingDepartment = await Department.findOne({
         "staff.userId": user._id
     });
@@ -247,10 +245,10 @@ const assignStaffToDepartment = asyncHandler(async (req, res) => {
         userId: user._id,
         role,
         assignedBy: req.user._id
-        // joinedAt auto-set
+        // joinedAt auto-set by schema default
     });
 
-
+    // Updating user's departmentId and role in User Service (inter-service communication)
     try {
         await axios.patch(
             `${process.env.USER_SERVICE_URL}/api/v1/users-dept/${user._id}/assign-department`,
@@ -312,12 +310,10 @@ const updateStaffRole = asyncHandler(async (req, res) => {
 
     if (req.user.role === "ADMIN") {
 
-        // Must belong to department
         if (!req.user.departmentId || req.user.departmentId.toString() !== deptId) {
             throw new ApiError(403, "You can only modify your own department");
         }
 
-        // Must already be ADMIN in department
         const isAdmin = department.staff.some(
             s =>
                 s.role === "ADMIN" &&
@@ -337,6 +333,7 @@ const updateStaffRole = asyncHandler(async (req, res) => {
         throw new ApiError(404, "User is not assigned to this department");
     }
 
+    // future implementation: prevent downgrading last ADMIN to avoid -> department without admin
     // if (staffMember.role === "ADMIN" && role !== "ADMIN") {
 
     //     const adminCount = department.staff.filter(
@@ -421,7 +418,7 @@ const removeStaff = asyncHandler(async (req, res) => {
             throw new ApiError(403, "You can only remove staff from your own department");
         }
 
-        // Admin must already be ADMIN in department
+        // User must already be ADMIN in department
         const isAdmin = department.staff.some(
             s =>
                 s.role === "ADMIN" &&
@@ -445,6 +442,7 @@ const removeStaff = asyncHandler(async (req, res) => {
         throw new ApiError(404, "User is not assigned to this department");
     }
 
+    // future implementation: prevent removing last ADMIN to avoid -> department without admin
     // const staffMember = department.staff[staffIndex];
 
     // if (staffMember.role === "ADMIN") {
@@ -469,6 +467,7 @@ const removeStaff = asyncHandler(async (req, res) => {
             ? `Bearer ${req.cookies.accessToken}`
             : null);
 
+    // Updating user's departmentId and role in User Service (inter-service communication)
     try {
         await axios.patch(
             `${process.env.USER_SERVICE_URL}/api/v1/users-dept/${userId}/remove-department`,
@@ -507,7 +506,7 @@ const removeStaff = asyncHandler(async (req, res) => {
 
 
 
-
+// used in user.admin for removal of staff when user's role is changed by SUPER_ADMIN (e.g. demoting an ADMIN to USER)
 const removeStaffByUserId = asyncHandler(async (req, res) => {
     const { userId } = req.params;
 
@@ -515,7 +514,6 @@ const removeStaffByUserId = asyncHandler(async (req, res) => {
         throw new ApiError(400, "User ID is required");
     }
 
-    // Find department where user exists in staff
     const department = await Department.findOne({
         "staff.userId": userId
     });
@@ -542,7 +540,7 @@ const removeStaffByUserId = asyncHandler(async (req, res) => {
     await department.save();
 
     console.log(
-        `🔄 Staff Auto-Removed | Dept: ${department.name} | User ID: ${userId} | Triggered By: ${req.user.email}`
+        `Staff Auto-Removed | Dept: ${department.name} | User ID: ${userId} | Triggered By: ${req.user.email}`
     );
 
     return res.status(200).json(
@@ -553,7 +551,7 @@ const removeStaffByUserId = asyncHandler(async (req, res) => {
                 userId,
                 removed: true
             },
-            "User removed from department staff for role change b"
+            "User removed from department staff for role change by admin"
         )
     );
 });

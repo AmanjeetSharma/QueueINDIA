@@ -18,7 +18,6 @@ const getAllUsers = asyncHandler(async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 10, 100); // max 100
     const skip = (page - 1) * limit;
 
-    /* ───── All Filters ───── */
     const {
         search = "",
         role,

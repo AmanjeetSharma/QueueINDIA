@@ -12,9 +12,11 @@ export const AuthProvider = ({ children }) => {
     const fetchProfile = useCallback(async () => {
         try {
             const { data } = await axiosInstance.get("/users/profile");
+            const userData = data?.data || data?.user || null;
             setUser(data?.data || data?.user || null);
             localStorage.setItem("backendReady", "true");
             // console.log("Profile fetched successfully:", data?.data || data?.user);
+            return userData; // Return user data for use in login flow without needing a second fetch
         } catch (err) {
             // console.error("Fetch profile error:", err);//debug log
             setUser(null);
@@ -59,7 +61,7 @@ export const AuthProvider = ({ children }) => {
             await new Promise((resolve) => setTimeout(resolve, 120));
 
             try {
-                const user = await fetchProfile();                
+                const user = await fetchProfile();
                 setUser(user);
                 localStorage.setItem("user", JSON.stringify(user));
 

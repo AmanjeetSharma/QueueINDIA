@@ -86,13 +86,11 @@ const BookingDetailsPage = () => {
     const handleApproveDocument = async (docId) => {
         try {
             await approveBooking(bookingId, docId);
-            toast.success('Document approved successfully', { icon: '✅', duration: 2000 });
         } catch (err) { }
     };
 
     const handleRejectDocument = async (docId, reason) => {
         if (!reason?.trim()) {
-            toast.error('Please provide a rejection reason', { icon: '⚠️', duration: 2000 });
             return;
         }
         try {

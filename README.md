@@ -1,6 +1,6 @@
-# 🇮🇳 QueueINDIA
+# QueueINDIA
 
-> **Smart Appointment & Queue Management Platform for Public Services**
+> **Queue Management Platform for Public Services**
 
 QueueINDIA is a full-stack appointment and queue management platform for public-facing departments and service centers. Citizens can discover departments, book service slots, upload documents, track booking status, and manage appointments online, while admins and department officers can manage departments, services, staff, queues, and booking workflows from role-based dashboards.
 
@@ -302,3 +302,9 @@ By default it pings the deployed Render URLs every 10 minutes and stops automati
 - The repo includes `frontend/vercel.json`, which suggests the frontend is intended for Vercel deployment
 - Ping bot helps in periodically sending requests to the backend, preventing cold start delays on Render’s free tier and ensuring faster response times.
 - When deploying, make sure `CORS_ORIGIN`, `FRONTEND_URL`, `BACKEND_URL`, `USER_SERVICE_URL`, and `DEPARTMENT_SERVICE_URL` all point to the correct public URLs
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+Copyright (c) 2026 Amanjeet Sharma

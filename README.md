@@ -1,5 +1,3 @@
-
-<<<<<<< HEAD
 # 🇮🇳 QueueINDIA
 
 > **Smart Appointment & Queue Management Platform for Public Services**
@@ -304,6 +302,3 @@ By default it pings the deployed Render URLs every 10 minutes and stops automati
 - The repo includes `frontend/vercel.json`, which suggests the frontend is intended for Vercel deployment
 - Ping bot helps in periodically sending requests to the backend, preventing cold start delays on Render’s free tier and ensuring faster response times.
 - When deploying, make sure `CORS_ORIGIN`, `FRONTEND_URL`, `BACKEND_URL`, `USER_SERVICE_URL`, and `DEPARTMENT_SERVICE_URL` all point to the correct public URLs
-=======
->>>>>>> fe17b739268a4f559f3dadb6610c863b89bac225
-

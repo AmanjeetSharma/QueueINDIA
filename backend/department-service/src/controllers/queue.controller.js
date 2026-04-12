@@ -13,7 +13,6 @@ import Booking from "../models/booking.model.js";
 const getLiveQueue = asyncHandler(async (req, res) => {
     const { serviceId, date, departmentId: queryDeptId } = req.query;
 
-    /* ───────────── BASIC VALIDATIONS ───────────── */
 
     if (!date) {
         throw new ApiError(400, "date query parameter is required");
@@ -23,7 +22,6 @@ const getLiveQueue = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Valid serviceId is required");
     }
 
-    /* ───────────── DEPARTMENT RESOLUTION ───────────── */
 
     let departmentId;
 
@@ -39,7 +37,6 @@ const getLiveQueue = asyncHandler(async (req, res) => {
         departmentId = req.user.departmentId;
     }
 
-    /* ───────────── BASE FILTER ───────────── */
 
     const baseFilter = {
         department: departmentId,
@@ -81,7 +78,7 @@ const getLiveQueue = asyncHandler(async (req, res) => {
                 serviceId,
                 date,
 
-                // 🔥 NEW: always return arrays (never null)
+                // NEW: always return arrays (never null)
                 serving: serving || [],
                 totalServing: serving?.length || 0,
 
@@ -183,7 +180,7 @@ const serveNextToken = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Department not found");
     }
 
-    /* ───────────── ENSURE SINGLE SERVING TOKEN ───────────── */
+    // Check if user is already serving a token (enforce 1 token at a time)
 
     const alreadyServing = await ServiceToken.findOne({
         servedBy: req.user._id,
@@ -197,8 +194,7 @@ const serveNextToken = asyncHandler(async (req, res) => {
         );
     }
 
-    /* ───────────── PICK NEXT TOKEN (PRIORITY + FIFO) ───────────── */
-
+    // Atomically find the next waiting token and update it to SERVING to prevent
     const nextToken = await ServiceToken.findOneAndUpdate(
         {
             department: departmentId,
@@ -248,9 +244,7 @@ const serveNextToken = asyncHandler(async (req, res) => {
 
 
 
-/* =========================================================
-   COMPLETE TOKEN
-   ========================================================= */
+//    COMPLETE TOKEN
 
 const completeToken = asyncHandler(async (req, res) => {
     const { tokenId } = req.params;
@@ -265,7 +259,7 @@ const completeToken = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Service token not found");
     }
 
-    /* ───────────── DEPARTMENT PROTECTION ───────────── */
+    // DEPARTMENT PROTECTION
 
     if (req.user.role !== "SUPER_ADMIN") {
         if (!req.user.departmentId) {
@@ -277,7 +271,7 @@ const completeToken = asyncHandler(async (req, res) => {
         }
     }
 
-    /* ───────────── NEW: SAFE SERVED BY VALIDATION ───────────── */
+    // NEW: SAFE SERVED BY VALIDATION (prevents potential race conditions where token status might have changed after initial fetch)
     // prevents crash if servedBy is null
     if (!token.servedBy || token.servedBy.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not serving this token");
@@ -287,7 +281,7 @@ const completeToken = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Only SERVING token can be completed");
     }
 
-    /* ───────────── CHANGED: ATOMIC UPDATE TO PREVENT RACE CONDITIONS ───────────── */
+    // CHANGED: ATOMIC UPDATE TO PREVENT RACE CONDITIONS
 
     const updatedToken = await ServiceToken.findOneAndUpdate(
         {
@@ -306,8 +300,8 @@ const completeToken = asyncHandler(async (req, res) => {
         throw new ApiError(409, "Token could not be completed. It may have already been updated.");
     }
 
-    /* ───────────── BOOKING STATUS UPDATE ───────────── */
 
+    // If token is linked to a booking, update booking status to COMPLETED as well
     await Booking.findByIdAndUpdate(updatedToken.booking, {
         status: "COMPLETED"
     });
@@ -335,9 +329,8 @@ const completeToken = asyncHandler(async (req, res) => {
 
 
 
-/* =========================================================
-   SKIP TOKEN
-   ========================================================= */
+
+//    SKIP TOKEN
 
 const skipToken = asyncHandler(async (req, res) => {
     const { tokenId } = req.params;
@@ -352,7 +345,7 @@ const skipToken = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Service token not found");
     }
 
-    /* ───────────── DEPARTMENT PROTECTION ───────────── */
+    // DEPARTMENT PROTECTION
 
     if (req.user.role !== "SUPER_ADMIN") {
         if (!req.user.departmentId) {
@@ -364,8 +357,7 @@ const skipToken = asyncHandler(async (req, res) => {
         }
     }
 
-    /* ───────────── NEW: SAFE SERVED BY VALIDATION ───────────── */
-
+    // SAFE SERVED BY VALIDATION
     if (!token.servedBy || token.servedBy.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not serving this token");
     }
@@ -374,8 +366,7 @@ const skipToken = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Only SERVING token can be skipped");
     }
 
-    /* ───────────── CHANGED: ATOMIC UPDATE ───────────── */
-
+    // ATOMIC UPDATE TO PREVENT RACE CONDITIONS
     const updatedToken = await ServiceToken.findOneAndUpdate(
         {
             _id: tokenId,

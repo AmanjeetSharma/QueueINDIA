@@ -50,7 +50,7 @@ const createDepartment = asyncHandler(async (req, res) => {
         );
     }
 
-    // 🔍 Prevent duplicate department at same location
+    // Prevent duplicate department at same location
     const exist = await Department.findOne({
         name: name.trim(),
         "address.city": address.city,
@@ -61,7 +61,7 @@ const createDepartment = asyncHandler(async (req, res) => {
         throw new ApiError(409, "Department already exists in this location");
     }
 
-    // 🔁 Normalize working hours
+    // Normalize working hours
     const normalizedWorkingHours = workingHours.map(wh => ({
         day: wh.day,
         isClosed: wh.isClosed || false,
@@ -98,7 +98,7 @@ const createDepartment = asyncHandler(async (req, res) => {
         },
         workingHours: normalizedWorkingHours,
 
-        // ✅ Services empty initially
+        // Services empty initially
         services: [],
 
         tokenManagement: tokenManagement || {
@@ -126,7 +126,7 @@ const createDepartment = asyncHandler(async (req, res) => {
         ratings: []
     });
 
-    console.log(`🏛 Department Created → ${department.name} (ID: ${department._id})`);
+    console.log(`Department Created → ${department.name} (ID: ${department._id})`);
 
     return res
         .status(201)
@@ -316,7 +316,7 @@ const getDepartments = asyncHandler(async (req, res) => {
 
     const filter = {};
 
-    // 🔍 Search by name, services, or category
+    // Search by name, services, or category
     if (search && search.trim().length > 0) {
         const searchTerm = search.trim();
         filter.$or = [
@@ -325,8 +325,7 @@ const getDepartments = asyncHandler(async (req, res) => {
             { departmentCategory: { $regex: searchTerm, $options: "i" } }
         ];
     }
-
-    // 🎯 Filters
+    // Filters
     if (category && category.trim().length > 0) {
         filter.departmentCategory = { $regex: category.trim(), $options: "i" };
     }
@@ -490,7 +489,7 @@ const deleteDepartment = asyncHandler(async (req, res) => {
 
     await Department.findByIdAndDelete(deptId);
 
-    console.log(`🗑️ Department deleted: ${department.name} (ID: ${department._id})`);
+    console.log(`Department deleted: ${department.name} (ID: ${department._id})`);
 
     return res
         .status(200)
@@ -525,7 +524,7 @@ const getDepartmentById = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Department not found");
     }
 
-    console.log(`🔍 Fetched details for Department: ${department.name} (ID: ${department._id})`);
+    console.log(`Fetched details for Department: ${department.name} (ID: ${department._id})`);
 
     return res
         .status(200)

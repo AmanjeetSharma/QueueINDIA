@@ -211,7 +211,6 @@ const createBooking = asyncHandler(async (req, res) => {
         notes
     } = req.body;
 
-    /* ─────────────────── VALIDATIONS ─────────────────── */
 
     if (!date || !slotTime) {
         throw new ApiError(400, "Date and slotTime are required");
@@ -234,7 +233,6 @@ const createBooking = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Online booking is not enabled for this department");
     }
 
-    /* ───────────── BOOKING WINDOW CHECK ───────────── */
 
     if (!isDateWithinBookingWindow(date, department.bookingWindowDays || 7)) {
         throw new ApiError(
@@ -243,7 +241,6 @@ const createBooking = asyncHandler(async (req, res) => {
         );
     }
 
-    /* ───────────── WORKING DAY CHECK ───────────── */
 
     const selectedDate = dayjs(date).tz(TZ);
     const dayOfWeek = selectedDate.format("ddd");
@@ -256,7 +253,6 @@ const createBooking = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Department is closed on the selected date");
     }
 
-    /* ───────────── SLOT VALIDATION ───────────── */
 
     const [slotStart, slotEnd] = slotTime.split("-");
 
@@ -264,7 +260,6 @@ const createBooking = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Selected slot is outside working hours");
     }
 
-    /* ───────────── CAPACITY CHECK ───────────── */
 
     const tokenManagement =
         service.tokenManagement || department.tokenManagement || {};
@@ -293,7 +288,6 @@ const createBooking = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Selected slot is fully booked");
     }
 
-    /* ───────────── PRIORITY VALIDATION ───────────── */
 
     if (priorityType !== "NONE") {
         if (!service.priorityAllowed) {
@@ -326,7 +320,6 @@ const createBooking = asyncHandler(async (req, res) => {
         }
     }
 
-    /* ───────────── PREFILL SUBMITTED DOCS ───────────── */
 
     const submittedDocs = service.requiredDocs.map(doc => ({
         requiredDocId: doc._id,
@@ -342,13 +335,11 @@ const createBooking = asyncHandler(async (req, res) => {
     }));
 
 
-    /* ───────────── INITIAL STATUS ───────────── */
 
     const initialStatus = service.isDocumentUploadRequired
         ? "PENDING_DOCS"
         : "DOCS_SUBMITTED";
 
-    /* ───────────── CREATE BOOKING ───────────── */
 
     const booking = await Booking.create({
         user: req.user._id,
@@ -386,7 +377,7 @@ const createBooking = asyncHandler(async (req, res) => {
     });
 
     console.log(
-        `✅ Booking created | ID: ${booking._id} | User: ${req.user._id}`
+        `Booking created | ID: ${booking._id} | User: ${req.user._id}`
     );
 
     return res.status(201).json(
@@ -475,12 +466,12 @@ const getBookingById = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Booking not found");
     }
 
-    // 🔒 Security check
+    //Security check
     if (booking.user.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not authorized to view this booking");
     }
 
-    // 🔍 Find service config from department
+    // Find service config from department
     const serviceFromDept = booking.department.services.find(
         s => s._id.toString() === booking.service.serviceId.toString()
     );
@@ -489,18 +480,15 @@ const getBookingById = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Service configuration not found for this booking");
     }
 
-    /**
-     * 🧠 Merge required docs + submitted docs
-     * This array WILL BE booking.submittedDocs
-     * Frontend already expects this
-     */
+    
+    // Merge required docs with submitted docs to get complete info for frontend
     const mergedDocs = serviceFromDept.requiredDocs.map(reqDoc => {
         const submitted = booking.submittedDocs.find(
             d => d.name === reqDoc.name
         );
 
         return {
-            _id: reqDoc._id,               // ✅ frontend uses this as docId
+            _id: reqDoc._id,               
             name: reqDoc.name,
             description: reqDoc.description,
             isMandatory: reqDoc.isMandatory,
@@ -570,12 +558,12 @@ const cancelBooking = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Booking not found");
     }
 
-    // 🔒 Ownership check
+    // Ownership check
     if (booking.user.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not authorized to cancel this booking");
     }
 
-    // ❌ Business rules
+    // Business rules
     if (booking.status === "CANCELLED") {
         throw new ApiError(400, "Booking is already cancelled");
     }

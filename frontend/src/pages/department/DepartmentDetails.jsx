@@ -833,7 +833,7 @@ const ServiceCard = ({ service, index, onViewDetails, onBookSlot, isSlotBookingE
           <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
             <p className="text-xs text-amber-700 flex items-center gap-1.5">
               <FaExclamationTriangle className="text-amber-600 text-xs" />
-              <span className="font-medium">Verify account to book appointments</span>
+              <span className="font-medium">Please verify atleast one email or phone number to book appointments</span>
             </p>
           </div>
         )}

@@ -7,7 +7,7 @@ import Booking from "../models/booking.model.js";
 
 // utils/cloudinaryHelpers.js
 /**
- * 🧩 Extract Cloudinary public_id from a Cloudinary URL
+ * Extract Cloudinary public_id from a Cloudinary URL
  * - Handles versioned URLs (v12345)
  * - Removes file extension
  */
@@ -30,7 +30,7 @@ export const extractPublicId = (url) => {
 const uploadDocument = asyncHandler(async (req, res) => {
     const { bookingId } = req.params;
     const { docId } = req.body;
-    // console.log("📥 uploadDocument called");
+    // console.log("uploadDocument called");
     // console.log("bookingId:", bookingId);
     // console.log("docId (requiredDocId):", docId);
     // console.log("file:", req.file?.originalname);
@@ -50,12 +50,12 @@ const uploadDocument = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Booking not found");
     }
 
-    // 🔒 Ownership check
+    // Ownership check
     if (booking.user.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not authorized to upload documents for this booking");
     }
 
-    // ❌ Block invalid states
+    // Block invalid states
     if (!["PENDING_DOCS", "DOCS_SUBMITTED", "UNDER_REVIEW"].includes(booking.status)) {
         throw new ApiError(
             400,
@@ -81,7 +81,7 @@ const uploadDocument = asyncHandler(async (req, res) => {
                 await deleteFromCloudinary(publicId);
             }
         } catch (err) {
-            console.error("⚠️ Failed to delete old file:", err.message);
+            console.error("Failed to delete old file:", err.message);
         }
     }
 

@@ -167,7 +167,6 @@ const approveBooking = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Booking not found");
     }
 
-    // ───── Role-based department security ─────
     if (req.user.role !== "SUPER_ADMIN") {
         const departmentId = req.user.departmentId;
 
@@ -180,7 +179,6 @@ const approveBooking = asyncHandler(async (req, res) => {
         }
     }
 
-    // ───── Approve single document ─────
     const doc = booking.submittedDocs.id(docId);
 
     if (!doc) {
@@ -194,7 +192,6 @@ const approveBooking = asyncHandler(async (req, res) => {
     doc.status = "APPROVED";
     doc.rejectionReason = "";
 
-    // ───── Check if all docs are approved ─────
     const allDocsApproved = booking.submittedDocs.every(
         d => d.status === "APPROVED"
     );
@@ -209,7 +206,7 @@ const approveBooking = asyncHandler(async (req, res) => {
         );
     }
 
-    // ───── All docs approved → assign token ─────
+    // All docs approved → assign token + approve booking
     if (booking.status === "APPROVED") {
         throw new ApiError(400, "Booking already approved");
     }
@@ -532,65 +529,6 @@ const completeBooking = asyncHandler(async (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
-const evaluateBookingAfterDocChange = async (booking) => {
-    const hasRejected = booking.submittedDocs.some(
-        (doc) => doc.status === "REJECTED"
-    );
-
-    const allApproved = booking.submittedDocs.every(
-        (doc) => doc.status === "APPROVED"
-    );
-
-    if (hasRejected) {
-        booking.status = "REJECTED";
-        await booking.save();
-        return { approved: false };
-    }
-
-    if (allApproved) {
-        // Assign token
-        const lastToken = await ServiceToken.findOne({
-            department: booking.department,
-            date: booking.date,
-            slotTime: booking.slotTime
-        }).sort({ tokenNumber: -1 });
-
-        const nextTokenNumber = lastToken ? lastToken.tokenNumber + 1 : 1;
-
-        const serviceToken = await ServiceToken.create({
-            booking: booking._id,
-            department: booking.department,
-            service: booking.service.serviceId,
-            date: booking.date,
-            slotTime: booking.slotTime,
-            tokenNumber: nextTokenNumber
-        });
-
-        booking.status = "APPROVED";
-        booking.tokenNumber = nextTokenNumber;
-        await booking.save();
-
-        return {
-            approved: true,
-            tokenNumber: nextTokenNumber,
-            serviceTokenId: serviceToken._id
-        };
-    }
-
-    // Still under review
-    booking.status = "UNDER_REVIEW";
-    await booking.save();
-
-    return { approved: false };
-};
 
 
 

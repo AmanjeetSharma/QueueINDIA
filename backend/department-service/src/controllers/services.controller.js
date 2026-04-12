@@ -36,13 +36,13 @@ const addService = asyncHandler(async (req, res) => {
         throw new ApiError(403, "Not authorized to add service");
     }
 
-    // 🔁 Prevent duplicate serviceCode (case-insensitive)
+    // Prevent duplicate serviceCode (case-insensitive)
     const uppercaseServiceCode = serviceCode.toUpperCase();
     if (department.services.some(s => s.serviceCode === uppercaseServiceCode)) {
         throw new ApiError(409, "Service with this code already exists in this department");
     }
 
-    // 🟦 Build service object according to new schema
+    // Build service object according to new schema
     const newService = {
         name,
         serviceCode: uppercaseServiceCode,
@@ -70,7 +70,7 @@ const addService = asyncHandler(async (req, res) => {
 
     const savedService = department.services[department.services.length - 1];
 
-    console.log(`🆕 Service Added: ${savedService.name} (${savedService.serviceCode}) to ${department.name} by ${req.user.email}`);
+    console.log(`Service Added: ${savedService.name} (${savedService.serviceCode}) to ${department.name} by ${req.user.email}`);
 
     return res.status(201).json(
         new ApiResponse(201, savedService, "Service added successfully")
@@ -101,7 +101,7 @@ const updateService = asyncHandler(async (req, res) => {
     const department = await Department.findById(deptId);
     if (!department) throw new ApiError(404, "Department not found");
 
-    // 🔐 Authorization: SUPER_ADMIN or assigned ADMIN only
+    // Authorization: SUPER_ADMIN or assigned ADMIN only
     const isAssignedAdmin = department.staff.some(
         staffMember => staffMember.userId.toString() === req.user._id.toString()
     );

@@ -91,7 +91,6 @@ const ServiceDetails = () => {
             return;
         }
 
-        // ✅ VERIFICATION CHECK: User must be verified via at least one method
         const isVerified = user?.isEmailVerified || user?.secondaryEmailVerified || user?.isPhoneVerified;
 
         if (!isVerified) {

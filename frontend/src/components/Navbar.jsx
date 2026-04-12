@@ -174,7 +174,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center gap-2 sm:gap-3">
             <span className="font-bold text-2xl sm:text-3xl bg-slate-800 bg-clip-text text-transparent select-none">
               Queue
-              <span className="font-bold text-2xl sm:text-3xl bg-blue-600 bg-clip-text text-transparent select-none">
+              <span className="font-bold text-2xl sm:text-3xl bg-blue-700 bg-clip-text text-transparent select-none">
                 INDIA
               </span>
             </span>

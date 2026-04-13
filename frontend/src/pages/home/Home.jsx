@@ -85,7 +85,7 @@ const Home = () => {
 
     const DepartmentSkeleton = () => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {[1, 2, 3, 4, 5, 6].map(i => (
+            {[1, 2, 3].map(i => (
                 <div key={i} className="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-100 animate-pulse">
                     <div className="flex gap-3 md:gap-4 mb-3 md:mb-4">
                         <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gray-100" />

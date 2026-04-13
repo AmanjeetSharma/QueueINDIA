@@ -111,7 +111,7 @@ const BackendStartupToast = ({ message, onDismiss, onRefresh }) => {
                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                             </svg>
                             <span className="text-xs sm:text-sm font-medium text-amber-900">
-                                What's happening?
+                                Why is this happening?
                             </span>
                             <svg className="w-4 h-4 ml-auto text-amber-700 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -122,15 +122,19 @@ const BackendStartupToast = ({ message, onDismiss, onRefresh }) => {
                     <div className="mt-2 bg-amber-100 rounded-lg p-3 sm:p-4 space-y-1.5 sm:space-y-2">
                         <div className="flex items-start gap-1.5 sm:gap-2">
                             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0"></div>
-                            <span className="text-xs sm:text-sm text-amber-800">Cold start in progress (As Per Render Policy)</span>
+                            <span className="text-xs sm:text-sm text-amber-800">Render's free tier spins down after 15 minutes of inactivity</span>
                         </div>
                         <div className="flex items-start gap-1.5 sm:gap-2">
                             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0"></div>
-                            <span className="text-xs sm:text-sm text-amber-800">Loading services</span>
+                            <span className="text-xs sm:text-sm text-amber-800">Cold start takes 60-90 seconds to spin up services</span>
                         </div>
                         <div className="flex items-start gap-1.5 sm:gap-2">
                             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0"></div>
-                            <span className="text-xs sm:text-sm text-amber-800">Render usually takes 60-90 seconds to start up</span>
+                            <span className="text-xs sm:text-sm text-amber-800">Click "Refresh" to manually trigger wake-up sequence</span>
+                        </div>
+                        <div className="flex items-start gap-1.5 sm:gap-2">
+                            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0"></div>
+                            <span className="text-xs sm:text-sm text-amber-800">Page auto-reloads after services are ready</span>
                         </div>
                     </div>
                 </details>
@@ -139,12 +143,12 @@ const BackendStartupToast = ({ message, onDismiss, onRefresh }) => {
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <button
                         onClick={onRefresh}
-                        className="w-full sm:flex-1 bg-amber-500 hover:bg-amber-600 text-amber-900 font-medium py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base active:scale-95"
+                        className="w-full sm:flex-1 bg-amber-500 hover:bg-amber-600 text-amber-900 font-medium py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base active:scale-95 shadow-md"
                     >
                         <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                        Refresh
+                        Click to Wake Up Service
                     </button>
 
                     <button
@@ -158,7 +162,7 @@ const BackendStartupToast = ({ message, onDismiss, onRefresh }) => {
                 {/* Auto-refresh Notice - Compact */}
                 <div className="mt-3 sm:mt-4 text-center">
                     <p className="text-xxs sm:text-xs text-amber-600">
-                        Auto-retry in {timeLeft}s
+                        Auto-retry in {timeLeft}s — or click Refresh above to wake now
                     </p>
                 </div>
             </div>
@@ -180,17 +184,27 @@ export const showBackendStartupToast = (message = "Failed to connect. Backend is
                 onRefresh={async () => {
                     toast.dismiss(t.id);
 
+                    // Show loading state (optional)
+                    toast.loading('Waking up Render services...', { duration: 2000 });
+
                     try {
-                        // Fire wake-up requests in parallel
+                        // Fire wake-up requests in parallel with timeout
                         await Promise.all([
-                            fetch("https://queueindia-user.onrender.com", { method: "GET" }),
-                            fetch("https://queueindia-department.onrender.com", { method: "GET" })
+                            fetch("https://queueindia-user.onrender.com", { 
+                                method: "GET",
+                                headers: { 'Cache-Control': 'no-cache' }
+                            }),
+                            fetch("https://queueindia-department.onrender.com", { 
+                                method: "GET",
+                                headers: { 'Cache-Control': 'no-cache' }
+                            })
                         ]);
                     } catch (err) {
-                        console.log("Waking services...", err);
                     }
 
                     // Small delay to give services time to start
+                    toast.success('Services waking up! Page will reload in 2 seconds...', { duration: 2000 });
+                    
                     setTimeout(() => {
                         window.location.reload();
                     }, 2000);
@@ -234,6 +248,9 @@ style.textContent = `
         overflow: hidden;
     }
 `;
-document.head.appendChild(style);
+if (!document.head.querySelector('#backend-toast-styles')) {
+    style.id = 'backend-toast-styles';
+    document.head.appendChild(style);
+}
 
 export default BackendStartupToast;

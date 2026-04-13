@@ -177,9 +177,23 @@ export const showBackendStartupToast = (message = "Failed to connect. Backend is
                     // Optional: Store dismissal in sessionStorage
                     sessionStorage.setItem('backend-startup-dismissed', 'true');
                 }}
-                onRefresh={() => {
+                onRefresh={async () => {
                     toast.dismiss(t.id);
-                    window.location.reload();
+
+                    try {
+                        // Fire wake-up requests in parallel
+                        await Promise.all([
+                            fetch("https://queueindia-user.onrender.com", { method: "GET" }),
+                            fetch("https://queueindia-department.onrender.com", { method: "GET" })
+                        ]);
+                    } catch (err) {
+                        console.log("Waking services...", err);
+                    }
+
+                    // Small delay to give services time to start
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
                 }}
             />
         ),

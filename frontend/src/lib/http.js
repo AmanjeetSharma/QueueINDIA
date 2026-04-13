@@ -12,7 +12,7 @@ axiosInstance.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // 🚫 Do NOT refresh for auth endpoints (very important)
+        // Do NOT refresh for auth endpoints (very important)
         const skipRefresh = [
             "/auth/refresh-token",
             "/auth/login",
@@ -27,17 +27,17 @@ axiosInstance.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        // 🔐 If unauthorized → Try refresh ONCE
+        // If unauthorized → Try refresh ONCE
         if (error.response?.status === 401) {
             originalRequest._retry = true;
             try {
-                // console.log("🔄 Trying refresh token...");
+                // console.log("Trying refresh token...");
                 await axiosInstance.post("/auth/refresh-token", {}, { withCredentials: true });
 
-                // console.log("🔁 Retrying original request after refresh...");
+                // console.log("Retrying original request after refresh...");
                 return axiosInstance(originalRequest);
             } catch (refreshErr) {
-                // console.warn("❌ Refresh failed: letting AuthContext handle logout");
+                // console.warn("Refresh failed: letting AuthContext handle logout");
                 return Promise.reject(refreshErr);
             }
         }

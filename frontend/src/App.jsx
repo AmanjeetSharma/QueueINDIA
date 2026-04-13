@@ -11,7 +11,6 @@ import { QueueProvider } from "./context/QueueContext";
 const App = () => {
   return (
     <AuthProvider>
-      {/* Core providers first */}
       <DepartmentProvider>
         <ServiceProvider>
           <BookingProvider>

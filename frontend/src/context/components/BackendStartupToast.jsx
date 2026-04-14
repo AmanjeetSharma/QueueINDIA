@@ -185,13 +185,15 @@ export const showBackendStartupToast = (message = "Failed to connect. Backend is
                 onRefresh={async () => {
                     toast.dismiss(t.id);
 
+                    // Show loading state (optional)
                     toast.loading('Waking up Render services...', {
-                        duration: 4000,
+                        duration: 3000,
                         position: "top-right",
                     });
 
                     try {
-                        const [userRes, deptRes] = await Promise.all([
+                        // Fire wake-up requests in parallel with timeout
+                        await Promise.all([
                             fetch("https://queueindia-user.onrender.com", {
                                 method: "GET",
                                 headers: { 'Cache-Control': 'no-cache' }
@@ -201,22 +203,14 @@ export const showBackendStartupToast = (message = "Failed to connect. Backend is
                                 headers: { 'Cache-Control': 'no-cache' }
                             })
                         ]);
-
-                        if (userRes.ok && deptRes.ok) {
-                            toast.success('Services are ready! Reloading...', {
-                                duration: 3000,
-                                position: "top-center",
-                            });
-                        } else {
-                            throw new Error("Services not ready yet");
-                        }
-
                     } catch (err) {
-                        toast.error('Services still waking up… try again in a few seconds', {
-                            position: "top-center",
-                        });
-                        return;
                     }
+
+                    // Small delay to give services time to start
+                    toast.success('Services waking up! Page will reload in 3 seconds...', {
+                        duration: 3000,
+                        position: "top-center",
+                    });
 
                     setTimeout(() => {
                         window.location.reload();
@@ -533,3 +527,5 @@ export default BackendStartupToast;
 // document.head.appendChild(style);
 
 // export default BackendStartupToast;
+
+

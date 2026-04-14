@@ -438,7 +438,7 @@ const Home = () => {
                                 {isAuthenticated ? (
                                     <button
                                         onClick={() => navigate('/departments')}
-                                        className="bg-white text-slate-900 px-5 md:px-8 py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold hover:shadow-xl transition-all hover:translate-y-[-2px] text-sm md:text-base"
+                                        className="bg-white text-slate-900 px-5 md:px-8 py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold hover:shadow-xl transition-all hover:-translate-y-0.5 text-sm md:text-base"
                                     >
                                         Book your appointment
                                     </button>
@@ -446,16 +446,17 @@ const Home = () => {
                                     <>
                                         <button
                                             onClick={() => navigate('/register')}
-                                            className="bg-white text-slate-900 px-5 md:px-8 py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold hover:shadow-xl transition-all hover:translate-y-[-2px] text-sm md:text-base"
+                                            className="bg-white text-slate-900 px-5 md:px-8 py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold hover:shadow-xl transition-all hover:-translate-y-0.5 text-sm md:text-base cursor-pointer"
                                         >
-                                            Create free account
+                                            Create your account
                                         </button>
                                         <button
-                                            onClick={() => navigate('/departments')}
-                                            className="bg-white/10 border border-white/20 text-white px-5 md:px-8 py-2.5 md:py-3 rounded-lg md:rounded-xl font-medium hover:bg-white/20 transition-all hover:translate-y-[-2px] text-sm md:text-base"
+                                            onClick={() => navigate('/login')}
+                                            className="bg-transparent border border-white text-white px-5 md:px-8 py-2.5 md:py-3 rounded-lg md:rounded-xl font-medium hover:-translate-y-0.5 hover:bg-slate-900 transition-all text-sm md:text-base cursor-pointer"
                                         >
-                                            Browse departments
+                                            Login to book
                                         </button>
+
                                     </>
                                 )}
                             </div>
@@ -470,23 +471,6 @@ const Home = () => {
                             </div>
                         </div>
                     </div>
-                </motion.div>
-            </section>
-            <section>
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.2 }}
-                    className="text-center mt-6 pb-10"
-                >
-                    <p className="text-gray-500 text-sm">
-                        By creating an account, you agree to our{" "}
-                        <Link to="/terms-of-service" className="text-blue-600 hover:text-blue-500">Terms</Link> and{" "}
-                        <Link to="/privacy-policy" className="text-blue-600 hover:text-blue-500">Privacy Policy</Link>
-                    </p>
-                    <p className="text-gray-500 text-sm mt-2">
-                        © 2024 QueueINDIA. Secure public service portal.
-                    </p>
                 </motion.div>
             </section>
             <Footer />

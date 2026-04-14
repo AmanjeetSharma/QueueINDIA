@@ -97,7 +97,7 @@ const Footer = () => {
                         <ul className="space-y-3">
                             <li className="flex items-start gap-3 text-sm text-slate-400">
                                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                <span>123 Lovely Professional University, Phagwara, Punjab - 144411</span>
+                                <span>Lovely Professional University, Phagwara, Punjab - 144411</span>
                             </li>
                             <li className="flex items-center gap-3 text-sm text-slate-400">
                                 <Phone className="w-4 h-4" />

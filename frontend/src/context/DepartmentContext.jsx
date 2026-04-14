@@ -76,7 +76,8 @@ export const DepartmentProvider = ({ children }) => {
 
             return response.data;
         } catch (err) {
-            const errorMsg = err?.response?.data?.message || 'Failed to fetch departments or Backend is starting up as it can take up to 60-90 seconds';
+            const errorMsg =
+                err?.response?.data?.message || 'Failed to fetch departments or Backend is starting up as it can take up to 60-90 seconds (Render free tier). Please Click on Wake Up Services Button';
             setError(errorMsg);
             showBackendStartupToast(errorMsg);
             throw err;

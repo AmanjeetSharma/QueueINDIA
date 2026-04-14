@@ -2,6 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { motion, useAnimation } from 'framer-motion';
 import { BiSolidSleepy } from "react-icons/bi";
+import { LuUnplug } from "react-icons/lu";
+import { TbFaceIdError } from "react-icons/tb";
+
+
 
 
 const BackendStartupToast = ({ message, onDismiss, onRefresh }) => {
@@ -22,6 +26,7 @@ const BackendStartupToast = ({ message, onDismiss, onRefresh }) => {
             setTimeLeft(prev => {
                 if (prev <= 1) {
                     clearInterval(timer);
+                    onRefresh(); // Auto-trigger refresh when timer runs out
                     return 0;
                 }
                 return prev - 1;
@@ -53,26 +58,11 @@ const BackendStartupToast = ({ message, onDismiss, onRefresh }) => {
                 <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
                     <div className="flex-shrink-0">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                            <svg
-                                className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                            </svg>
+                            <TbFaceIdError className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
                         </div>
                     </div>
 
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-base sm:text-lg font-semibold text-amber-900 mb-0.5 sm:mb-1 truncate">
-                            Backend Starting Up
-                        </h3>
                         <p className="text-amber-800 text-xs sm:text-sm line-clamp-2">
                             {message || "First-time initialization in progress..."}
                         </p>
@@ -109,7 +99,7 @@ const BackendStartupToast = ({ message, onDismiss, onRefresh }) => {
                 <details className="mb-4 sm:mb-6 group">
                     <summary className="flex items-center gap-2 cursor-pointer list-none">
                         <div className="bg-amber-100 rounded-lg p-2 flex-1 flex items-center gap-2">
-                            <svg className="w-4 h-4 text-amber-700 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-4 h-4 text-amber-700 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                             </svg>
                             <span className="text-xs sm:text-sm font-medium text-amber-900">
@@ -155,10 +145,8 @@ const BackendStartupToast = ({ message, onDismiss, onRefresh }) => {
                         onClick={onRefresh}
                         className="w-full sm:flex-1 bg-amber-500 hover:bg-amber-600 text-amber-900 font-medium py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base active:scale-95 shadow-md cursor-pointer"
                     >
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Click to Wake Up Service
+                        <LuUnplug className="w-5 h-5 sm:w-6 sm:h-6" />
+                        Click to Wake Up Services
                     </button>
 
                 </div>

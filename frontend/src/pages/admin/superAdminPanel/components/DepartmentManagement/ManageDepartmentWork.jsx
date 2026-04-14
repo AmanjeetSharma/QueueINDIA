@@ -346,7 +346,7 @@ const ManageDepartmentWork = () => {
                                     <FaClock className="w-4 h-4 text-slate-500" /> Working Hours
                                 </h3>
                                 <button 
-                                    onClick={() => navigate(`/super-admin-panel/departments/${deptId}/edit`)} 
+                                    onClick={() => navigate(`/manage/departments/${deptId}/edit`)} 
                                     className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
                                 >
                                     <FiEdit2 className="w-3.5 h-3.5" /> Edit Hours

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { motion, useAnimation } from 'framer-motion';
+import { BiSolidSleepy } from "react-icons/bi";
+
 
 const BackendStartupToast = ({ message, onDismiss, onRefresh }) => {
     const [timeLeft, setTimeLeft] = useState(60);
@@ -188,7 +190,7 @@ export const showBackendStartupToast = (message = "Failed to connect. Backend is
                     // Show loading state (optional)
                     toast.loading('Waking up Render services...', {
                         duration: 3000,
-                        position: "top-right",
+                        position: "top-center",
                     });
 
                     try {
@@ -207,9 +209,10 @@ export const showBackendStartupToast = (message = "Failed to connect. Backend is
                     }
 
                     // Small delay to give services time to start
-                    toast.success('Services waking up! Page will reload in 3 seconds...', {
+                    toast.success('Services are waking up! kindly wait for them to be ready.', {
                         duration: 3000,
                         position: "top-center",
+                        icon: <BiSolidSleepy className="w-10 h-10 text-white" />,
                     });
 
                     setTimeout(() => {

@@ -95,7 +95,7 @@ const ResetPassword = () => {
         navigate("/login", {
           state: { message: "Password reset successfully! Please login with your new password." }
         });
-      }, 5000);
+      }, 3500);
     } catch (error) {
       // Error handled in context
     } finally {

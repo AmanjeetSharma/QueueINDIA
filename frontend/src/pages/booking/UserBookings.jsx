@@ -15,7 +15,11 @@ import {
   FaSearch,
   FaExclamationTriangle,
   FaSync,
-  FaInfoCircle
+  FaInfoCircle,
+  FaChevronDown,
+  FaChevronUp,
+  FaFolderOpen,
+  FaFolder
 } from 'react-icons/fa';
 
 const UserBookings = () => {
@@ -24,6 +28,7 @@ const UserBookings = () => {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [cancellingId, setCancellingId] = useState(null);
+  const [expandedDates, setExpandedDates] = useState({});
   const [cancelModal, setCancelModal] = useState({
     isOpen: false,
     bookingId: null,
@@ -39,7 +44,6 @@ const UserBookings = () => {
     'PENDING_DOCS',
     'DOCS_SUBMITTED',
     'UNDER_REVIEW',
-
   ];
 
   const TERMINAL_STATUSES = [
@@ -48,7 +52,6 @@ const UserBookings = () => {
     'CANCELLED',
     'COMPLETED',
   ];
-
 
   // Auto-fetch on mount
   useEffect(() => {
@@ -74,6 +77,43 @@ const UserBookings = () => {
     }
   };
 
+  // Group bookings by date and sort within each date
+  const groupBookingsByDate = (bookingsList) => {
+    const grouped = {};
+    
+    bookingsList.forEach(booking => {
+      const dateKey = booking.date;
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(booking);
+    });
+
+    // Sort bookings within each date (latest booking first - by createdAt)
+    Object.keys(grouped).forEach(date => {
+      grouped[date].sort((a, b) => {
+        return new Date(b.createdAt || b.bookedAt || b.date) - new Date(a.createdAt || a.bookedAt || a.date);
+      });
+    });
+
+    // Sort dates in descending order (latest dates first)
+    const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+    
+    const sortedGrouped = {};
+    sortedDates.forEach(date => {
+      sortedGrouped[date] = grouped[date];
+    });
+
+    return sortedGrouped;
+  };
+
+  const toggleDateExpansion = (date) => {
+    setExpandedDates(prev => ({
+      ...prev,
+      [date]: !prev[date]
+    }));
+  };
+
   const filteredBookings = bookings.filter(booking => {
     if (filter !== 'all' && booking.status !== filter) return false;
 
@@ -89,6 +129,8 @@ const UserBookings = () => {
 
     return true;
   });
+
+  const groupedBookings = groupBookingsByDate(filteredBookings);
 
   const handleCancelClick = (booking) => {
     setCancelModal({
@@ -144,9 +186,22 @@ const UserBookings = () => {
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
     try {
-      return new Date(dateStr).toLocaleDateString('en-IN', {
+      const date = new Date(dateStr);
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      if (date.toDateString() === today.toDateString()) {
+        return 'Today';
+      } else if (date.toDateString() === tomorrow.toDateString()) {
+        return 'Tomorrow';
+      }
+      
+      return date.toLocaleDateString('en-IN', {
+        weekday: 'short',
         day: 'numeric',
-        month: 'short'
+        month: 'short',
+        year: 'numeric'
       });
     } catch (error) {
       return 'Invalid Date';
@@ -155,7 +210,21 @@ const UserBookings = () => {
 
   const formatTime = (slotTime) => {
     if (!slotTime) return '';
-    return slotTime.replace('-', '-').replace(':', ':'); // Keep as is for compactness
+    return slotTime;
+  };
+
+  const formatFullDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    try {
+      return new Date(dateStr).toLocaleDateString('en-IN', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return 'Invalid Date';
+    }
   };
 
   // Show loading only on initial load when there are no bookings
@@ -195,7 +264,6 @@ const UserBookings = () => {
           </div>
 
           {/* Compact Search and Filter */}
-          {/* Compact Search and Filter - Redesigned */}
           <div className="mb-5">
             <div className="flex flex-col sm:flex-row gap-3">
               {/* Search Bar with Clear Icon */}
@@ -322,127 +390,179 @@ const UserBookings = () => {
             )}
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredBookings.map((booking, index) => {
-              const statusConfig = getStatusConfig(booking.status);
-              const StatusIcon = statusConfig.icon;
-
+          <div className="space-y-4">
+            {Object.entries(groupedBookings).map(([date, dateBookings]) => {
+              const isExpanded = expandedDates[date] || false; // Default to collapsed (false)
+              const bookingCount = dateBookings.length;
+              
               return (
-                <motion.div
-                  key={booking._id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  className="bg-white rounded-xl shadow hover:shadow-md transition-shadow"
-                >
-                  <div className="p-4">
-                    {/* Top row: Status and Actions */}
-                    <div className="flex items-start justify-between mb-3">
-                      {/* Status */}
-                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
-                        <StatusIcon className="text-xs" />
-                        {statusConfig.label}
-                      </div>
-
-                      {/* Token number if exists */}
-                      {booking.tokenNumber && (
-                        <div className="text-xs font-semibold bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-2 py-1 rounded">
-                          Token #{booking.tokenNumber}
+                <div key={date} className="space-y-3">
+                  {/* Date Header - Like Windows Explorer Folder */}
+                  <div 
+                    className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200"
+                    onClick={() => toggleDateExpansion(date)}
+                  >
+                    <div className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {/* Folder Icon */}
+                        <div className="text-amber-500">
+                          {isExpanded ? (
+                            <FaFolderOpen className="text-2xl" />
+                          ) : (
+                            <FaFolder className="text-2xl" />
+                          )}
                         </div>
-                      )}
-                    </div>
-
-                    {/* Service and Info */}
-                    <div className="mb-3">
-                      <h3 className="text-base font-bold text-slate-900 mb-1.5 line-clamp-1">
-                        {booking.service?.name || 'Unknown Service'}
-                      </h3>
-
-                      {/* Department and service code */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium text-slate-700">
-                          {booking.metadata?.departmentName || 'Unknown Department'}
-                        </span>
-                        {booking.service?.serviceCode && (
-                          <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                            {booking.service.serviceCode}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Date and Time - Compact */}
-                      <div className="flex items-center gap-3 text-sm text-slate-600">
-                        <div className="flex items-center gap-1.5">
-                          <FaCalendarAlt className="text-xs text-slate-400" />
-                          <span>{formatDate(booking.date)}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <FaClock className="text-xs text-slate-400" />
-                          <span>{formatTime(booking.slotTime)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons - Single Row */}
-                    <div className="flex gap-2 pt-3 border-t border-slate-100">
-                      {TERMINAL_STATUSES.includes(booking.status) ? (
-                        <Link
-                          to={`/bookings/${booking._id}`}
-                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm rounded-lg font-medium transition-colors"
-                        >
-                          <FaInfoCircle className="text-xs" />
-                          View Details
-                        </Link>
-                      ) : ACTIVE_STATUSES.includes(booking.status) ? (
-                        // Active → Upload + Cancel
-                        <>
-                          {/* Upload / Details button */}
-                          <Link
-                            to={`/bookings/${booking._id}`}
-                            className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${booking.status === 'PENDING_DOCS' || booking.status === 'UNDER_REVIEW'
-                              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
-                              : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
-                              }`}
-                          >
-                            <FaFileUpload className="text-xs" />
-                            Upload Docs
-                          </Link>
-
-                          {/* Cancel button */}
-                          <button
-                            onClick={() => handleCancelClick(booking)}
-                            disabled={cancellingId === booking._id}
-                            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 border-2 border-red-600 text-red-600 text-sm rounded-lg hover:bg-red-50 transition-colors font-medium disabled:opacity-50"
-                          >
-                            {cancellingId === booking._id ? (
-                              <>
-                                <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                                Cancelling
-                              </>
-                            ) : (
-                              <>
-                                <FaTimes className="text-xs" />
-                                Cancel
-                              </>
+                        
+                        <div>
+                          <h2 className="text-lg font-semibold text-slate-900">
+                            {formatFullDate(date)}
+                          </h2>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-xs text-slate-500">
+                              {bookingCount} booking{bookingCount !== 1 ? 's' : ''}
+                            </p>
+                            {dateBookings.some(b => b.status === 'PENDING_DOCS') && (
+                              <span className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded">
+                                Pending action
+                              </span>
                             )}
-                          </button>
-                        </>
-                      ) : null}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Chevron Indicator */}
+                      <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                        {isExpanded ? (
+                          <FaChevronUp className="text-slate-500 text-sm" />
+                        ) : (
+                          <FaChevronDown className="text-slate-500 text-sm" />
+                        )}
+                      </button>
                     </div>
-
                   </div>
-                </motion.div>
+
+                  {/* Bookings Grid - Cards in Grid Layout */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-2">
+                          {dateBookings.map((booking, index) => {
+                            const statusConfig = getStatusConfig(booking.status);
+                            const StatusIcon = statusConfig.icon;
+
+                            return (
+                              <motion.div
+                                key={booking._id}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: index * 0.05 }}
+                                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-slate-200 overflow-hidden group"
+                              >
+                                <div className="p-4">
+                                  {/* Status Badge */}
+                                  <div className="mb-3">
+                                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
+                                      <StatusIcon className="text-xs" />
+                                      {statusConfig.label}
+                                    </div>
+                                  </div>
+
+                                  {/* Service Name */}
+                                  <h3 className="text-base font-bold text-slate-900 mb-2 line-clamp-2 min-h-[3rem]">
+                                    {booking.service?.name || 'Unknown Service'}
+                                  </h3>
+
+                                  {/* Department */}
+                                  <div className="mb-3">
+                                    <p className="text-sm text-slate-600 line-clamp-1">
+                                      {booking.metadata?.departmentName || 'Unknown Department'}
+                                    </p>
+                                    {booking.service?.serviceCode && (
+                                      <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded inline-block mt-1">
+                                        {booking.service.serviceCode}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Time and Token */}
+                                  <div className="space-y-1.5 mb-4">
+                                    <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                                      <FaClock className="text-xs text-slate-400" />
+                                      <span>{formatTime(booking.slotTime)}</span>
+                                    </div>
+                                    
+                                    {booking.tokenNumber && (
+                                      <div className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-1 rounded inline-block">
+                                        Token #{booking.tokenNumber}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Action Buttons */}
+                                  <div className="flex gap-2 pt-3 border-t border-slate-100">
+                                    {TERMINAL_STATUSES.includes(booking.status) ? (
+                                      <Link
+                                        to={`/bookings/${booking._id}`}
+                                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 text-sm rounded-lg font-medium transition-colors"
+                                      >
+                                        <FaInfoCircle className="text-xs" />
+                                        View Details
+                                      </Link>
+                                    ) : ACTIVE_STATUSES.includes(booking.status) ? (
+                                      <>
+                                        <Link
+                                          to={`/bookings/${booking._id}`}
+                                          className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${booking.status === 'PENDING_DOCS' || booking.status === 'UNDER_REVIEW'
+                                            ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
+                                            : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                                          }`}
+                                        >
+                                          <FaFileUpload className="text-xs" />
+                                          {booking.status === 'PENDING_DOCS' ? 'Upload Docs' : 'View'}
+                                        </Link>
+
+                                        <button
+                                          onClick={() => handleCancelClick(booking)}
+                                          disabled={cancellingId === booking._id}
+                                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 border-2 border-red-600 text-red-600 text-sm rounded-lg hover:bg-red-50 transition-colors font-medium disabled:opacity-50"
+                                        >
+                                          {cancellingId === booking._id ? (
+                                            <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                                          ) : (
+                                            <>
+                                              <FaTimes className="text-xs" />
+                                              Cancel
+                                            </>
+                                          )}
+                                        </button>
+                                      </>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               );
             })}
           </div>
         )}
       </div>
 
-      {/* Cancel Confirmation Modal - Compact */}
+      {/* Cancel Confirmation Modal */}
       <AnimatePresence>
         {cancelModal.isOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -451,7 +571,6 @@ const UserBookings = () => {
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
             />
 
-            {/* Modal */}
             <div className="fixed inset-0 flex items-center justify-center z-50 px-3">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -460,7 +579,6 @@ const UserBookings = () => {
                 className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Modal Header */}
                 <div className="p-4 border-b border-slate-200">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -473,7 +591,6 @@ const UserBookings = () => {
                   </div>
                 </div>
 
-                {/* Modal Body */}
                 <div className="p-4">
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between items-center p-2 bg-red-50 rounded-lg">
@@ -497,7 +614,6 @@ const UserBookings = () => {
                   </div>
                 </div>
 
-                {/* Modal Footer */}
                 <div className="p-4 border-t border-slate-200 flex justify-end gap-2">
                   <button
                     onClick={handleCancelClose}

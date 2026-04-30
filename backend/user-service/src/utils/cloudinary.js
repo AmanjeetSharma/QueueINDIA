@@ -18,7 +18,7 @@ const uploadOnCloudinary = async (localFilePath, folder = "") => {
         // Generate a temporary compressed filename
         const compressedPath = localFilePath.replace(/(\.\w+)$/, "-compressed$1");
 
-        // ✅ Compress image before upload
+        // Compress image before upload
         await sharp(localFilePath)
             .resize({
                 width: 800,   // Prevent giant uploads (mobile camera images)
@@ -35,19 +35,19 @@ const uploadOnCloudinary = async (localFilePath, folder = "") => {
             options.folder = folder;
         }
 
-        // ✅ Upload the compressed file instead of the original
+        // Upload the compressed file instead of the original
         const result = await cloudinary.uploader.upload(compressedPath, options);
 
-        console.log("✅ File uploaded to Cloudinary:", result.secure_url);
+        console.log("File uploaded to Cloudinary:", result.secure_url);
 
-        // 🧹 Cleanup: remove both files
+        // Cleanup: remove both files
         if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
         if (fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
 
         return result.secure_url;
 
     } catch (error) {
-        console.error("❌ Cloudinary upload failed:", error.message);
+        console.error("Cloudinary upload failed:", error.message);
 
         // Cleanup in case of failure
         if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);

@@ -20,11 +20,10 @@ const getDepartmentStaff = asyncHandler(async (req, res) => {
 
     let departmentIdToUse;
 
-    // SUPER_ADMIN → Can access any department
     if (req.user.role === "SUPER_ADMIN") {
         departmentIdToUse = deptId;
 
-        // ADMIN → Can only access their assigned department
+        // ADMIN: Can only access their assigned department
     } else {
         if (!req.user.departmentId) {
             throw new ApiError(403, "Admin not assigned to any department");

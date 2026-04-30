@@ -33,7 +33,7 @@ const getProfile = asyncHandler(async (req, res) => {
     console.log("User profile fetched:", user.name);
     return res
         .status(200)
-        .json(new ApiResponse(200, user, "✅ User profile fetched successfully"));
+        .json(new ApiResponse(200, user, "User profile fetched successfully"));
 });
 
 
@@ -49,7 +49,7 @@ const getProfile = asyncHandler(async (req, res) => {
 
 
 /**
- * 🧩 Helper function to extract Cloudinary public_id from a full URL
+ * Helper function to extract Cloudinary public_id from a full URL
  * Works even if the URL includes versioning (v12345)
  */
 const extractPublicId = (url) => {
@@ -72,7 +72,7 @@ const updateProfile = asyncHandler(async (req, res) => {
 
     const { name, address } = req.body;
 
-    // ✅ Validate name
+    // Validate name
     if (name && name.trim().length < 2) {
         throw new ApiError(400, "Name must be at least 2 characters long");
     }
@@ -87,60 +87,60 @@ const updateProfile = asyncHandler(async (req, res) => {
         };
     }
 
-    // ✅ Handle avatar upload (via multipart form-data)
+    // Handle avatar upload (via multipart form-data)
     const avatarFile = req?.files?.avatar?.[0];
     if (avatarFile && !avatarValidator(avatarFile)) {
         fs.unlinkSync(avatarFile.path);
         throw new ApiError(400, "Invalid avatar: only JPEG/PNG/WebP up to 2 MB allowed");
     }
 
-    // ✅ Update allowed fields
+    // Update allowed fields
     if (name) user.name = name.trim();
 
-    // ✅ Handle avatar replacement
+    // Handle avatar replacement
     if (avatarFile) {
-        // 🧹 Delete old avatar only if it's hosted on Cloudinary
+        // Delete old avatar only if it's hosted on Cloudinary
         if (user.avatar && user.avatar.includes("/upload/")) {
             try {
                 const publicId = extractPublicId(user.avatar);
                 console.log("Deleting old avatar with publicId:", publicId);
 
                 const deleteResponse = await cloudinary.uploader.destroy(publicId);
-                console.log("🧹 Old avatar deleted from Cloudinary:", deleteResponse);
+                console.log("Old avatar deleted from Cloudinary:", deleteResponse);
             } catch (error) {
-                console.error("⚠️ Error deleting old avatar:", error?.message);
+                console.error("Error deleting old avatar:", error?.message);
             }
         } else {
-            console.log("ℹ️  Old avatar not from Cloudinary — skipping delete.");
+            console.log("Old avatar not from Cloudinary — skipping delete.");
         }
 
 
-        // ☁️ Upload new avatar to Cloudinary
+        // Upload new avatar to Cloudinary
         const uploadedAvatar = await uploadOnCloudinary(
             avatarFile.path,
             "QueueIndia/users/avatars"
         );
 
         if (!uploadedAvatar) {
-            throw new ApiError(500, "⚠️ Error uploading new avatar");
+            throw new ApiError(500, "Error uploading new avatar");
         }
 
-        // ✅ Save the new avatar URL in the user document
+        // Save the new avatar URL in the user document
         user.avatar = uploadedAvatar;
 
-        // 🧹 Delete local temp file after upload
+        // Delete local temp file after upload
         if (fs.existsSync(avatarFile.path)) {
             fs.unlinkSync(avatarFile.path);
             console.log("🧹 Local avatar file deleted after upload.");
         }
     }
 
-    // ✅ Save updated user
+    // Save updated user
     await user.save();
 
     const updatedUser = await User.findById(user._id).select("-password -sessions");
 
-    console.log("✅ User profile updated:", updatedUser.name);
+    console.log("User profile updated:", updatedUser.name);
 
     return res
         .status(200)
@@ -374,13 +374,8 @@ const verifyPhone = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid OTP");
     }
 
-    // ✅ Move pendingPhone to main phone
     user.phone = user.pendingPhone;
-
-    // Mark verified
     user.isPhoneVerified = true;
-
-    // Clear temp + OTP fields
     user.pendingPhone = null;
     user.phoneVerificationCode = null;
     user.phoneVerificationExpiry = null;
@@ -388,14 +383,14 @@ const verifyPhone = asyncHandler(async (req, res) => {
     await user.save();
 
     console.log(
-        `✅ Phone verified for user: ${user.name}, Phone: ${user.phone}`
+        `Phone verified for user: ${user.name}, Phone: ${user.phone}`
     );
 
     return res.status(200).json(
         new ApiResponse(
             200,
             { phone: user.phone },
-            "✅ Phone verified successfully"
+            "Phone verified successfully"
         )
     );
 });
@@ -416,7 +411,6 @@ const verifyPhone = asyncHandler(async (req, res) => {
 
 
 const addSecondaryEmail = asyncHandler(async (req, res) => {
-    // console.log("Request to add secondary email:", req.body);
     const { secondaryEmail } = req.body;
     const user = await User.findById(req.user._id);
 
@@ -425,12 +419,10 @@ const addSecondaryEmail = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Please provide a valid email address");
     }
 
-    // If same as primary email, disallow
     if (user.email && user.email.toLowerCase() === secondaryEmail.toLowerCase()) {
         throw new ApiError(400, "Secondary email cannot be the same as primary email");
     }
 
-    // If already verified and same, short-circuit
     if (
         user.secondaryEmail &&
         user.secondaryEmail.toLowerCase() === secondaryEmail.toLowerCase() &&
@@ -439,17 +431,14 @@ const addSecondaryEmail = asyncHandler(async (req, res) => {
         throw new ApiError(409, "Secondary email is already verified");
     }
 
-    // Save new secondaryEmail (or re-verify existing)
     user.secondaryEmail = secondaryEmail.toLowerCase();
     user.secondaryEmailVerified = false;
 
-    // Generate OTP valid for 10 minutes
     const otp = generateOtp(6);
     user.secondaryEmailVerificationCode = otp;
     user.secondaryEmailVerificationExpiry = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    // Send email
     await sendEmail(
         user.secondaryEmail,
         "Verify your secondary email",
@@ -464,7 +453,6 @@ const addSecondaryEmail = asyncHandler(async (req, res) => {
 
 
 
-// POST /api/v1/users/email/verify-secondary
 const verifySecondaryEmail = asyncHandler(async (req, res) => {
     const { otp } = req.body;
     const user = await User.findById(req.user._id);
@@ -512,7 +500,7 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
 
     const emailContent = verificationEmail(token);
     await sendEmail(user.email, "Verify your email", emailContent, true);
-    console.log(`Primary Verification email sent to ${user.email}`) ;
+    console.log(`Primary Verification email sent to ${user.email}`);
 
     res.status(200).json(new ApiResponse(200, {}, "Verification email sent"));
 });
@@ -558,24 +546,20 @@ const updateDOB = asyncHandler(async (req, res) => {
     // dd/mm/yyyy → [dd, mm, yyyy]
     const [day, month, year] = dob.split("/");
 
-    // Validate format
     if (!day || !month || !year || year.length !== 4) {
         throw new ApiError(400, "Invalid DOB format. Use dd/mm/yyyy");
     }
 
     const parsedDate = new Date(`${year}-${month}-${day}`);
 
-    // Validate valid date
     if (isNaN(parsedDate.getTime())) {
         throw new ApiError(400, "Invalid date value");
     }
 
-    // No future DOB
     if (parsedDate > new Date()) {
         throw new ApiError(400, "DOB cannot be in the future");
     }
 
-    // Optional: age check (remove if not needed)
     const age = new Date().getFullYear() - parsedDate.getFullYear();
     if (age < 0 || age > 120) {
         throw new ApiError(400, "Entered DOB results in invalid age");
